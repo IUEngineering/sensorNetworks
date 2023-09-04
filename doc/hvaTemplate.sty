@@ -1,0 +1,148 @@
+\ProvidesPackage{hvaTemplate}
+% standard packages %
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{txfonts}
+\RequirePackage{graphicx}
+\RequirePackage[left=2cm,right=2cm,top=2.2cm,bottom=4cm]{geometry}
+\RequirePackage[pdftex,pdfpagelabels,bookmarks,hyperindex,hyperfigures]{hyperref}
+\RequirePackage{listings}  % for code
+\RequirePackage{xcolor} % needs to be after listings
+
+% Headers and foot notes %
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\includegraphics[width=.4\textwidth]{Logos/AUAS-Engineering-zwart-RGB.png}}
+\fancyhead[RE,LO]{\@doctitle}
+\fancyfoot[CE,CO]{\rightmark}
+\fancyfoot[LE,RO]{\thepage}
+\setlength{\headsep}{45pt}
+
+
+% make a titlepage %
+\def \@doctitle {Title}
+\def \@extraInfo {Groep/Team/Vak}
+\def \@docAuthor {name/names}
+
+\newcommand{\setTitle}[1]{\def \@doctitle {#1}}
+\newcommand{\extraInfo}[1]{\def \@extraInfo {#1}}
+\newcommand{\setAuthor}[1]{\def \@docAuthor {#1}}
+
+
+\newcommand{\makeTitlepage}{
+	\begin{titlepage}
+		\begin{center}
+			\includegraphics[width=0.7\textwidth]{Logos/AUAS_logo_zwart_RGB.png}
+			\\[0.5cm]
+			{\Large \@extraInfo}
+			\\[0.5cm]
+			\rule{\linewidth}{0.5mm}\\[0.4cm]
+			{\huge \bfseries \@doctitle \\[0.4cm]}
+			\rule{\linewidth}{0.5mm}\\[1.5cm]
+
+			\noindent
+			\emph{Auteurs:} 
+			\@docAuthor
+			\\[10cm]
+			Datum: \today
+		\end{center}
+	\end{titlepage}
+}
+
+\newcommand{\hvaCopyright}{
+	\vfill
+	\noindent
+	\copyright 2020 Copyright Hogeschool van Amsterdam
+
+	\noindent
+	Alle rechten voorbehouden. Niets uit deze uitgave mag worden verveelvoudigd, 
+	opgeslagen in een geautomatiseerd gegevensbestand, of openbaar gemaakt, 
+	in enige vorm of op enige wijze, hetzij elektronisch, mechanisch, door print-outs, kopieën, 
+	of op welke manier dan ook, zonder voorafgaande schriftelijke toestemming van de Hogeschool Amsterdam.
+	\newpage
+}
+
+
+% code formatting %
+\definecolor{keyword}{RGB}{0,0,255}
+\definecolor{comment}{RGB}{0,128,0}
+\definecolor{keywordsoperators}{RGB}{255,48,99}
+\definecolor{numbers}{RGB}{255,69,0}
+\definecolor{string}{RGB}{204,102,13}
+
+
+
+
+
+% c
+%\lstset{
+%	language		= C,
+%	numbers 		= left,
+%	numberstyle		= \small,
+%	basicstyle   	= \footnotesize\ttfamily,
+%	showstringspaces= false,
+%	commentstyle 	= \color{string},
+%	keywordstyle	= \color{string},
+%	stringstyle  	= \color{string},
+%	firstnumber		= \lst@firstline
+%}
+\lstdefinestyle{c}{
+	language     		= C,
+	keywordstyle		= \color{keyword},
+	commentstyle 		= \color{comment},
+	stringstyle			= \color{string},
+	belowcaptionskip	= \baselineskip,
+}
+
+
+% vhdl
+%\lstset{
+%	language		= vhdl,
+%	numbers 		= left,
+%	numberstyle		= \small,
+%	basicstyle   	= \footnotesize\ttfamily,
+%	showstringspaces= false,
+%	commentstyle 	= \color{comment},
+%	keywordstyle	= \color{keyword},
+%	stringstyle  	= \color{string},
+%	firstnumber		= \lst@firstline
+%}
+\lstdefinelanguage{VHDL}{
+	morekeywords=[1]{
+		library,use,all,entity,is,port,in,out,end,architecture,of,
+		begin,and,if,else,process,signal,range,to,downto,then,elsif,
+		wait
+	},
+	morekeywords=[2]{
+		STD_LOGIC_VECTOR,STD_LOGIC,IEEE,STD_LOGIC_1164,
+		NUMERIC_STD,STD_LOGIC_ARITH,STD_LOGIC_UNSIGNED,std_logic_vector,
+		std_logic,to_unsigned, integer, CLOCK_PERIOD, after
+	},
+	morecomment=[l]--,
+	morestring=[b]"
+}
+
+\lstdefinestyle{vhdl}{
+	language     = VHDL,
+	basicstyle   = \ttfamily,
+	keywordstyle = [1]\color{keyword}\bfseries,
+	keywordstyle = [2]\color{keywordsoperators}\bfseries,
+	commentstyle = \color{comment},
+	stringstyle  = \color{string}
+}
+
+
+% java
+%\lstset{
+%	language		= Java,
+%	numbers 		= left,
+%	numberstyle		= \small,
+%	basicstyle   	= \footnotesize\ttfamily,
+%	showstringspaces= false,
+%	commentstyle 	= \color{comment},
+%	keywordstyle	= \color{keyword},
+%	stringstyle  	= \color{string},
+%	firstnumber		= \lst@firstline
+%}

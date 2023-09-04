@@ -1,3 +1,28 @@
 # Ignore .vscode settings folders
 **/.vscode/**
 
+# Ignore latex generated files
+*.aux
+*.bcf
+*.bit
+*.blg
+*.bbl
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.glo
+*.glx
+*.gxg
+*.gxs
+*.idx
+*.ilg
+*.ind
+*.out
+**/sensorNetworks.pdf
+*.run.xml
+*.url
+*.svn
+*.synctex.gz
+*.toc
