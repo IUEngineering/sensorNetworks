@@ -42,7 +42,7 @@ AVRFOLDER =
 DUDEFOLDER =
 
 # Project name
-PROJECTNAME = hardwareTest
+PROJECTNAME = nrfTest
 # The AVR microcontroller
 MICROCONTROLLER = atxmega256a3u
 # The AVR programmer (o.a. avrisp2 and )
