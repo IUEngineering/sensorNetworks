@@ -13,10 +13,10 @@
  *	send <waarde>
 	verstuurt wat je invoert op waarde naar de geselecteerde pipe
 	
- *	writingpipe <pipenaam>
+ *	wpip <pipenaam>
 	verander de writing pipe
 	
- *	readingpipe <index, pipenaam>
+ *	rpip <pipenaamm> <index>
 	verander de reading pipes
 	
 	Het programma print continu uit wat hij ontvangt.
@@ -27,12 +27,18 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdlib.h>
 #include "serialF0.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "clock.h"
 
 char received_packet[NRF_MAX_PAYLOAD_SIZE+1];
+void runCommand(char *command);
+void wpip(char *command);
+void rpip(char *command);
+void send(char *command);
+void help(char *command);
 
 void nrfInit(uint16_t channel) {
 	nrfspiInit();
@@ -63,6 +69,8 @@ void nrfInit(uint16_t channel) {
 
 
 int main(void) {
+	PORTC.DIRSET = PIN0_bm;
+
 	init_clock();
     init_stream(F_CPU);
     
@@ -77,48 +85,94 @@ int main(void) {
 	nrfInit(channel);
 	printf("Gestart met channel %d. Geen idee of dat legaal is, maar dat is jouw probleem.\n\n", channel);
     
+	char inputBuffer[256];
+	char *inChar = inputBuffer;
+
     while (1) {
-		char command[4]   = "";
-		char attribute[NRF_MAX_PAYLOAD_SIZE+1] = "";
-		
-		scanf("%4s", command);
-		if(strncmp(command, "help", 4) == 0) {
-			printf("\n\nEr zijn 4 commandos:\n*	help\n\tprint deze lijst\n\n*	send <waarde>\n\tverstuurt wat je invoert op waarde naar de geselecteerde pipe\n\n*	wpip <pipenaam>\n\tverander de writing pipe\n");
-			printf("\n*	rpip <index> <pipenaam>\n\tverander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\nHet programma print continu uit wat het ontvangt.");
+		char newInputChar = uartF0_getc();
+		if(newInputChar != '\0') {
+			if(newInputChar == '\r') newInputChar = '\n';
+			*inChar = newInputChar;
+			uartF0_putc(newInputChar);
+			if(newInputChar == '\n') {
+				*inChar = '\0';
+				uartF0_putc('\r');
+				runCommand(inputBuffer);
+				inChar = inputBuffer;
+			}
+			else inChar++;
 		}
-		else if(strncmp(command, "send", 4) == 0) {
-			scanf("%s", attribute);
-			nrfStopListening();
-			
-			printf("\n\nVerzonden: %s\nAck ontvangen: %s\n", attribute, nrfWrite((uint8_t *) attribute, strlen(attribute))>0?"JA":"NEE");
-			_delay_ms(5);
-			nrfStartListening();
-		}
-		else if(strncmp(command, "wpip", 4) == 0) {
-			scanf("%s", attribute);
-			nrfOpenWritingPipe((uint8_t *)attribute);
-			printf("\n\nWriting pipe %s geopend.\n", attribute);
-		}
-		else if(strncmp(command, "rpip", 4) == 0) {
-			int index = 0;
-			scanf("%5s %d", attribute, &index);
-			nrfStopListening();
-			nrfOpenReadingPipe(index, (uint8_t *) attribute);
-			nrfStartListening();
-			printf("\n\nReading pipe %d, %s geopend.\n", index, attribute);
-			if(index > 1)  printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", attribute[4]);
-		}
-		else printf("\n\nDat commando ken ik niet.\nBackspace werkt niet trouwens, omdat ik te lui was om dat te laten werken. Alles in 1 keer goed typen dus.\n");
-	
     }
 }
 
 
+void runCommand(char *command) {
+	void (*comFunc[4])(char*) = {
+		wpip, rpip, send, help
+	};
+	char commands[4][4] = {
+		"wpip", "rpip", "send", "help"
+	};
+
+	if(command[4] != ' ' || strlen(command) < 6) {
+		printf("fuck off commando's zijn 4 karakters lang\n");
+		return;
+	}
+
+	for(uint8_t i = 0; i < 4; i++) {
+		if(strncmp(commands[i], command, 4) == 0) {
+			comFunc[i](command + 5);
+			return;
+		}
+	}
+	printf("Die ken ik niet :(\n");
+
+}
+
+void wpip(char *command) {
+	nrfOpenWritingPipe((uint8_t *)command);
+	printf("\n\nWriting pipe %s geopend.\n", command);
+}
+
+void rpip(char *command) {
+	char *token = strtok(command, " ");
+	char pipeName[6];
+	uint8_t pipeIndex = 0; 
+
+	if(token != NULL) strncpy(pipeName, token, 6);
+	else {
+		printf("No pipename provided\n");
+		return;
+	}
+
+	token = strtok(token, NULL);
+	if(token != NULL) pipeIndex = atoi(token);
+	
+	nrfStopListening();
+	nrfOpenReadingPipe(pipeIndex, (uint8_t *) "FRANS");
+	nrfStartListening();
+	printf("\n\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
+	if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", pipeName[3]);
+}
+
+void send(char *command) {
+	nrfStopListening();
+	uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
+	printf("\n\nVerzonden: %s\nAck ontvangen: %s\n", command, response > 0 ? "JA":"NEE");
+	_delay_ms(5);
+	nrfStartListening();
+}
+
+void help(char *command) {
+
+}
+
 ISR(PORTF_INT0_vect) {
+	PORTC.OUTTGL = PIN0_bm;
 	uint8_t	packet_length;
 	if(nrfAvailable(NULL)) {						// is er iets nuttigs binnengekomen??
 		packet_length = nrfGetDynamicPayloadSize();	// kijk hoe groot het is
-		nrfRead(received_packet, packet_length);	// lees wat er is gestuurt
+		nrfRead(received_packet, packet_length);	// lees wat er is gestuurd
 		received_packet[packet_length] = '\0';		// zet laatste karakter van de array naar null
 		
 		printf("Ontvangen: %s\n", received_packet);
