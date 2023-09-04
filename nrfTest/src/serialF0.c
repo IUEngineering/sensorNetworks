@@ -222,7 +222,7 @@ static int8_t calc_bscale(uint32_t f_cpu, uint32_t baud, uint8_t clk2x)
   }
 
   return bscale;
-}	// calc_bscale
+}    // calc_bscale
 
 /*! \brief   Initializes the serial stream for the HvA-Xmegaboard
  *          
@@ -242,23 +242,23 @@ void init_stream(uint32_t f_cpu)
   bscale = calc_bscale(f_cpu, BAUD_115K2, UART_NO_DOUBLE_CLK);
   bsel   = calc_bsel(f_cpu, BAUD_115K2, bscale, UART_NO_DOUBLE_CLK);
 
-	PORTF.PIN2CTRL = PORT_OPC_PULLUP_gc;  // pullup on rx
-	PORTF.OUTSET = PIN3_bm;               // tx high
-	PORTF.DIRSET = PIN3_bm;
-	PORTF.DIRCLR = PIN2_bm;
+    PORTF.PIN2CTRL = PORT_OPC_PULLUP_gc;  // pullup on rx
+    PORTF.OUTSET = PIN3_bm;               // tx high
+    PORTF.DIRSET = PIN3_bm;
+    PORTF.DIRCLR = PIN2_bm;
 
-	USARTF0.BAUDCTRLA = (bsel & USART_BSEL_gm);
-	USARTF0.BAUDCTRLB = ((bscale << USART_BSCALE_gp) & USART_BSCALE_gm) |
+    USARTF0.BAUDCTRLA = (bsel & USART_BSEL_gm);
+    USARTF0.BAUDCTRLB = ((bscale << USART_BSCALE_gp) & USART_BSCALE_gm) |
                       ((bsel >> 8) & ~USART_BSCALE_gm);
-	
- 	USARTF0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+    
+     USARTF0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 
-	USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | 
+    USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | 
                   USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_OFF_gc;
-	
-	PMIC.CTRL |= PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
+    
+    PMIC.CTRL |= PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
   stdout = stdin = &uartF0_stdinout;
-	
+    
 } // init_stream
 
 
@@ -274,13 +274,13 @@ static volatile uint8_t rx_f0_wridx, rx_f0_rdidx, rx_f0_buf[RXBUF_DEPTH_F0];
  *  \return non-zero if there is data else zero
  */
 static uint8_t CanRead_F0(void) {
-	uint8_t wridx = rx_f0_wridx, rdidx = rx_f0_rdidx;
-	
-	if(wridx >= rdidx)
-		return wridx - rdidx;
-	else
-		return wridx - rdidx + RXBUF_DEPTH_F0;
-	
+    uint8_t wridx = rx_f0_wridx, rdidx = rx_f0_rdidx;
+    
+    if(wridx >= rdidx)
+        return wridx - rdidx;
+    else
+        return wridx - rdidx + RXBUF_DEPTH_F0;
+    
 } // CanRead_F0 
 
 
@@ -290,20 +290,20 @@ static uint8_t CanRead_F0(void) {
  *  \return The received byte 
  */
 static uint8_t ReadByte_F0(void) {
-	uint8_t res, curSlot, nextSlot;
-	
-	curSlot = rx_f0_rdidx;
-	// Busy-wait for a byte to be available. Should not be necessary if the caller calls CanRead_xxx() first 
-	while(!CanRead_F0()) ;
-	
-	res = rx_f0_buf[curSlot];
+    uint8_t res, curSlot, nextSlot;
+    
+    curSlot = rx_f0_rdidx;
+    // Busy-wait for a byte to be available. Should not be necessary if the caller calls CanRead_xxx() first 
+    while(!CanRead_F0()) ;
+    
+    res = rx_f0_buf[curSlot];
 
-	nextSlot = curSlot + 1;
-	if(nextSlot >= RXBUF_DEPTH_F0)
-		nextSlot = 0;
-	rx_f0_rdidx = nextSlot;
-	
-	return res;
+    nextSlot = curSlot + 1;
+    if(nextSlot >= RXBUF_DEPTH_F0)
+        nextSlot = 0;
+    rx_f0_rdidx = nextSlot;
+    
+    return res;
 } // ReadByte_F0 
 
 
@@ -312,15 +312,15 @@ static uint8_t ReadByte_F0(void) {
  *  \return non-zero if there is space else zero
  */
 static uint8_t CanWrite_F0(void) {
-	uint8_t wridx1 = tx_f0_wridx + 1, rdidx = tx_f0_rdidx;
-	
-	if(wridx1 >= TXBUF_DEPTH_F0)
-		wridx1 -= TXBUF_DEPTH_F0;
-	if(rdidx >= wridx1)
-		return rdidx - wridx1;
-	else
-		return rdidx - wridx1 + TXBUF_DEPTH_F0;
-	
+    uint8_t wridx1 = tx_f0_wridx + 1, rdidx = tx_f0_rdidx;
+    
+    if(wridx1 >= TXBUF_DEPTH_F0)
+        wridx1 -= TXBUF_DEPTH_F0;
+    if(rdidx >= wridx1)
+        return rdidx - wridx1;
+    else
+        return rdidx - wridx1 + TXBUF_DEPTH_F0;
+    
 } // CanWrite_F0 
 
 
@@ -332,24 +332,24 @@ static uint8_t CanWrite_F0(void) {
  *  \return void
  */
 static void WriteByte_F0(uint8_t data) {
-	uint8_t curSlot, nextSlot, savePMIC;
-	
-	// Busy-wait for a byte to be available. Should not be necessary if the caller calls CanWrite_xxx() first 
-	while(!CanWrite_F0())
-		USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_LO_gc;
-	
-	curSlot = tx_f0_wridx;
-	tx_f0_buf[curSlot] = data;
-	
-	nextSlot = curSlot + 1;
-	if(nextSlot >= TXBUF_DEPTH_F0)
-		nextSlot = 0;
+    uint8_t curSlot, nextSlot, savePMIC;
+    
+    // Busy-wait for a byte to be available. Should not be necessary if the caller calls CanWrite_xxx() first 
+    while(!CanWrite_F0())
+        USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_LO_gc;
+    
+    curSlot = tx_f0_wridx;
+    tx_f0_buf[curSlot] = data;
+    
+    nextSlot = curSlot + 1;
+    if(nextSlot >= TXBUF_DEPTH_F0)
+        nextSlot = 0;
 
-	savePMIC = PMIC.CTRL;
-	PMIC.CTRL = savePMIC & ~PMIC_LOLVLEN_bm;
-	tx_f0_wridx = nextSlot;
-	USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_LO_gc;
-	PMIC.CTRL = savePMIC;
+    savePMIC = PMIC.CTRL;
+    PMIC.CTRL = savePMIC & ~PMIC_LOLVLEN_bm;
+    tx_f0_wridx = nextSlot;
+    USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_LO_gc;
+    PMIC.CTRL = savePMIC;
 
 } // WriteByte_F0 
 
@@ -357,19 +357,19 @@ static void WriteByte_F0(uint8_t data) {
  *          It puts the received byte in the RX buffer
  */
 ISR(USARTF0_RXC_vect) {
-	
-	uint8_t curSlot, nextSlot;
-	
-	curSlot = rx_f0_wridx;
-	rx_f0_buf[curSlot] = USARTF0.DATA;
-	
-	nextSlot = curSlot + 1;
-	if(nextSlot >= RXBUF_DEPTH_F0)
-	nextSlot = 0;
-	
-	if(nextSlot != rx_f0_rdidx)
-	rx_f0_wridx = nextSlot;
-	
+    
+    uint8_t curSlot, nextSlot;
+    
+    curSlot = rx_f0_wridx;
+    rx_f0_buf[curSlot] = USARTF0.DATA;
+    
+    nextSlot = curSlot + 1;
+    if(nextSlot >= RXBUF_DEPTH_F0)
+    nextSlot = 0;
+    
+    if(nextSlot != rx_f0_rdidx)
+    rx_f0_wridx = nextSlot;
+    
 } // ISR(USARTF0_RXC_vect)
 
 
@@ -377,22 +377,22 @@ ISR(USARTF0_RXC_vect) {
  *          If there is a byte to send in the TX buffer, it will be send
  */
 ISR(USARTF0_DRE_vect) {
-	
-	uint8_t curSlot, nextSlot, lastSlot;
-	
-	nextSlot = curSlot = tx_f0_rdidx;
-	lastSlot = tx_f0_wridx;
-	
-	if(curSlot != lastSlot) {
-		USARTF0.DATA = tx_f0_buf[curSlot];
-		nextSlot = curSlot + 1;
-		if(nextSlot >= TXBUF_DEPTH_F0)
-		nextSlot = 0;
-	}
-	if(nextSlot == lastSlot)
-	USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_OFF_gc;
-	
-	tx_f0_rdidx = nextSlot;
-	
+    
+    uint8_t curSlot, nextSlot, lastSlot;
+    
+    nextSlot = curSlot = tx_f0_rdidx;
+    lastSlot = tx_f0_wridx;
+    
+    if(curSlot != lastSlot) {
+        USARTF0.DATA = tx_f0_buf[curSlot];
+        nextSlot = curSlot + 1;
+        if(nextSlot >= TXBUF_DEPTH_F0)
+        nextSlot = 0;
+    }
+    if(nextSlot == lastSlot)
+    USARTF0.CTRLA = USART_RXCINTLVL_MED_gc | USART_TXCINTLVL_OFF_gc | USART_DREINTLVL_OFF_gc;
+    
+    tx_f0_rdidx = nextSlot;
+    
 } // ISR(USARTF0_DRE_vect) 
 //@endcond
