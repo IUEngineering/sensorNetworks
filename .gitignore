@@ -26,3 +26,8 @@
 *.svn
 *.synctex.gz
 *.toc
+
+# Ignore C compile bs
+*.elf
+*.hex
+*.o
