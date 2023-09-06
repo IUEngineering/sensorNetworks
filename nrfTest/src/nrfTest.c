@@ -78,8 +78,7 @@ int main(void) {
     sei();
     clear_screen();
     
-    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp help voor een lijst met commando's.");
-    printf("\nTyp een channel en druk op enter om te beginnen.\n\nBELANGRIJK: Ga in tera term naar setup -> terminal en klik op \"local echo\".\nZo kan je zien wat je typt. Je kan dit opslaan door naar setup -> save settings te gaan en daar op \"save\" te drukken.\n\n");
+    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp help voor een lijst met commando's.\n");
     uint16_t channel = 125;
     scanf("%d", &channel);
     nrfInit(channel);
@@ -138,18 +137,22 @@ void wpip(char *command) {
 }
 
 void rpip(char *command) {
-    char *token = strtok(command, " \n");
     char pipeName[6];
-    uint8_t pipeIndex = 0; 
+    uint8_t pipeIndex = 0;
+    char *spaceChar = strchr(command, ' ');
+    if(spaceChar == NULL) spaceChar = strchr(command, '\0');
 
-    if(token != NULL) strncpy(pipeName, token, 6);
+    if(spaceChar != NULL || spaceChar - command > 5) {
+        strncpy(pipeName, command, spaceChar - command);
+        pipeName[spaceChar - command] = '\0';
+    }
     else {
         printf("No pipename provided\n");
         return;
     }
 
-    token = strtok(token, NULL);
-    if(token != NULL) pipeIndex = atoi(token);
+    spaceChar = strchr(command, ' ');
+    if(spaceChar != NULL && spaceChar + 1 != NULL) pipeIndex = atoi(spaceChar + 1);
      
     nrfStopListening();
     nrfOpenReadingPipe(pipeIndex, (uint8_t *) pipeName);
