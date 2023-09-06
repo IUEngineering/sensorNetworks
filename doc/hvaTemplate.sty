@@ -73,27 +73,19 @@
 \definecolor{string}{RGB}{204,102,13}
 
 
-
-
-
 % c
-%\lstset{
-%	language		= C,
-%	numbers 		= left,
-%	numberstyle		= \small,
-%	basicstyle   	= \footnotesize\ttfamily,
-%	showstringspaces= false,
-%	commentstyle 	= \color{string},
-%	keywordstyle	= \color{string},
-%	stringstyle  	= \color{string},
-%	firstnumber		= \lst@firstline
-%}
 \lstdefinestyle{c}{
-	language     		= C,
-	keywordstyle		= \color{keyword},
-	commentstyle 		= \color{comment},
-	stringstyle			= \color{string},
-	belowcaptionskip	= \baselineskip,
+	language		= C,
+	numbers 		= left,
+	numberstyle		= \small,
+	basicstyle   	= \footnotesize\ttfamily,
+	showstringspaces= false,
+    otherkeywords={define,include,\# },
+	commentstyle 	= \color{comment},
+	keywordstyle	= \color{keyword},
+	stringstyle  	= \color{string},
+	firstnumber		= \lst@firstline,
+    belowcaptionskip	= \baselineskip
 }
 
 
