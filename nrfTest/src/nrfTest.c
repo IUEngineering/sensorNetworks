@@ -69,7 +69,7 @@ void nrfInit(uint16_t channel) {
 
 
 int main(void) {
-    PORTC.DIRSET = PIN0_bm;
+    PORTF.DIRSET = PIN0_bm;
 
     init_clock();
     init_stream(F_CPU);
@@ -150,13 +150,14 @@ void rpip(char *command) {
 
     token = strtok(token, NULL);
     if(token != NULL) pipeIndex = atoi(token);
-    
+     
     nrfStopListening();
-    nrfOpenReadingPipe(pipeIndex, (uint8_t *) "FRANS");
+    nrfOpenReadingPipe(pipeIndex, (uint8_t *) pipeName);
     nrfStartListening();
     printf("\n\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
     if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", pipeName[3]);
 }
+
 
 void send(char *command) {
     nrfStopListening();
@@ -173,7 +174,7 @@ void help(char *command) {
 }
 
 ISR(PORTF_INT0_vect) {
-    PORTC.OUTTGL = PIN0_bm;
+    PORTF.OUTTGL = PIN0_bm;
     uint8_t    packet_length;
     if(nrfAvailable(NULL)) {                        // is er iets nuttigs binnengekomen??
         packet_length = nrfGetDynamicPayloadSize();    // kijk hoe groot het is
