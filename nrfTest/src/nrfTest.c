@@ -23,6 +23,7 @@
  */ 
 
 #define F_CPU    32000000
+#define COMMANDS 5
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -33,12 +34,12 @@
 #include "nrf24spiXM2.h"
 #include "clock.h"
 
-char received_packet[NRF_MAX_PAYLOAD_SIZE+1];
 void runCommand(char *command);
 void wpip(char *command);
 void rpip(char *command);
 void send(char *command);
 void help(char *command);
+void chan(char *command);
 
 void nrfInit(uint16_t channel) {
     nrfspiInit();
@@ -62,7 +63,6 @@ void nrfInit(uint16_t channel) {
     PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
     
     nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
-    
     nrfPowerUp();
     nrfStartListening();
 }
@@ -79,7 +79,7 @@ int main(void) {
     clear_screen();
     
     printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp help voor een lijst met commando's.\n");
-    uint16_t channel = 125;
+    uint16_t channel = 54;
     scanf("%d", &channel);
     nrfInit(channel);
     printf("Gestart met channel %d. Geen idee of dat legaal is, maar dat is jouw probleem.\n\n", channel);
@@ -114,14 +114,14 @@ int main(void) {
 
 
 void runCommand(char *command) {
-    void (*comFunc[4])(char*) = {
-        wpip, rpip, send, help
+    void (*comFunc[COMMANDS])(char*) = {
+        wpip, rpip, send, help, chan
     };
-    char commands[4][4] = {
-        "wpip", "rpip", "send", "help"
+    char commands[COMMANDS][4] = {
+        "wpip", "rpip", "send", "help", "chan"
     };
 
-    for(uint8_t i = 0; i < 4; i++) {
+    for(uint8_t i = 0; i < COMMANDS; i++) {
         if(strncmp(commands[i], command, 4) == 0) {
             comFunc[i](command + 5);
             return;
@@ -176,14 +176,25 @@ void help(char *command) {
 	printf("\n*	rpip <index> <pipenaam>\n\tverander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\nHet programma print continu uit wat het ontvangt.\n");
 }
 
+void chan (char *command) {
+    uint8_t channel = atoi(command);
+    nrfStopListening();
+    nrfSetChannel(channel);
+    nrfStartListening();
+
+    printf("Geswitched naar channel %d\n", channel);
+}
+
 ISR(PORTF_INT0_vect) {
+    char receivedPacket[NRF_MAX_PAYLOAD_SIZE+1];
+
     PORTF.OUTTGL = PIN0_bm;
-    uint8_t    packet_length;
+    uint8_t packetLength;
     if(nrfAvailable(NULL)) {                        // is er iets nuttigs binnengekomen??
-        packet_length = nrfGetDynamicPayloadSize();    // kijk hoe groot het is
-        nrfRead(received_packet, packet_length);    // lees wat er is gestuurd
-        received_packet[packet_length] = '\0';        // zet laatste karakter van de array naar null
+        packetLength = nrfGetDynamicPayloadSize();    // kijk hoe groot het is
+        nrfRead(receivedPacket, packetLength);    // lees wat er is gestuurd
+        receivedPacket[packetLength] = '\0';        // zet laatste karakter van de array naar null
         
-        printf("Ontvangen: %s\n", received_packet);
+        printf("Ontvangen: %s\n", receivedPacket);
     }    
 }
