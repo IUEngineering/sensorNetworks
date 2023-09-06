@@ -92,6 +92,14 @@ int main(void) {
         char newInputChar = uartF0_getc();
         if(newInputChar != '\0') {
             if(newInputChar == '\r') newInputChar = '\n';
+            if(newInputChar == '\b') {
+                if(inChar != inputBuffer) {
+                    inChar--;
+                    printf("\b \b");
+                }
+                continue;
+            }
+
             *inChar = newInputChar;
             uartF0_putc(newInputChar);
             if(newInputChar == '\n') {
@@ -114,11 +122,6 @@ void runCommand(char *command) {
         "wpip", "rpip", "send", "help"
     };
 
-    if(command[4] != ' ' || strlen(command) < 6) {
-        printf("fuck off commando's zijn 4 karakters lang\n");
-        return;
-    }
-
     for(uint8_t i = 0; i < 4; i++) {
         if(strncmp(commands[i], command, 4) == 0) {
             comFunc[i](command + 5);
@@ -135,7 +138,7 @@ void wpip(char *command) {
 }
 
 void rpip(char *command) {
-    char *token = strtok(command, " ");
+    char *token = strtok(command, " \n");
     char pipeName[6];
     uint8_t pipeIndex = 0; 
 
@@ -157,6 +160,7 @@ void rpip(char *command) {
 
 void send(char *command) {
     nrfStopListening();
+    _delay_us(130);
     uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
     printf("\n\nVerzonden: %s\nAck ontvangen: %s\n", command, response > 0 ? "JA":"NEE");
     _delay_ms(5);
@@ -164,7 +168,8 @@ void send(char *command) {
 }
 
 void help(char *command) {
-
+    printf("\n\nEr zijn 4 commandos:\n*	help\n\tprint deze lijst\n\n*	send <waarde>\n\tverstuurt wat je invoert op waarde naar de geselecteerde pipe\n\n*	wpip <pipenaam>\n\tverander de writing pipe\n");
+	printf("\n*	rpip <index> <pipenaam>\n\tverander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\nHet programma print continu uit wat het ontvangt.\n");
 }
 
 ISR(PORTF_INT0_vect) {
