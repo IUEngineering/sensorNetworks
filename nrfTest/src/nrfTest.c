@@ -63,9 +63,9 @@ void nrfInit(uint16_t channel) {
     nrfFlushTx();
     
     // Initialize the receiving interrupt
-    PORTE.INT0MASK |= PIN6_bm;
-    PORTE.PIN6CTRL = PORT_ISC_FALLING_gc;
-    PORTE.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+    PORTF.INT0MASK |= PIN6_bm;
+    PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
+    PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
     
     nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
     nrfPowerUp();
@@ -245,7 +245,7 @@ void chan(char *command) {
     printf("Geswitched naar channel %d\n", channel);
 }
 
-ISR(PORTE_INT0_vect) {
+ISR(PORTF_INT0_vect) {
     PORTF.OUTTGL = PIN0_bm;
     uint8_t packetLength;
     // Did I receive something actually valuable? 
@@ -256,5 +256,4 @@ ISR(PORTE_INT0_vect) {
         nrfRead(receivedPacket, packetLength);
         receivedPacket[packetLength] = '\0';
     }    
-    sprintf(receivedPacket, "Fuck off lmao dit is een bericht");
 }
