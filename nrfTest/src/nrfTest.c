@@ -95,7 +95,7 @@ int main(void) {
     char inputBuffer[256];
 
     // Make a char pointer to insert the next typed character into the buffer.
-    char *inChar = inputBuffer;
+    char *bufferPtr = inputBuffer;
 
     while (1) {
 
@@ -105,18 +105,18 @@ int main(void) {
             PORTF.OUTTGL = PIN1_bm;
 
             // Handle the user typing while something has been received.
-            if(inChar != inputBuffer) {
+            if(bufferPtr != inputBuffer) {
                 printf("\rReceived: %s", receivedPacket);
 
                 // Calculate how many characters of the user written command are left after printing the received packet.
-                int16_t trailingCharacters = (inChar - inputBuffer) - strlen(receivedPacket) - 10;
+                int16_t trailingCharacters = (bufferPtr - inputBuffer) - strlen(receivedPacket) - 10;
 
                 // Print that many spaces
                 for(int16_t i = 0; i < trailingCharacters; i++)
                     printf(" ");
 
                 // Print the user inputted buffer (make sure there is a terminating \0 character so printf stops at the right place).
-                *inChar = '\0';
+                *bufferPtr = '\0';
                 printf("\n%s", inputBuffer);
             }
             else printf("Receive: %s\n", receivedPacket);
@@ -132,8 +132,8 @@ int main(void) {
         if(newInputChar != '\0') {
             // Backspace support :)
             if(newInputChar == '\b') {
-                if(inChar != inputBuffer) {
-                    inChar--;
+                if(bufferPtr != inputBuffer) {
+                    bufferPtr--;
                     // Go back one character, replace the next character with a space, and then go back one character again.
                     printf("\b \b");
                 }
@@ -141,16 +141,20 @@ int main(void) {
 
             // Things like minicom and teraterm send return characters as \r. Very annoying.
             else if(newInputChar == '\r') {
-                *inChar = '\0';
+                *bufferPtr = '\0';
                 printf("\n");
-                runCommand(inputBuffer);
-                inChar = inputBuffer;
+
+                if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
+                else send(inputBuffer); 
+
+                // Reset the bufferPtr to the start of the buffer again.
+                bufferPtr = inputBuffer;
             }
 
             // Check if it's a printable character.
             else if(newInputChar >= ' ' && newInputChar <= '~') {
-                *inChar = newInputChar;
-                inChar++;
+                *bufferPtr = newInputChar;
+                bufferPtr++;
 
                 // Provide an echo of what the user is typing.
                 // Otherwise the user's input would be invisible to the user.
