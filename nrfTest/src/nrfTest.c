@@ -35,6 +35,10 @@
 #include "nrf24spiXM2.h"
 #include "clock.h"
 
+// Define the received packet globally so that the received text can be printed
+// without interrupting user's the current text input.
+char receivedPacket[NRF_MAX_PAYLOAD_SIZE+1] = "\0";
+
 void runCommand(char *command);
 void wpip(char *command);
 void rpip(char *command);
@@ -58,10 +62,10 @@ void nrfInit(uint16_t channel) {
     nrfFlushRx();
     nrfFlushTx();
     
-    //initialiseert de interrupt die runt wanneer er een signaal ontvangen wordt
-    PORTF.INT0MASK |= PIN6_bm;
-    PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
-    PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+    // Initialize the receiving interrupt
+    PORTE.INT0MASK |= PIN6_bm;
+    PORTE.PIN6CTRL = PORT_ISC_FALLING_gc;
+    PORTE.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
     
     nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
     nrfPowerUp();
@@ -70,7 +74,7 @@ void nrfInit(uint16_t channel) {
 
 
 int main(void) {
-    PORTF.DIRSET = PIN0_bm;
+    PORTF.DIRSET = PIN0_bm | PIN1_bm;
 
     init_clock();
     init_stream(F_CPU);
@@ -94,10 +98,38 @@ int main(void) {
     char *inChar = inputBuffer;
 
     while (1) {
+
+        // When something was received:
+        if(receivedPacket[0] != '\0') {
+
+            PORTF.OUTTGL = PIN1_bm;
+
+            // Handle the user typing while something has been received.
+            if(inChar != inputBuffer) {
+                printf("\rReceived: %s", receivedPacket);
+
+                // Calculate how many characters of the user written command are left after printing the received packet.
+                int16_t trailingCharacters = (inChar - inputBuffer) - strlen(receivedPacket) - 10;
+
+                // Print that many spaces
+                for(int16_t i = 0; i < trailingCharacters; i++)
+                    printf(" ");
+
+                // Print the user inputted buffer (make sure there is a terminating \0 character so printf stops at the right place).
+                *inChar = '\0';
+                printf("\n%s", inputBuffer);
+            }
+            else printf("Receive: %s\n", receivedPacket);
+
+            // Prevent the packet from being printed multiple times.
+            receivedPacket[0] = 0;
+        }
+
         // Get the character from the user.
         char newInputChar = uartF0_getc();
-        if(newInputChar != '\0') {
 
+
+        if(newInputChar != '\0') {
             // Backspace support :)
             if(newInputChar == '\b') {
                 if(inChar != inputBuffer) {
@@ -105,20 +137,21 @@ int main(void) {
                     // Go back one character, replace the next character with a space, and then go back one character again.
                     printf("\b \b");
                 }
-                continue;
             }
 
-            *inChar = newInputChar;
-
-            if(newInputChar == '\r') {
-                // Things like minicom and teraterm send return characters as \r. Very annoying.
+            // Things like minicom and teraterm send return characters as \r. Very annoying.
+            else if(newInputChar == '\r') {
                 *inChar = '\0';
                 printf("\n");
                 runCommand(inputBuffer);
                 inChar = inputBuffer;
             }
-            else {
+
+            // Check if it's a printable character.
+            else if(newInputChar >= ' ' && newInputChar <= '~') {
+                *inChar = newInputChar;
                 inChar++;
+
                 // Provide an echo of what the user is typing.
                 // Otherwise the user's input would be invisible to the user.
                 uartF0_putc(newInputChar);
@@ -212,9 +245,7 @@ void chan(char *command) {
     printf("Geswitched naar channel %d\n", channel);
 }
 
-ISR(PORTF_INT0_vect) {
-    char receivedPacket[NRF_MAX_PAYLOAD_SIZE+1];
-
+ISR(PORTE_INT0_vect) {
     PORTF.OUTTGL = PIN0_bm;
     uint8_t packetLength;
     // Did I receive something actually valuable? 
@@ -224,8 +255,6 @@ ISR(PORTF_INT0_vect) {
         // Put received data into a buffer.
         nrfRead(receivedPacket, packetLength);
         receivedPacket[packetLength] = '\0';
-
-        // Relay it to the user.
-        printf("Ontvangen: %s\n", receivedPacket);
     }    
+    sprintf(receivedPacket, "Fuck off lmao dit is een bericht");
 }
