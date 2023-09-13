@@ -1,4 +1,5 @@
 #include <string.h>
+#include <avr/interrupt.h>
 
 #include "iso.h"
 #include "nrf24L01.h"
@@ -10,7 +11,37 @@
 
 static uint8_t myId = 0;
 
-uint8_t initId(void) {
+// receivedChat only gets updated when the program receives a chat, not some other message.
+char receivedChat[NRF_MAX_PAYLOAD_SIZE + 1] = "\0";
+
+
+void isoInitNrf(void) {
+    nrfspiInit();
+    nrfBegin();
+    
+    nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_8RETRANSMIT_gc);
+    nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
+    nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
+    nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
+    nrfSetChannel(STANDARD_CHANNEL);
+    nrfSetAutoAck(1);
+    nrfEnableDynamicPayloads();
+    
+    nrfClearInterruptBits();
+    nrfFlushRx();
+    nrfFlushTx();
+    
+    // Initialize the receiving interrupt
+    PORTF.INT0MASK |= PIN6_bm;
+    PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
+    PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+    
+    nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
+    nrfPowerUp();
+    nrfStartListening();
+}
+
+uint8_t isoInitId(void) {
     PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
     PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
     PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
@@ -20,15 +51,43 @@ uint8_t initId(void) {
     myId = ~PORTD.IN & 0b1111;
     myId |= TEAM_ID;
 
+    printf("My ID is 0x%02x\n", myId);
+
     return myId;
 }
 
+char *isoGetReceivedChat() {
+    return receivedChat;
+}
 
-void chatSend(char *command) {
+
+void isoSendChat(char *command) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
     uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
-    printf("\nID:%2x Verzonden: %s\nAck ontvangen: %s\n", myId, command, response > 0 ? "JA":"NEE");
+    printf("Verzonden%s: %s\n\n", response > 0 ? " (ACK)" : "", command);
     nrfStartListening();
+}
+
+
+void interpretMessage(char *message) {
+    strcpy(receivedChat, message);
+}
+
+
+ISR(PORTF_INT0_vect) {
+    PORTF.OUTTGL = PIN0_bm;
+    uint8_t packetLength;
+    // Did I receive something actually valuable? 
+    if(nrfAvailable(NULL)) {
+        static char receivedPacket[NRF_MAX_PAYLOAD_SIZE + 1];
+        packetLength = nrfGetDynamicPayloadSize();
+
+        // Put received data into a buffer.
+        nrfRead(receivedPacket, packetLength);
+        receivedPacket[packetLength] = '\0';
+
+        interpretMessage(receivedPacket);
+    }    
 }

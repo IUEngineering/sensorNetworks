@@ -11,7 +11,6 @@
 // without interrupting user's the current text input.
 extern char receivedPacket[];
 
-void nrfInit(uint16_t channel);
 void interpretNewChar(char newChar);
 uint8_t getUserInputLength();
 char *getCurrentInputBuffer();

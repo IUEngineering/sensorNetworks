@@ -3,9 +3,12 @@
 
 #include <avr/io.h>
 
-uint8_t initId(void);
-uint8_t isoInterpret(char *message);
-void chatSend(char *message);
+#define STANDARD_CHANNEL 54
+
+void isoInitNrf(void);
+uint8_t isoInitId(void);
+void isoSendChat(char *message);
+char *isoGetReceivedChat();
 
 
 #endif

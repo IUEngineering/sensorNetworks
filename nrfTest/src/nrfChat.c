@@ -7,6 +7,7 @@
 #include "serialF0.h"
 
 #define COMMANDS 5
+#define INPUT_BUFFER_LENGTH 256
 
 void wpip(char *command);
 void rpip(char *command);
@@ -16,44 +17,15 @@ void chan(char *command);
 void runCommand(char *command);
 
 
-// Define the received packet globally so that the received text can be printed
-// without interrupting user's the current text input.
-char receivedPacket[NRF_MAX_PAYLOAD_SIZE+1] = "\0";
-
-void nrfInit(uint16_t channel) {
-    nrfspiInit();
-    nrfBegin();
-    
-    nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_8RETRANSMIT_gc);
-    nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
-    nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
-    nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-    nrfSetChannel(channel);
-    nrfSetAutoAck(1);
-    nrfEnableDynamicPayloads();
-    
-    nrfClearInterruptBits();
-    nrfFlushRx();
-    nrfFlushTx();
-    
-    // Initialize the receiving interrupt
-    PORTF.INT0MASK |= PIN6_bm;
-    PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
-    PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-    
-    nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
-    nrfPowerUp();
-    nrfStartListening();
-}
-
 // Make a buffer for the command.
 // Not going to worry about buffer overflow, just don't input too much and you'll be fine.
-static char inputBuffer[256];
+static char inputBuffer[INPUT_BUFFER_LENGTH];
 
 // Make a char pointer to insert the next typed character into the buffer.
 static char *bufferPtr = inputBuffer;
 
 void interpretNewChar(char newChar) {
+    
     // Backspace support :)
     if(newChar == '\b') {
         if(bufferPtr != inputBuffer) {
@@ -69,14 +41,14 @@ void interpretNewChar(char newChar) {
         printf("\n");
 
         if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else chatSend(inputBuffer); 
+        else isoSendChat(inputBuffer); 
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
     }
 
     // Check if it's a printable character.
-    else if(newChar >= ' ' && newChar <= '~') {
+    else if(newChar >= ' ' && newChar <= '~' && bufferPtr - inputBuffer < INPUT_BUFFER_LENGTH) {
         *bufferPtr = newChar;
         bufferPtr++;
 
@@ -99,7 +71,7 @@ char *getCurrentInputBuffer() {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        wpip, rpip, chatSend, help, chan
+        wpip, rpip, isoSendChat, help, chan
     };
 
     // Make a corresponding array of 4 letter function names.
@@ -121,7 +93,7 @@ void runCommand(char *command) {
 
 void wpip(char *command) {
     nrfOpenWritingPipe((uint8_t *)command);
-    printf("\n\nWriting pipe %s geopend.\n", command);
+    printf("\nWriting pipe %s geopend.\n\n", command);
 }
 
 void rpip(char *command) {
@@ -139,7 +111,7 @@ void rpip(char *command) {
         pipeName[nameLength] = '\0';
     }
     else {
-        printf("No valid pipename provided\n");
+        printf("\nNo valid pipename provided\n\n");
         return;
     }
 
@@ -151,13 +123,18 @@ void rpip(char *command) {
     nrfStopListening();
     nrfOpenReadingPipe(pipeIndex, (uint8_t *) pipeName);
     nrfStartListening();
-    printf("\n\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
+    printf("\nReading pipe %d, %s geopend.\n\n", pipeIndex, pipeName);
     if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", pipeName[4]);
 }
 
 void help(char *command) {
-    printf("\n\nEr zijn 4 commandos:\n*	help\n\tprint deze lijst\n\n*	send <waarde>\n\tverstuurt wat je invoert op waarde naar de geselecteerde pipe\n\n*	wpip <pipenaam>\n\tverander de writing pipe\n");
-	printf("\n*	rpip <index> <pipenaam>\n\tverander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\nHet programma print continu uit wat het ontvangt.\n\n");
+    printf("\n\nEr zijn 4 commandos:\n\n");
+    printf("*    /help\n\tPrint deze lijst.\n\n");
+    printf("*    /send <waarde>\n\tVerstuurt wat je invoert op waarde naar de geselecteerde pipe.\n\n");
+    printf("*    /wpip <pipenaam>\n\tVerander de writing pipe.\n\n");
+    printf("*    /rpip <index> [pipenaam]\n\tVerander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\n");
+    printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n\n");
+    printf("Het programma print continu uit wat het ontvangt.\n\n");
 }
 
 // Function to change the frequency channel.
@@ -167,20 +144,5 @@ void chan(char *command) {
     nrfSetChannel(channel);
     nrfStartListening();
 
-    printf("Geswitched naar channel %d\n", channel);
-}
-
-
-
-ISR(PORTF_INT0_vect) {
-    PORTF.OUTTGL = PIN0_bm;
-    uint8_t packetLength;
-    // Did I receive something actually valuable? 
-    if(nrfAvailable(NULL)) {
-        packetLength = nrfGetDynamicPayloadSize();
-
-        // Put received data into a buffer.
-        nrfRead(receivedPacket, packetLength);
-        receivedPacket[packetLength] = '\0';
-    }    
+    printf("\nGeswitched naar channel %d\n\n", channel);
 }

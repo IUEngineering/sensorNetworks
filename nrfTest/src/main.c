@@ -41,6 +41,7 @@
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
 
+    isoInitNrf();
     init_clock();
     init_stream(F_CPU);
     
@@ -49,17 +50,18 @@ int main(void) {
     clear_screen();
     
     // Send welcome message
-    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp help voor een lijst met commando's.\n");
+    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp /help voor een lijst met commando's.\n");
+    isoInitId();
+
     for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
     printf("\n\n");
-    nrfInit(54);
 
-    initId();
 
     while (1) {
         
         // When something was received:
-        if(receivedPacket[0] != '\0') {
+        char *receivedPacket = isoGetReceivedChat();
+        if(receivedPacket[0] != 0) {
             uint8_t inputLength = getUserInputLength();
 
             // Handle the user typing while something has been received.
