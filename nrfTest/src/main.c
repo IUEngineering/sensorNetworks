@@ -60,13 +60,14 @@ int main(void) {
     while (1) {
         
         // When something was received:
-        char *receivedPacket = isoGetReceivedChat();
+        uint8_t receivePipe = 0;
+        char *receivedPacket = isoGetReceivedChat(&receivePipe);
         if(receivedPacket[0] != 0) {
             uint8_t inputLength = getUserInputLength();
 
             // Handle the user typing while something has been received.
             if(inputLength > 0) {
-                printf("\rReceived: %s", receivedPacket);
+                printf("\rReceived from pipe %d: %s", receivePipe, receivedPacket);
 
                 // Calculate how many characters of the user written command are left after printing the received packet.
                 int16_t trailingCharacters = inputLength - strlen(receivedPacket) - 10;
@@ -78,7 +79,7 @@ int main(void) {
                 // Print the user inputted buffer (make sure there is a terminating \0 character so printf stops at the right place).
                 printf("\n%s", getCurrentInputBuffer());
             }
-            else printf("Received: %s\n", receivedPacket);
+            else printf("Received from pipe %d: %s\n", receivePipe, receivedPacket);
 
             // Prevent the packet from being printed multiple times.
             receivedPacket[0] = 0;

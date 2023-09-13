@@ -8,7 +8,7 @@
 void isoInitNrf(void);
 uint8_t isoInitId(void);
 void isoSendChat(char *message);
-char *isoGetReceivedChat();
+char *isoGetReceivedChat(uint8_t *pipe);
 
 
 #endif

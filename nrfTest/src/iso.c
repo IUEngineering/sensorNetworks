@@ -13,6 +13,7 @@ static uint8_t myId = 0;
 
 // receivedChat only gets updated when the program receives a chat, not some other message.
 char receivedChat[NRF_MAX_PAYLOAD_SIZE + 1] = "\0";
+uint8_t receivePipe = 69;
 
 
 void isoInitNrf(void) {
@@ -35,9 +36,12 @@ void isoInitNrf(void) {
     PORTF.INT0MASK |= PIN6_bm;
     PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
     PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-    
-    nrfOpenReadingPipe(0, (uint8_t *)"HVA01");
     nrfPowerUp();
+    
+    _delay_ms(1);
+    nrfOpenWritingPipe((uint8_t *) "HVA01");
+    _delay_ms(1);
+    nrfOpenReadingPipe(0, (uint8_t *) "HVA01");
     nrfStartListening();
 }
 
@@ -56,7 +60,8 @@ uint8_t isoInitId(void) {
     return myId;
 }
 
-char *isoGetReceivedChat() {
+char *isoGetReceivedChat(uint8_t *pipe) {
+    *pipe = receivePipe;
     return receivedChat;
 }
 
@@ -85,6 +90,7 @@ ISR(PORTF_INT0_vect) {
         packetLength = nrfGetDynamicPayloadSize();
 
         // Put received data into a buffer.
+        receivePipe = (nrfGetStatus() & NRF_STATUS_RX_P_NO_gm) >> 1;
         nrfRead(receivedPacket, packetLength);
         receivedPacket[packetLength] = '\0';
 

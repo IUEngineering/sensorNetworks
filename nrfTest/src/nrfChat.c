@@ -92,7 +92,7 @@ void runCommand(char *command) {
 }
 
 void wpip(char *command) {
-    nrfOpenWritingPipe((uint8_t *)command);
+    nrfOpenWritingPipe((uint8_t *) command);
     printf("\nWriting pipe %s geopend.\n\n", command);
 }
 
@@ -123,8 +123,9 @@ void rpip(char *command) {
     nrfStopListening();
     nrfOpenReadingPipe(pipeIndex, (uint8_t *) pipeName);
     nrfStartListening();
-    printf("\nReading pipe %d, %s geopend.\n\n", pipeIndex, pipeName);
-    if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", pipeName[4]);
+    printf("\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
+    if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n\n", pipeName[4]);
+    else printf("\n");
 }
 
 void help(char *command) {
