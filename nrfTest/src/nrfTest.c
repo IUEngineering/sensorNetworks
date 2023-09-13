@@ -46,6 +46,7 @@ void send(char *command);
 void help(char *command);
 void chan(char *command);
 
+
 void nrfInit(uint16_t channel) {
     nrfspiInit();
     nrfBegin();
@@ -88,7 +89,7 @@ int main(void) {
     for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
     printf("\n\n");
     nrfInit(54);
-    
+
     
     // Make a buffer for the command.
     // Not going to worry about buffer overflow, just don't input too much and you'll be fine.
@@ -101,8 +102,6 @@ int main(void) {
 
         // When something was received:
         if(receivedPacket[0] != '\0') {
-
-            PORTF.OUTTGL = PIN1_bm;
 
             // Handle the user typing while something has been received.
             if(bufferPtr != inputBuffer) {
@@ -119,7 +118,7 @@ int main(void) {
                 *bufferPtr = '\0';
                 printf("\n%s", inputBuffer);
             }
-            else printf("Receive: %s\n", receivedPacket);
+            else printf("Received: %s\n", receivedPacket);
 
             // Prevent the packet from being printed multiple times.
             receivedPacket[0] = 0;
@@ -127,7 +126,6 @@ int main(void) {
 
         // Get the character from the user.
         char newInputChar = uartF0_getc();
-
 
         if(newInputChar != '\0') {
             // Backspace support :)
@@ -193,6 +191,7 @@ void wpip(char *command) {
     printf("\n\nWriting pipe %s geopend.\n", command);
 }
 
+
 void rpip(char *command) {
     // Pipenames are max 5 characters + 1 null character.
     char pipeName[6];
@@ -214,7 +213,7 @@ void rpip(char *command) {
 
     // Check if there is a second argument (the reading pipe index).
     spaceChar = strchr(command, ' ');
-    if(spaceChar != NULL && spaceChar + 1 != NULL) pipeIndex = atoi(spaceChar + 1);
+    if(spaceChar != NULL && *(spaceChar + 1) != NULL) pipeIndex = atoi(spaceChar + 1);
     
     // Open the pipe
     nrfStopListening();
@@ -248,6 +247,8 @@ void chan(char *command) {
 
     printf("Geswitched naar channel %d\n", channel);
 }
+
+
 
 ISR(PORTF_INT0_vect) {
     PORTF.OUTTGL = PIN0_bm;
