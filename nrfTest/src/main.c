@@ -22,7 +22,7 @@
     Het programma print continu uit wat hij ontvangt.
  */ 
 
-#define F_CPU    32000000
+#define F_CPU 32000000
 
 
 #include <avr/io.h>
@@ -54,6 +54,7 @@ int main(void) {
     printf("\n\n");
     nrfInit(54);
 
+    initId();
 
     while (1) {
         

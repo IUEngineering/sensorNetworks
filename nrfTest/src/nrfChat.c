@@ -1,16 +1,15 @@
+#include <string.h>
+#include <stdlib.h>
+
 #include "nrfChat.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 #define COMMANDS 5
 
 void wpip(char *command);
 void rpip(char *command);
-void send(char *command);
 void help(char *command);
 void chan(char *command);
 
@@ -70,7 +69,7 @@ void interpretNewChar(char newChar) {
         printf("\n");
 
         if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else send(inputBuffer); 
+        else chatSend(inputBuffer); 
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
@@ -100,7 +99,7 @@ char *getCurrentInputBuffer() {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        wpip, rpip, send, help, chan
+        wpip, rpip, chatSend, help, chan
     };
 
     // Make a corresponding array of 4 letter function names.
@@ -154,15 +153,6 @@ void rpip(char *command) {
     nrfStartListening();
     printf("\n\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
     if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n", pipeName[4]);
-}
-
-void send(char *command) {
-    nrfStopListening();
-    // The datasheet says it takes 130 us to switch out of listening mode.
-    _delay_us(130);
-    uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
-    printf("\nVerzonden: %s\nAck ontvangen: %s\n", command, response > 0 ? "JA":"NEE");
-    nrfStartListening();
 }
 
 void help(char *command) {
