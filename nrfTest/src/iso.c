@@ -11,11 +11,12 @@
 
 static uint8_t myId = 0;
 
+//TODO: This should be in the nrfChat lib
 // receivedChat only gets updated when the program receives a chat, not some other message.
 char receivedChat[NRF_MAX_PAYLOAD_SIZE + 1] = "\0";
 uint8_t receivePipe = 69;
 
-
+//TODO: optimize the init
 void isoInitNrf(void) {
     nrfspiInit();
     nrfBegin();
@@ -71,8 +72,9 @@ void isoSendChat(char *command) {
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
     uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
-    printf("Verzonden%s: %s\n\n", response > 0 ? " (ACK)" : "", command);
     nrfStartListening();
+    
+    printf("Verzonden%s: %s\n\n", response > 0 ? " (ACK)" : "", command);
 }
 
 

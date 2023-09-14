@@ -63,6 +63,7 @@ uint8_t getUserInputLength() {
 }
 
 char *getCurrentInputBuffer() {
+    // Make sure there is a terminating \0 character so printf stops at the right place.
     *bufferPtr = '\0';
     return inputBuffer;
 }
@@ -79,7 +80,7 @@ void runCommand(char *command) {
         "wpip", "rpip", "send", "help", "chan"
     };
 
-    // Start comparing the sent command with the command names.
+    
     for(uint8_t i = 0; i < COMMANDS; i++) {
         if(strncmp(commands[i], command, 4) == 0) {
             // Run the command, with the text after it as argument.
@@ -96,7 +97,9 @@ void wpip(char *command) {
     printf("\nWriting pipe %s geopend.\n\n", command);
 }
 
+//TODO: Refactor perhaps
 void rpip(char *command) {
+    //TODO: Look at this code and at what Dolman already checks
     // Pipenames are max 5 characters + 1 null character.
     char pipeName[6];
     uint8_t pipeIndex = 0;

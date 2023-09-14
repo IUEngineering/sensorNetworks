@@ -41,9 +41,9 @@
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
 
-    isoInitNrf();
     init_clock();
     init_stream(F_CPU);
+    isoInitNrf();
     
     PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
@@ -62,10 +62,13 @@ int main(void) {
         // When something was received:
         uint8_t receivePipe = 0;
         char *receivedPacket = isoGetReceivedChat(&receivePipe);
+        
+        //TODO: make a function containing everything in this if statement. Function name printPacket? 
         if(receivedPacket[0] != 0) {
-            uint8_t inputLength = getUserInputLength();
 
             // Handle the user typing while something has been received.
+            uint8_t inputLength = getUserInputLength();
+
             if(inputLength > 0) {
                 printf("\rReceived from pipe %d: %s", receivePipe, receivedPacket);
 
@@ -76,7 +79,7 @@ int main(void) {
                 for(int16_t i = 0; i < trailingCharacters; i++)
                     printf(" ");
 
-                // Print the user inputted buffer (make sure there is a terminating \0 character so printf stops at the right place).
+                // Print the user inputted buffer.
                 printf("\n%s", getCurrentInputBuffer());
             }
             else printf("Received from pipe %d: %s\n", receivePipe, receivedPacket);
