@@ -68,12 +68,6 @@ uint8_t isoInitId(void) {
     return myId;
 }
 
-char *isoGetReceivedChat(uint8_t *pipe) {
-    *pipe = receivePipe;
-    return receivedChat;
-}
-
-
 void isoSendChat(char *command) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
