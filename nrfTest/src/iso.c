@@ -79,16 +79,6 @@ uint8_t isoInitId(void) {
     return myId;
 }
 
-void isoSendChat(char *command) {
-    nrfStopListening();
-    // The datasheet says it takes 130 us to switch out of listening mode.
-    _delay_us(130);
-    uint8_t response = nrfWrite((uint8_t *) command, strlen(command));
-    nrfStartListening();
-    
-    printf("Verzonden%s: %s\n\n", response > 0 ? " (ACK)" : "", command);
-}
-
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     uint8_t sentData[32];
     sentData[0] = myId;
