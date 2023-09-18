@@ -16,9 +16,6 @@
 static uint8_t myId = 0;
 static void sendThePingOfLifes(void);
 
-//TODO: This should be in the nrfChat lib
-// receivedChat only gets updated when the program receives a chat, not some other message.
-char receivedChat[NRF_MAX_PAYLOAD_SIZE + 1] = "\0";
 uint8_t receivePipe = 69;
 
 //TODO: optimize the init
@@ -104,7 +101,12 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
 
 
 void interpretMessage(char *message) {
-    strcpy(receivedChat, message);
+    printf("Received from ID \e[0;35m0x%02x\e[0m for ID \e[0;35m0x%02x\e[0m: ", message[0], message[1]);
+    for(uint8_t i = 2; i < 32 && message[i] != '\0'; i++) {
+        if(message[i] >= ' ' && message[i] <= '~') printf("%c", message[i]);
+        else printf(" \e[0;35m%02x\e[0m ", message[i]);
+    }
+    printf("\n");
 }
 
 void sendThePingOfLifes(void) {
