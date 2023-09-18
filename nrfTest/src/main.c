@@ -64,37 +64,31 @@ int main(void) {
         char *receivedPacket = isoGetReceivedChat(&receivePipe);
         
         //TODO: Make a function containing everything in this if statement. Function name printPacket? 
-        if(receivedPacket[0] != 0) {
+        // if(receivedPacket[0] != 0) {
 
-            // Handle the user typing while something has been received.
-            uint8_t inputLength = getUserInputLength();
+        //     // Handle the user typing while something has been received.
+        //     uint8_t inputLength = getUserInputLength();
 
-            if(inputLength > 0) {
-                printf("\rReceived from pipe %d: %s", receivePipe, receivedPacket);
+        //     if(inputLength > 0) {
+        //         printf("\rReceived from pipe %d: %s", receivePipe, receivedPacket);
 
-                // Calculate how many characters of the user written command are left after printing the received packet.
-                int16_t trailingCharacters = inputLength - strlen(receivedPacket) - 10;
+        //         // Calculate how many characters of the user written command are left after printing the received packet.
+        //         int16_t trailingCharacters = inputLength - strlen(receivedPacket) - 10;
 
-                // Print that many spaces
-                for(int16_t i = 0; i < trailingCharacters; i++)
-                    printf(" ");
+        //         // Print that many spaces
+        //         for(int16_t i = 0; i < trailingCharacters; i++)
+        //             printf(" ");
 
-                // Print the user inputted buffer.
-                printf("\n%s", getCurrentInputBuffer());
-            }
-            else {
-                printf("Received from ID \e[0;35m0x%02x\e[0m for ID \e[0;35m0x%02x\e[0m: ", receivedPacket[0], receivedPacket[1]);
-                for(uint8_t i = 2; i < 32 && receivedPacket[i] != '\0'; i++) {
-                    if(receivedPacket[i] >= ' ' && receivedPacket[i] <= '~') printf("%c", receivedPacket[i]);
-                    else printf(" \e[0;35m%02x\e[0m ", receivedPacket[i]);
-                }
+        //         // Print the user inputted buffer.
+        //         printf("\n%s", getCurrentInputBuffer());
+        //     }
+        //     else {
+                
+        //     }
 
-                printf("\n");
-            }
-
-            // Prevent the packet from being printed multiple times.
-            receivedPacket[0] = 0;
-        }
+        //     // Prevent the packet from being printed multiple times.
+        //     receivedPacket[0] = 0;
+        // }
 
         // Get the character from the user.
         char newInputChar = uartF0_getc();
