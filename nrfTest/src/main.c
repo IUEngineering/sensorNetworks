@@ -40,12 +40,13 @@
 
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
+    PORTC.DIRSET = PIN0_bm;
 
     init_clock();
     init_stream(F_CPU);
     isoInitNrf();
     
-    PMIC.CTRL |= PMIC_LOLVLEN_bm;
+    PMIC.CTRL |= PMIC_MEDLVLEN_bm;
     sei();
     clear_screen();
     

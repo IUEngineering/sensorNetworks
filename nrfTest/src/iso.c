@@ -9,7 +9,12 @@
 // Shift team ID 4 bits to the left so that it can be the first(most segnificant) 4 bits of the ID.
 #define TEAM_ID 0x02 << 4
 
+// Counter every 250 ms formula:
+// TC_CCA = ((t * F_CPU) / (2* N)) - 1 
+#define TC_CCA  15624
+
 static uint8_t myId = 0;
+static void sendThePingOfLifes(void);
 
 //TODO: This should be in the nrfChat lib
 // receivedChat only gets updated when the program receives a chat, not some other message.
@@ -44,6 +49,11 @@ void isoInitNrf(void) {
     _delay_ms(1);
     nrfOpenReadingPipe(0, (uint8_t *) "HVA01");
     nrfStartListening();
+
+    TCC0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
+    TCC0.CTRLA    = TC_CLKSEL_DIV256_gc;
+    TCC0.CCA      = TC_CCA;
+    TCC0.INTCTRLA |= TC_OVFINTLVL_MED_gc;
 }
 
 uint8_t isoInitId(void) {
@@ -56,7 +66,7 @@ uint8_t isoInitId(void) {
     myId = ~PORTD.IN & 0b1111;
     myId |= TEAM_ID;
 
-    printf("My ID is 0x%02x\n", myId);
+    printf("My ID is 0x%02x, CCA is: %d\n", myId, TC_CCA);
 
     return myId;
 }
@@ -86,7 +96,7 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    uint8_t response = nrfWrite((uint8_t *) sentData, len + 2);
+    nrfWrite((uint8_t *) sentData, len + 2);
     nrfStartListening();
 
     //TODO: Add printf for debugging crap.
@@ -95,6 +105,10 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
 
 void interpretMessage(char *message) {
     strcpy(receivedChat, message);
+}
+
+void sendThePingOfLifes(void) {
+    isoSend(0, (uint8_t*) "life", 4);
 }
 
 
@@ -113,4 +127,12 @@ ISR(PORTF_INT0_vect) {
 
         interpretMessage(receivedPacket);
     }    
+}
+
+ISR(TCC0_OVF_vect) {
+    PORTC.OUTTGL = PIN0_bm;
+    
+
+    //IMusch ref
+    sendThePingOfLifes();
 }
