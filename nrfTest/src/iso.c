@@ -77,6 +77,21 @@ void isoSendChat(char *command) {
     printf("Verzonden%s: %s\n\n", response > 0 ? " (ACK)" : "", command);
 }
 
+void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
+    uint8_t sentData[32];
+    sentData[0] = myId;
+    sentData[1] = dest;
+    memcpy(sentData + 2, data, len);
+
+    nrfStopListening();
+    // The datasheet says it takes 130 us to switch out of listening mode.
+    _delay_us(130);
+    uint8_t response = nrfWrite((uint8_t *) sentData, len + 2);
+    nrfStartListening();
+
+    //TODO: Add printf for debugging crap.
+}
+
 
 void interpretMessage(char *message) {
     strcpy(receivedChat, message);
