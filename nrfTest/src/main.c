@@ -3,10 +3,10 @@
  *
  * Created: 18/03/2021 21:13:47
  * Author : Jochem Leijenhorst
- 
+ TODO: Verander dit naar van NL naar EN! 
  Dit programma heeft variabele pipes. Deze voer je in op tera term/putty
  Er zijn 4 commandos:
- 
+ TODO: Change the commands that they are correct, since that we've implemented the / command method. 
  *    help
     print deze lijst
  
@@ -63,7 +63,7 @@ int main(void) {
         uint8_t receivePipe = 0;
         char *receivedPacket = isoGetReceivedChat(&receivePipe);
         
-        //TODO: make a function containing everything in this if statement. Function name printPacket? 
+        //TODO: Make a function containing everything in this if statement. Function name printPacket? 
         if(receivedPacket[0] != 0) {
 
             // Handle the user typing while something has been received.
