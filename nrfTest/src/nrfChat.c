@@ -1,22 +1,31 @@
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
+#include "friendList.h"
 #include "nrfChat.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
-#define COMMANDS 5
+#define COMMANDS 7
 #define INPUT_BUFFER_LENGTH 256
 
-void wpip(char *command);
-void rpip(char *command);
-void help(char *command);
-void chan(char *command);
-void send(char *command);
+static void wpip(char *command);
+static void rpip(char *command);
+static void help(char *command);
+static void chan(char *command);
+static void send(char *command);
+static void list(char *command);
+static void dest(char *command);
 
-void runCommand(char *command);
+static void runCommand(char *command);
 
+static void messageReceive(uint8_t *data, uint8_t length);
+
+static uint8_t receivedMessage[32];
+static uint8_t receivedMessageLength = 0;
+static uint8_t destinationId = 0xff;
 
 // Make a buffer for the command.
 // Not going to worry about buffer overflow, just don't input too much and you'll be fine.
@@ -24,6 +33,19 @@ static char inputBuffer[INPUT_BUFFER_LENGTH];
 
 // Make a char pointer to insert the next typed character into the buffer.
 static char *bufferPtr = inputBuffer;
+
+// Flag for printing the received message.
+static uint8_t receivedFlag = 0;
+
+
+void initChat() {
+    // Send welcome message
+    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp /help voor een lijst met commando's.\n");
+    isoInit(messageReceive);
+    for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
+    printf("\n\n");
+}
+
 
 void interpretNewChar(char newChar) {
     
@@ -42,7 +64,7 @@ void interpretNewChar(char newChar) {
         printf("\n");
 
         if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else isoSend(0x69, (uint8_t*) inputBuffer, strlen(inputBuffer)); 
+        else isoSend(destinationId, (uint8_t*) inputBuffer, strlen(inputBuffer)); 
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
@@ -69,16 +91,44 @@ char *getCurrentInputBuffer() {
     return inputBuffer;
 }
 
+void printReceivedMessage(void) {
+    if(receivedFlag == 0) return;
+
+    printf("Received: \e[0;34m\n");
+
+    // Print received message as hex values.
+    for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++)
+        printf("%02x ", receivedMessage[i]);
+
+    printf("\e[0m\n");
+
+    // Print received message as characters
+    for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++) {
+        if(isprint(receivedMessage[i])) printf("%c  ", receivedMessage[i]);
+        else printf("   ");
+    }
+    
+    printf("\n\n");
+
+    receivedFlag = 0;
+}
+
+
+void messageReceive(uint8_t *data, uint8_t length) {
+    receivedFlag = 1;
+    memcpy(receivedMessage, data, length);
+    receivedMessageLength = length;
+}
 
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        wpip, rpip, send, help, chan
+        wpip, rpip, send, help, chan, list, dest
     };
 
     // Make a corresponding array of 4 letter function names.
     const char commands[COMMANDS][4] = {
-        "wpip", "rpip", "send", "help", "chan"
+        "wpip", "rpip", "send", "help", "chan", "list", "dest"
     };
 
     
@@ -133,16 +183,17 @@ void rpip(char *command) {
 }
 
 void send(char *command) {
-    isoSend(0x42, (uint8_t*) command, strlen(command));
+    isoSend(destinationId, (uint8_t*) command, strlen(command));    
 }
 
 void help(char *command) {
-    printf("\n\nEr zijn 4 commandos:\n\n");
+    printf("\n\nEr zijn 6 commandos:\n\n");
     printf("*    /help\n\tPrint deze lijst.\n\n");
     printf("*    /send <waarde>\n\tVerstuurt wat je invoert op waarde naar de geselecteerde pipe.\n\n");
     printf("*    /wpip <pipenaam>\n\tVerander de writing pipe.\n\n");
     printf("*    /rpip <index> [pipenaam]\n\tVerander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\n");
-    printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n\n");
+    printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n");
+    printf("*    /list\n\tGeef een lijst van vrienden.\n\n\n");
     printf("Het programma print continu uit wat het ontvangt.\n\n");
 }
 
@@ -154,4 +205,17 @@ void chan(char *command) {
     nrfStartListening();
 
     printf("\nGeswitched naar channel %d\n\n", channel);
+}
+
+void list(char *command) {
+    printFriends();
+}
+
+void dest(char *command) {
+    uint8_t newId = strtol(command, NULL, 16);
+    if(newId == 0) printf("Invalid ID entered.\n\n");
+    else {
+        destinationId = newId;
+        printf("New destination ID is 0x%02x\n\n", newId);
+    }
 }

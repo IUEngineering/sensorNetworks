@@ -43,23 +43,15 @@
 
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
-    PORTC.DIRSET = PIN0_bm;
 
     init_clock();
     init_stream(F_CPU);
-    isoInitNrf();
     
-    PMIC.CTRL |= PMIC_MEDLVLEN_bm;
+    PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
     clear_screen();
     
-    // Send welcome message
-    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp /help voor een lijst met commando's.\n");
-    isoInitId();
-
-    for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
-    printf("\n\n");
-
+    initChat();
 
     while (1) {
         // Get the character from the user.
@@ -68,6 +60,8 @@ int main(void) {
         if(newInputChar != '\0') {
            interpretNewChar(newInputChar);
         }
+
+        printReceivedMessage();
     }
 }
 
