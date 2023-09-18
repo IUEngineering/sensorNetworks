@@ -13,6 +13,7 @@ void wpip(char *command);
 void rpip(char *command);
 void help(char *command);
 void chan(char *command);
+void send(char *command);
 
 void runCommand(char *command);
 
@@ -41,7 +42,7 @@ void interpretNewChar(char newChar) {
         printf("\n");
 
         if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else isoSendChat(inputBuffer); 
+        else isoSend(0x69, (uint8_t*) inputBuffer, strlen(inputBuffer)); 
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
@@ -72,7 +73,7 @@ char *getCurrentInputBuffer() {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        wpip, rpip, isoSendChat, help, chan
+        wpip, rpip, send, help, chan
     };
 
     // Make a corresponding array of 4 letter function names.
@@ -129,6 +130,10 @@ void rpip(char *command) {
     printf("\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
     if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n\n", pipeName[4]);
     else printf("\n");
+}
+
+void send(char *command) {
+    isoSend(0x42, (uint8_t*) command, strlen(command));
 }
 
 void help(char *command) {

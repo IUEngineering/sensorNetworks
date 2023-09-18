@@ -82,7 +82,15 @@ int main(void) {
                 // Print the user inputted buffer.
                 printf("\n%s", getCurrentInputBuffer());
             }
-            else printf("Received from pipe %d: %s\n", receivePipe, receivedPacket);
+            else {
+                printf("Received from ID \e[0;35m0x%02x\e[0m for ID \e[0;35m0x%02x\e[0m: ", receivedPacket[0], receivedPacket[1]);
+                for(uint8_t i = 2; i < 32 && receivedPacket[i] != '\0'; i++) {
+                    if(receivedPacket[i] >= ' ' && receivedPacket[i] <= '~') printf("%c", receivedPacket[i]);
+                    else printf(" \e[0;35m%02x\e[0m ", receivedPacket[i]);
+                }
+
+                printf("\n");
+            }
 
             // Prevent the packet from being printed multiple times.
             receivedPacket[0] = 0;

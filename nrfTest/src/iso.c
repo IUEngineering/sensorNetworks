@@ -86,7 +86,7 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    uint8_t response = nrfWrite((uint8_t *) sentData, len + 2);
+    nrfWrite((uint8_t *) sentData, len + 2);
     nrfStartListening();
 
     //TODO: Add printf for debugging crap.
