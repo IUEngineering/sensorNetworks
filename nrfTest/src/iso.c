@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include <avr/interrupt.h>
 
 #include "iso.h"
@@ -16,7 +17,15 @@
 static uint8_t myId = 0;
 static void sendThePingOfLifes(void);
 
+typedef struct {
+    uint8_t id;
+    uint8_t timeStamp;
+}friend_t;
+
+static friend_t *friends;
+
 uint8_t receivePipe = 69;
+
 
 //TODO: optimize the init
 void isoInitNrf(void) {
@@ -46,6 +55,8 @@ void isoInitNrf(void) {
     _delay_ms(1);
     nrfOpenReadingPipe(0, (uint8_t *) "HVA01");
     nrfStartListening();
+
+    friends = (friend_t*) malloc(16);
 
     TCC0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
     TCC0.CTRLA    = TC_CLKSEL_DIV256_gc;
@@ -93,8 +104,14 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     //TODO: Add printf for debugging crap.
 }
 
-
 void interpretMessage(char *message) {
+    if(message[1] == '\0') {
+        friend_t* friendPointer = friends;
+        while(friendPointer->id != 0) 
+            friendPointer++;
+        friendPointer->id = message[1];
+    }
+
     printf("Received from ID \e[0;35m0x%02x\e[0m for ID \e[0;35m0x%02x\e[0m: ", message[0], message[1]);
     for(uint8_t i = 2; i < 32 && message[i] != '\0'; i++) {
         if(message[i] >= ' ' && message[i] <= '~') printf("%c", message[i]);
@@ -127,7 +144,6 @@ ISR(PORTF_INT0_vect) {
 
 ISR(TCC0_OVF_vect) {
     PORTC.OUTTGL = PIN0_bm;
-    
 
     //IMusch ref
     sendThePingOfLifes();

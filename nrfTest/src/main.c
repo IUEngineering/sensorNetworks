@@ -7,17 +7,20 @@
  Dit programma heeft variabele pipes. Deze voer je in op tera term/putty
  Er zijn 4 commandos:
  TODO: Change the commands that they are correct, since that we've implemented the / command method. 
- *    help
-    print deze lijst
+ *  help
+    Print deze lijst
  
- *    send <waarde>
-    verstuurt wat je invoert op waarde naar de geselecteerde pipe
+ *  send <waarde>
+    Verstuurt wat je invoert op waarde naar de geselecteerde pipe
     
- *    wpip <pipenaam>
-    verander de writing pipe
+ *  wpip <pipenaam>
+    Verander de writing pipe
     
- *    rpip <pipenaamm> <index>
-    verander de reading pipes
+ *  rpip <pipenaamm> <index>
+    Verander de reading pipes
+
+ *  chan <channel>
+    Verander de channel frequentie
     
     Het programma print continu uit wat hij ontvangt.
  */ 
