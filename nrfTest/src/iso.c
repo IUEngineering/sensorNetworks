@@ -15,11 +15,17 @@
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
 
+#define BROADCAST_PIPE (uint8_t *)"420B\0"
+#define PRIVATE_PIPE {'4', '2', '0', 'P', '\0'} 
+
+
 
 // Define list of neighbors (neighbors are friends :)
 static uint8_t myId = 0;
 static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *data, uint8_t length);
+static void send(uint8_t *data, uint8_t len);
+
 
 
 //TODO: optimize the init
@@ -45,14 +51,6 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
     nrfPowerUp();
     
-
-    _delay_ms(5);
-    nrfOpenWritingPipe((uint8_t *) "HVA01");
-    _delay_ms(5);
-    nrfOpenReadingPipe(0, (uint8_t *) "HVA01");
-    nrfStartListening();
-
-
     initFriendList();
 
     // Read the ID from the GPIO pins.
@@ -74,6 +72,16 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     receiveCallback = callback;
 
     printf("My ID is 0x%02x\n", myId);
+
+    nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
+    _delay_ms(50);
+
+    char privatePipe[6] = "420P";
+    privatePipe[4] = myId;
+    nrfOpenReadingPipe(0, (uint8_t *) BROADCAST_PIPE);
+    nrfOpenReadingPipe(1, (uint8_t *) privatePipe);
+
+    nrfStartListening();
 }
 
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
@@ -83,13 +91,30 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
 
+    static uint8_t privateWritingPipe[5] = PRIVATE_PIPE;
+    privateWritingPipe[4] = dest;
+    
+    // Turn off the timer/counter that creates interrupts that change the writing pipe.
+    TCC0.CTRLA = TC_CLKSEL_OFF_gc;
+    nrfOpenWritingPipe(privateWritingPipe);
+    send(sendData, len);
+    TCC0.CTRLA = TC_CLKSEL_DIV256_gc;
+}
+
+void send(uint8_t *data, uint8_t len) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    nrfWrite((uint8_t *) sendData, len + 1);
+    nrfWrite((uint8_t *) data, len + 1);
     nrfStartListening();
+}
 
-    //TODO: Add printf for debugging crap.
+void pingOfLife(void) {
+    nrfOpenWritingPipe(BROADCAST_PIPE);
+
+    char pingPacket[2] = "\0\0";
+    pingPacket[1] = myId;
+    send((uint8_t*)pingPacket, 1);
 }
 
 void interpretPacket(uint8_t *packet, uint8_t length) {
@@ -112,10 +137,6 @@ void interpretPacket(uint8_t *packet, uint8_t length) {
         PORTF.OUTTGL = PIN0_bm;
         receiveCallback(packet + 1, length - 1);
     }
-}
-
-void pingOfLife(void) {
-    isoSend(0, &myId, 1);
 }
 
 

@@ -8,17 +8,15 @@
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
-#define COMMANDS 7
+#define COMMANDS 6
 #define INPUT_BUFFER_LENGTH 38
 
-static void wpip(char *command);
 static void rpip(char *command);
 static void help(char *command);
 static void chan(char *command);
 static void send(char *command);
 static void list(char *command);
 static void dest(char *command);
-
 static void runCommand(char *command);
 
 static void messageReceive(uint8_t *data, uint8_t length);
@@ -64,7 +62,7 @@ void interpretNewChar(char newChar) {
         printf("\n");
 
         if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else isoSend(destinationId, (uint8_t*) inputBuffer, strlen(inputBuffer)); 
+        else send(inputBuffer); 
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
@@ -138,12 +136,12 @@ void messageReceive(uint8_t *data, uint8_t length) {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        wpip, rpip, send, help, chan, list, dest
+        rpip, send, help, chan, list, dest
     };
 
     // Make a corresponding array of 4 letter function names.
     const char commands[COMMANDS][4] = {
-        "wpip", "rpip", "send", "help", "chan", "list", "dest"
+        "rpip", "send", "help", "chan", "list", "dest"
     };
 
     
@@ -156,11 +154,6 @@ void runCommand(char *command) {
     }
     printf("Die ken ik niet :(\n");
 
-}
-
-void wpip(char *command) {
-    nrfOpenWritingPipe((uint8_t *) command);
-    printf("\nWriting pipe %s geopend.\n\n", command);
 }
 
 //TODO: Refactor perhaps
@@ -205,10 +198,10 @@ void help(char *command) {
     printf("\n\nEr zijn 6 commandos:\n\n");
     printf("*    /help\n\tPrint deze lijst.\n\n");
     printf("*    /send <waarde>\n\tVerstuurt wat je invoert op waarde naar de geselecteerde pipe.\n\n");
-    printf("*    /wpip <pipenaam>\n\tVerander de writing pipe.\n\n");
     printf("*    /rpip <index> [pipenaam]\n\tVerander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\n");
     printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n");
-    printf("*    /list\n\tGeef een lijst van vrienden.\n\n\n");
+    printf("*    /list\n\tGeef een lijst van vrienden.\n\n");
+    printf("*    /dest <id>\n\tVerander het adres van de ontvanger.\n\n\n");
     printf("Het programma print continu uit wat het ontvangt.\n\n");
 }
 
