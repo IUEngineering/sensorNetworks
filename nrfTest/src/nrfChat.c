@@ -217,6 +217,20 @@ void chan(char *command) {
 
 void list(char *command) {
     printFriends();
+
+    
+    uint8_t pipeRegister[5];
+    nrfReadRegisterMulti(REG_RX_ADDR_P0, pipeRegister, 5);
+    printf("Pijpen:\n");
+    for(uint8_t i = 0; i < 5; i++) printf("%02x ", pipeRegister[i]);
+    printf("\n");
+    nrfReadRegisterMulti(REG_RX_ADDR_P1, pipeRegister, 5);
+    for(uint8_t i = 0; i < 5; i++) printf("%02x ", pipeRegister[i]);
+    printf("\n");
+    for(uint8_t i = 0; i < 4; i++) {
+        printf("%02x ", nrfReadRegister(REG_RX_ADDR_P2 + i));
+    }
+    printf("\n");
 }
 
 void dest(char *command) {

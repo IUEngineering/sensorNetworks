@@ -11,6 +11,9 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
+#define BROADCAST_PIPE "BROAD"
+#define PRIVATE_PIPE "TYCH"
+
 // Counter every 250 ms formula:
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
@@ -25,7 +28,6 @@ static uint8_t myId = 0;
 static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *data, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
-
 
 
 //TODO: optimize the init
@@ -49,9 +51,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTF.INT0MASK |= PIN6_bm;
     PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
     PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-    nrfPowerUp();
     
-    initFriendList();
 
     // Read the ID from the GPIO pins.
     PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
@@ -62,67 +62,65 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTD.DIRCLR = 0b1111;
     myId = ~PORTD.IN & 0b1111;
     myId |= TEAM_ID;
+    uint8_t privatePipe[5] = PRIVATE_PIPE;
+    privatePipe[4] = myId;
+    
+    nrfPowerUp();
+
+    _delay_ms(5);
+    nrfOpenWritingPipe((uint8_t *) "HVA01");
+    _delay_ms(5);
+    nrfOpenReadingPipe(0, (uint8_t *) BROADCAST_PIPE);
+    _delay_ms(5);
+    nrfOpenReadingPipe(1, privatePipe);
+    nrfStartListening();
+
+
+    initFriendList();
+
 
     // Initialize the timer/counter for sending POL's and removing friends.
-    TCC0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCC0.CTRLA    = TC_CLKSEL_DIV256_gc;
-    TCC0.CCA      = TC_CCA;
-    TCC0.INTCTRLA |= TC_OVFINTLVL_LO_gc;
+    TCD0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
+    TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
+    TCD0.CCA      = TC_CCA;
+    TCD0.INTCTRLA |= TC_OVFINTLVL_LO_gc;
 
     receiveCallback = callback;
 
-    printf("My ID is 0x%02x\n", myId);
-
-    nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
-    _delay_ms(50);
-
-    char privatePipe[6] = "420P";
-    privatePipe[4] = myId;
-    nrfOpenReadingPipe(0, (uint8_t *) BROADCAST_PIPE);
-    nrfOpenReadingPipe(1, (uint8_t *) privatePipe);
-
-    nrfStartListening();
+    printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
 }
 
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
+    // Prevent segfault
     if(len > 31) len = 31;
 
     uint8_t sendData[32];
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
 
-    static uint8_t privateWritingPipe[5] = PRIVATE_PIPE;
-    privateWritingPipe[4] = dest;
-    
-    // Turn off the timer/counter that creates interrupts that change the writing pipe.
-    TCC0.CTRLA = TC_CLKSEL_OFF_gc;
-    nrfOpenWritingPipe(privateWritingPipe);
-    send(sendData, len);
-    TCC0.CTRLA = TC_CLKSEL_DIV256_gc;
+    static uint8_t writingPipe[5] = PRIVATE_PIPE;
+    writingPipe[4] = dest;
+
+    TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
+    nrfOpenWritingPipe(writingPipe);
+    send(sendData, len + 1);
+    TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
 }
 
 void send(uint8_t *data, uint8_t len) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    nrfWrite((uint8_t *) data, len + 1);
+    nrfWrite(data, len);
     nrfStartListening();
 }
 
-void pingOfLife(void) {
-    nrfOpenWritingPipe(BROADCAST_PIPE);
-
-    char pingPacket[2] = "\0\0";
-    pingPacket[1] = myId;
-    send((uint8_t*)pingPacket, 1);
-}
-
-void interpretPacket(uint8_t *packet, uint8_t length) {
-    // If it's a Ping of Life.
-    if(packet[0] == '\0') {
+static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe) {
+    // If it's the broadcast pipe, it's probably a ping of life from another node.
+    if(receivePipe == 0) {
         // Add a new direct neighbor friend.
         friend_t newFriend;
-        newFriend.id = packet[1];
+        newFriend.id = packet[0];
         newFriend.hops = 0;
         newFriend.remainingTime = FORGET_FRIEND_TIME;
         newFriend.via = 0;
@@ -131,29 +129,33 @@ void interpretPacket(uint8_t *packet, uint8_t length) {
         return;
     }
 
-    // PORTF.OUTTGL = PIN1_bm;
+    PORTF.OUTTGL = PIN1_bm;
 
-    if(packet[0] == myId) {
-        PORTF.OUTTGL = PIN0_bm;
-        receiveCallback(packet + 1, length - 1);
-    }
+    if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
+}
+
+void pingOfLife(void) {
+    nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
+    send(&myId, 1);
 }
 
 
 ISR(PORTF_INT0_vect) {
+    uint8_t receivePipe = 0xff;
+
     // Did I receive something actually valuable? 
-    if(nrfAvailable(NULL)) {
+    if(nrfAvailable(&receivePipe)) {
         uint8_t length = nrfGetDynamicPayloadSize();
         uint8_t packet[32];
 
         // Put received data into a buffer.
         nrfRead(packet, length);
 
-        interpretPacket(packet, length);
+        interpretPacket(packet, length, receivePipe);
     }    
 }
 
-ISR(TCC0_OVF_vect) {
+ISR(TCD0_OVF_vect) {
     // Cut the
     pingOfLife();
     // you've been feeding my veins.
