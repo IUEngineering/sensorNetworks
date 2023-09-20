@@ -77,6 +77,8 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 }
 
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
+    if(len > 31) len = 31;
+
     uint8_t sendData[32];
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
@@ -91,6 +93,7 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
 }
 
 void interpretPacket(uint8_t *packet, uint8_t length) {
+    // If it's a Ping of Life.
     if(packet[0] == '\0') {
         // Add a new direct neighbor friend.
         friend_t newFriend;
@@ -103,10 +106,12 @@ void interpretPacket(uint8_t *packet, uint8_t length) {
         return;
     }
 
-    PORTF.OUTTGL = PIN1_bm;
-    printf("ID: 0x%02x\n", packet[0]);
+    // PORTF.OUTTGL = PIN1_bm;
 
-    if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
+    if(packet[0] == myId) {
+        PORTF.OUTTGL = PIN0_bm;
+        receiveCallback(packet + 1, length - 1);
+    }
 }
 
 void pingOfLife(void) {
@@ -121,7 +126,6 @@ ISR(PORTF_INT0_vect) {
         uint8_t packet[32];
 
         // Put received data into a buffer.
-        // receivePipe = (nrfGetStatus() & NRF_STATUS_RX_P_NO_gm) >> 1;
         nrfRead(packet, length);
 
         interpretPacket(packet, length);

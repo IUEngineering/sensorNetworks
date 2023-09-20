@@ -9,7 +9,7 @@
 #include "serialF0.h"
 
 #define COMMANDS 7
-#define INPUT_BUFFER_LENGTH 256
+#define INPUT_BUFFER_LENGTH 38
 
 static void wpip(char *command);
 static void rpip(char *command);
@@ -38,7 +38,7 @@ static char *bufferPtr = inputBuffer;
 static uint8_t receivedFlag = 0;
 
 
-void initChat() {
+void initChat(void) {
     // Send welcome message
     printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp /help voor een lijst met commando's.\n");
     isoInit(messageReceive);
@@ -70,8 +70,8 @@ void interpretNewChar(char newChar) {
         bufferPtr = inputBuffer;
     }
 
-    // Check if it's a printable character.
-    else if(newChar >= ' ' && newChar <= '~' && bufferPtr - inputBuffer < INPUT_BUFFER_LENGTH) {
+    // Check if it's a printable character and if it's not overflowing any buffers.
+    else if(newChar >= ' ' && newChar <= '~' && (bufferPtr - inputBuffer < 31 || inputBuffer[0] == '/') && bufferPtr - inputBuffer < INPUT_BUFFER_LENGTH) {
         *bufferPtr = newChar;
         bufferPtr++;
 
@@ -81,11 +81,11 @@ void interpretNewChar(char newChar) {
     }
 }
 
-uint8_t getUserInputLength() {
+uint8_t getUserInputLength(void) {
     return bufferPtr - inputBuffer;
 }
 
-char *getCurrentInputBuffer() {
+char *getCurrentInputBuffer(void) {
     // Make sure there is a terminating \0 character so printf stops at the right place.
     *bufferPtr = '\0';
     return inputBuffer;
@@ -94,7 +94,18 @@ char *getCurrentInputBuffer() {
 void printReceivedMessage(void) {
     if(receivedFlag == 0) return;
 
-    printf("Received: \e[0;34m\n");
+    // Make sure to overwrite the current buffer.
+    if(bufferPtr != inputBuffer) {
+        printf("\rReceived: \e[0;34m");
+
+        // Add enough spaces to hide te current buffer. (10 is the length of "Received: ")
+        for(uint8_t i = 0; i < (bufferPtr - inputBuffer) - 10; i++) 
+            uartF0_putc(' ');
+
+        printf("\n");
+    }
+    else 
+        printf("Received: \e[0;34m\n");
 
     // Print received message as hex values.
     for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++)
@@ -102,13 +113,17 @@ void printReceivedMessage(void) {
 
     printf("\e[0m\n");
 
-    // Print received message as characters
+    // Print received message as characters.
     for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++) {
         if(isprint(receivedMessage[i])) printf("%c  ", receivedMessage[i]);
         else printf("   ");
     }
     
     printf("\n\n");
+
+    // Print the input buffer back onto the terminal.
+    if(bufferPtr != inputBuffer)
+        printf("%s", inputBuffer);
 
     receivedFlag = 0;
 }

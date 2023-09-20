@@ -11,10 +11,10 @@
 // without interrupting user's the current text input.
 extern char receivedPacket[];
 
-void initChat();
+void initChat(void);
 void interpretNewChar(char newChar);
-uint8_t getUserInputLength();
-char *getCurrentInputBuffer();
+uint8_t getUserInputLength(void);
+char *getCurrentInputBuffer(void);
 void printReceivedMessage(void);
 
 #endif // _NRFCHAT_H_
