@@ -11,6 +11,9 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
+#define BROADCAST_PIPE "BROAD"
+#define PRIVATE_PIPE "TYCH"
+
 // Counter every 250 ms formula:
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
@@ -20,6 +23,8 @@
 static uint8_t myId = 0;
 static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *data, uint8_t length);
+static uint8_t privatePipe[5] = PRIVATE_PIPE;
+static void send(uint8_t *data, uint8_t len);
 
 
 //TODO: optimize the init
@@ -43,17 +48,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTF.INT0MASK |= PIN6_bm;
     PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
     PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-    nrfPowerUp();
     
-
-    _delay_ms(5);
-    nrfOpenWritingPipe((uint8_t *) "HVA01");
-    _delay_ms(5);
-    nrfOpenReadingPipe(0, (uint8_t *) "HVA01");
-    nrfStartListening();
-
-
-    initFriendList();
 
     // Read the ID from the GPIO pins.
     PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
@@ -64,6 +59,21 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTD.DIRCLR = 0b1111;
     myId = ~PORTD.IN & 0b1111;
     myId |= TEAM_ID;
+    privatePipe[4] = myId;
+    
+    nrfPowerUp();
+
+    _delay_ms(5);
+    nrfOpenWritingPipe((uint8_t *) "prive");
+    _delay_ms(5);
+    nrfOpenReadingPipe(0, (uint8_t *) "broad");
+    _delay_ms(5);
+    nrfOpenReadingPipe(1, privatePipe);
+    nrfStartListening();
+
+
+    initFriendList();
+
 
     // Initialize the timer/counter for sending POL's and removing friends.
     TCC0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
@@ -73,21 +83,26 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     receiveCallback = callback;
 
-    printf("My ID is 0x%02x\n", myId);
+    printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
 }
 
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
+    // Prevent segfault
+    if(len > 31) len = 31;
+
     uint8_t sendData[32];
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
 
+    send(data, len + 1);
+}
+
+void send(uint8_t *data, uint8_t len) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    nrfWrite((uint8_t *) sendData, len + 1);
+    nrfWrite(data, len);
     nrfStartListening();
-
-    //TODO: Add printf for debugging crap.
 }
 
 void interpretPacket(uint8_t *packet, uint8_t length) {
@@ -110,7 +125,9 @@ void interpretPacket(uint8_t *packet, uint8_t length) {
 }
 
 void pingOfLife(void) {
-    isoSend(0, &myId, 1);
+    uint8_t sendBuf[2] = {0, 0};
+    sendBuf[1] = myId;
+    send(sendBuf, 2);
 }
 
 
