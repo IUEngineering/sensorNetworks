@@ -18,10 +18,6 @@
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
 
-#define BROADCAST_PIPE (uint8_t *)"420B\0"
-#define PRIVATE_PIPE {'4', '2', '0', 'P', '\0'} 
-
-
 
 // Define list of neighbors (neighbors are friends :)
 static uint8_t myId = 0;
