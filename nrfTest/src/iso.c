@@ -12,7 +12,10 @@
 #define TEAM_ID 0x02 << 5
 
 #define BROADCAST_PIPE "BROAD"
+#define BROADCAST_PIPE_INDEX 0
+
 #define PRIVATE_PIPE "TYCH"
+#define PRIVATE_PIPE_INDEX 1
 
 // Counter every 250 ms formula:
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
@@ -66,9 +69,9 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     _delay_ms(5);
     nrfOpenWritingPipe((uint8_t *) "HVA01");
     _delay_ms(5);
-    nrfOpenReadingPipe(0, (uint8_t *) BROADCAST_PIPE);
+    nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, (uint8_t *) BROADCAST_PIPE);
     _delay_ms(5);
-    nrfOpenReadingPipe(1, privatePipe);
+    nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
 
 
@@ -83,7 +86,8 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     receiveCallback = callback;
 
-    printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
+    printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", \
+        myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
 }
 
 void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
@@ -96,12 +100,19 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
 
     // Check if it's a direct neighbor. If it isn't, send it to the via neighbor.
     friend_t *sendFriend = findFriend(dest);
+    if(sendFriend == NULL) {
+        printf("I don't know friend %02x\n\n", dest);
+        return;
+    }
     if(sendFriend->hops != 0) sendFriend = findFriend(sendFriend->via);
 
     TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
     openPrivateWritingPipe(sendFriend->id);
     send(sendData, len + 1);
     TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
+
+    if(sendFriend->id == dest) printf("Sent to %02x\n\n", dest);
+    else printf("Sent to %02x via %02x.\n\n", dest, sendFriend->id);
 }
 
 void send(uint8_t *data, uint8_t len) {
@@ -112,39 +123,24 @@ void send(uint8_t *data, uint8_t len) {
     nrfStartListening();
 }
 
-static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe) {
-    // If it's the broadcast pipe, it's probably a ping of life from another node.
-    if(receivePipe == 0) {
-        // Add a new direct neighbor friend.
-        friend_t newFriend;
-        newFriend.id = packet[0];
-        newFriend.hops = 0;
-        newFriend.remainingTime = FORGET_FRIEND_TIME;
-        newFriend.via = 0;
-
-        addFriend(newFriend);
-        return;
-    }
-
-    PORTF.OUTTGL = PIN1_bm;
-
-    // If it's a message for me.
-    if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
-    
-    // If it's a message for someone else.
-    else {
-        friend_t *nextFriend = findFriend(packet[0]);
-        if(nextFriend == NULL) return;
-
-        // Forward the message.
-        openPrivateWritingPipe(nextFriend->via);
-        send(packet, length);
-    }
-}
 
 void pingOfLife(void) {
+    uint8_t listLength = 0;
+    friend_t *friends = getFriendsList(&listLength);
+    
+    // Cringe iso implemention.
+    uint8_t ping[32];
+    uint8_t pingSize = 1;
+    ping[0] = myId;
+
+    // Build ping message.
+    for(uint8_t i = 0; i < listLength; i++)
+        if(friends[i].id != 0 && friends[i].hops == 0) 
+            ping[pingSize++] = friends[i].id;
+
+
     nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
-    send(&myId, 1);
+    send(ping, pingSize);
 }
 
 
@@ -154,19 +150,54 @@ void openPrivateWritingPipe(uint8_t destId) {
     nrfOpenWritingPipe(writingPipe);
 }
 
+static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
+    // If it's the broadcast pipe, it's probably a ping of life from another node.
+    if(receivePipe == BROADCAST_PIPE_INDEX) {
+
+        // Add the sender as a new direct neighbor friend.
+        addFriend(packet[0], 0, packet[0]);
+
+        // Add all the sender's friends.
+        for(uint8_t i = 1; i < length; i++)
+            // Make sure you're not adding yourself as friend (you can't be schizophrenic).
+            if(packet[i] != myId) 
+                addFriend(packet[i], 1, packet[0]);
+
+        return;
+    }
+
+    PORTF.OUTTGL = PIN1_bm;
+    if(receivePower) PORTF.OUTSET = PIN0_bm;
+    else PORTF.OUTCLR = PIN0_bm;
+    printf("Receive Power: %d\n", receivePower);
+
+    // If it's a message for me.
+    if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
+    
+    // If it's a message for someone else.
+    else {
+        friend_t *destFriend = findFriend(packet[0]);
+        if(destFriend == NULL) return;
+
+        // Relay the message.
+        openPrivateWritingPipe(destFriend->via);
+        send(packet, length);
+    }
+}
 
 ISR(PORTF_INT0_vect) {
     uint8_t receivePipe = 0xff;
 
     // Did I receive something actually valuable? 
     if(nrfAvailable(&receivePipe)) {
+        uint8_t receivePower = nrfReadRegister(9);
         uint8_t length = nrfGetDynamicPayloadSize();
         uint8_t packet[32];
 
         // Put received data into a buffer.
         nrfRead(packet, length);
 
-        interpretPacket(packet, length, receivePipe);
+        interpretPacket(packet, length, receivePipe, receivePower);
     }    
 }
 

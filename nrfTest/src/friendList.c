@@ -16,13 +16,21 @@ void initFriendList() {
     friends = (friend_t *) calloc(INITIAL_FRIEND_LIST_LENGTH, sizeof(friend_t));
 }
 
-uint8_t addFriend(friend_t friend) {
+uint8_t addFriend(uint8_t id, uint8_t hops, uint8_t via) {
+
+    friend_t newFriend;
+    newFriend.id = id;
+    newFriend.via = via;
+    newFriend.hops = hops;
+    newFriend.remainingTime = FORGET_FRIEND_TIME;
 
     // Check if we already know this friend by a shorter route.
-    friend_t *friendInList = findFriend(friend.id);
-    if(friendInList != NULL && friendInList->hops <= friend.hops) {
-        if(friendInList->hops == friend.hops) friendInList->remainingTime = friend.remainingTime;
-        return 0;
+    friend_t *oldFriend = findFriend(newFriend.id);
+    if(oldFriend != NULL) {
+        if(newFriend.hops <= oldFriend->hops)
+            *oldFriend = newFriend;
+
+        return 1;
     }
 
     // If the list not long enough for our vast amount of friends.
@@ -35,9 +43,9 @@ uint8_t addFriend(friend_t friend) {
     // Add the friend to the nearest hole in the list.
     friend_t *friendPtr = friends;
     while(friendPtr->id != 0) friendPtr++;
-    *friendPtr = friend;
+    *friendPtr = newFriend;
     friendAmount++;
-    return 1;
+    return 0;
 }
 
 void removeFriend(friend_t *friend) {
@@ -80,8 +88,13 @@ void printDebugFriends(void) {
         printf("%02x %02x,   ", friends[i].id, friends[i].remainingTime);
     }
     printf("\n");
-
 }
+
+friend_t *getFriendsList(uint8_t *listLength) {
+    *listLength = friendListLength;
+    return friends;
+}
+
 
 // Find a friend, and return a pointer to that friend.
 friend_t *findFriend(uint8_t id) {
