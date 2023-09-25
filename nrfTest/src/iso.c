@@ -50,10 +50,9 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     
 
     // Read the ID from the GPIO pins.
+    // Enable pullup for the first 4 pins of PORT D
+    PORTCFG.MPCMASK = 0b1111; 
     PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
-    PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
-    PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
-    PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
 
     PORTD.DIRCLR = 0b1111;
     myId = ~PORTD.IN & 0b1111;
