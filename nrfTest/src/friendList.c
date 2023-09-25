@@ -17,18 +17,22 @@ void initFriendList() {
 }
 
 uint8_t addFriend(friend_t friend) {
-    for(uint8_t i = 0; i < friendListLength; i++) {
-        if(friends[i].id == friend.id) {
-            friends[i].remainingTime = FORGET_FRIEND_TIME;
-            return 0;
-        }
+
+    // Check if we already know this friend by a shorter route.
+    friend_t *friendInList = findFriend(friend.id);
+    if(friendInList != NULL && friendInList->hops <= friend.hops) {
+        if(friendInList->hops == friend.hops) friendInList->remainingTime = friend.remainingTime;
+        return 0;
     }
 
+    // If the list not long enough for our vast amount of friends.
     if(friendListLength == friendAmount) {
+        // Resize the list to add 8 bytes.
         friends = (friend_t *) realloc(friends, friendListLength + INITIAL_FRIEND_LIST_LENGTH);
         friendListLength += 8;
     }
 
+    // Add the friend to the nearest hole in the list.
     friend_t *friendPtr = friends;
     while(friendPtr->id != 0) friendPtr++;
     *friendPtr = friend;

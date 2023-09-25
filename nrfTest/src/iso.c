@@ -94,9 +94,12 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
 
+    // Check if it's a direct neighbor. If it isn't, send it to the via neighbor.
+    friend_t *sendFriend = findFriend(dest);
+    if(sendFriend->hops != 0) sendFriend = findFriend(sendFriend->via);
 
     TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
-    openPrivateWritingPipe(dest);
+    openPrivateWritingPipe(sendFriend->id);
     send(sendData, len + 1);
     TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
 }
