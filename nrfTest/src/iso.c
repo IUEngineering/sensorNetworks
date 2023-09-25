@@ -25,7 +25,6 @@ static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *data, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
 static void openPrivateWritingPipe(uint8_t destId);
-inline void openPublicWritingPipe();
 
 
 //TODO: optimize the init
@@ -149,6 +148,7 @@ void pingOfLife(void) {
 void openPrivateWritingPipe(uint8_t destId) {
     static uint8_t writingPipe[5] = PRIVATE_PIPE;
     writingPipe[4] = destId;
+    nrfOpenWritingPipe(writingPipe);
 }
 
 
