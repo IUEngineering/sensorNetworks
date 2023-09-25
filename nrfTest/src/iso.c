@@ -24,6 +24,8 @@ static uint8_t myId = 0;
 static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *data, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
+static void openPrivateWritingPipe(uint8_t destId);
+inline void openPublicWritingPipe();
 
 
 //TODO: optimize the init
@@ -93,11 +95,9 @@ void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
     sendData[0] = dest;
     memcpy(sendData + 1, data, len);
 
-    static uint8_t writingPipe[5] = PRIVATE_PIPE;
-    writingPipe[4] = dest;
 
     TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
-    nrfOpenWritingPipe(writingPipe);
+    openPrivateWritingPipe(dest);
     send(sendData, len + 1);
     TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
 }
@@ -126,12 +126,29 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
 
     PORTF.OUTTGL = PIN1_bm;
 
+    // If it's a message for me.
     if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
+    
+    // If it's a message for someone else.
+    else {
+        friend_t *nextFriend = findFriend(packet[0]);
+        if(nextFriend == NULL) return;
+
+        // Forward the message.
+        openPrivateWritingPipe(nextFriend->via);
+        send(packet, length);
+    }
 }
 
 void pingOfLife(void) {
     nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
     send(&myId, 1);
+}
+
+
+void openPrivateWritingPipe(uint8_t destId) {
+    static uint8_t writingPipe[5] = PRIVATE_PIPE;
+    writingPipe[4] = destId;
 }
 
 

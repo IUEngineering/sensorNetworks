@@ -18,6 +18,7 @@ uint8_t addFriend(friend_t friend);
 void printFriends(void);
 void friendTimeTick(void);
 void printDebugFriends(void);
+friend_t *findFriend(uint8_t id);
 
 
 #endif // _FRIENDLIST_H_

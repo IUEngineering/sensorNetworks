@@ -78,3 +78,12 @@ void printDebugFriends(void) {
     printf("\n");
 
 }
+
+// Find a friend, and return a pointer to that friend.
+friend_t *findFriend(uint8_t id) {
+    for(uint8_t i = 0; i < friendListLength; i++) {
+        if(friends[i].id == id) return friends + i;
+    }
+    // If the friend was not found :(
+    return NULL;
+}
