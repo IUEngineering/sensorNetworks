@@ -38,7 +38,7 @@ static uint8_t receivedFlag = 0;
 
 void initChat(void) {
     // Send welcome message
-    printf("Welkom bij de nrftester\nGemaakt door Jochem Leijenhorst.\n\nTyp /help voor een lijst met commando's.\n");
+    printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
     isoInit(messageReceive);
     for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
     printf("\n\n");
@@ -152,7 +152,7 @@ void runCommand(char *command) {
             return;
         }
     }
-    printf("Die ken ik niet :(\n");
+    printf("I don't know that command :(\n");
 
 }
 
@@ -185,9 +185,7 @@ void rpip(char *command) {
     nrfStopListening();
     nrfOpenReadingPipe(pipeIndex, (uint8_t *) pipeName);
     nrfStartListening();
-    printf("\nReading pipe %d, %s geopend.\n", pipeIndex, pipeName);
-    if(pipeIndex > 1) printf("Onthoud goed dat voor pipes 2 tot 5 alleen het laatste karakter wordt gebruikt. In dit geval is dat %c\n\n", pipeName[4]);
-    else printf("\n");
+    printf("\nOpened reading pipe %d, %s.\n\n", pipeIndex, pipeName);
 }
 
 void send(char *command) {
@@ -195,14 +193,14 @@ void send(char *command) {
 }
 
 void help(char *command) {
-    printf("\n\nEr zijn 6 commandos:\n\n");
-    printf("*    /help\n\tPrint deze lijst.\n\n");
-    printf("*    /send <waarde>\n\tVerstuurt wat je invoert op waarde naar de geselecteerde pipe.\n\n");
-    printf("*    /rpip <index> [pipenaam]\n\tVerander de reading pipes. Index is welke van de 6 pipes je wilt aanpassen (0 t/m 5).\n\n");
+    printf("\n\nThere are %d commands:\n\n", COMMANDS);
+    printf("*    /help\n\tPrint this list.\n\n");
+    printf("*    /send <message>\n\tSend a message. This can also be done by just typing a message and pressing enter.\n\n");
+    printf("*    /rpip <pipename> [index]\n\tChange one of the reading pipes. The reading pipe index can be provided, the default is 0.\n\n");
     printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n");
-    printf("*    /list\n\tGeef een lijst van vrienden.\n\n");
-    printf("*    /dest <id>\n\tVerander het adres van de ontvanger.\n\n\n");
-    printf("Het programma print continu uit wat het ontvangt.\n\n");
+    printf("*    /list\n\tPrint a list of friends :)\n\n");
+    printf("*    /dest <id>\n\tChange the id of the destination node.\n\n\n");
+    printf("The program continually prints what it is receiving on all open reading pipes.\n\n");
 }
 
 // Function to change the frequency channel.
@@ -212,7 +210,7 @@ void chan(char *command) {
     nrfSetChannel(channel);
     nrfStartListening();
 
-    printf("\nGeswitched naar channel %d\n\n", channel);
+    printf("\nSwitched to channel %d\n\n", channel);
 }
 
 void list(char *command) {

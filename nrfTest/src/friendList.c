@@ -16,24 +16,36 @@ void initFriendList() {
     friends = (friend_t *) calloc(INITIAL_FRIEND_LIST_LENGTH, sizeof(friend_t));
 }
 
-uint8_t addFriend(friend_t friend) {
-    for(uint8_t i = 0; i < friendListLength; i++) {
-        if(friends[i].id == friend.id) {
-            friends[i].remainingTime = FORGET_FRIEND_TIME;
-            return 0;
-        }
+uint8_t addFriend(uint8_t id, uint8_t hops, uint8_t via) {
+
+    friend_t newFriend;
+    newFriend.id = id;
+    newFriend.via = via;
+    newFriend.hops = hops;
+    newFriend.remainingTime = FORGET_FRIEND_TIME;
+
+    // Check if we already know this friend by a shorter route.
+    friend_t *oldFriend = findFriend(newFriend.id);
+    if(oldFriend != NULL) {
+        if(newFriend.hops <= oldFriend->hops)
+            *oldFriend = newFriend;
+
+        return 1;
     }
 
+    // If the list not long enough for our vast amount of friends.
     if(friendListLength == friendAmount) {
+        // Resize the list to add 8 bytes.
         friends = (friend_t *) realloc(friends, friendListLength + INITIAL_FRIEND_LIST_LENGTH);
         friendListLength += 8;
     }
 
+    // Add the friend to the nearest hole in the list.
     friend_t *friendPtr = friends;
     while(friendPtr->id != 0) friendPtr++;
-    *friendPtr = friend;
+    *friendPtr = newFriend;
     friendAmount++;
-    return 1;
+    return 0;
 }
 
 void removeFriend(friend_t *friend) {
@@ -76,5 +88,19 @@ void printDebugFriends(void) {
         printf("%02x %02x,   ", friends[i].id, friends[i].remainingTime);
     }
     printf("\n");
+}
 
+friend_t *getFriendsList(uint8_t *listLength) {
+    *listLength = friendListLength;
+    return friends;
+}
+
+
+// Find a friend, and return a pointer to that friend.
+friend_t *findFriend(uint8_t id) {
+    for(uint8_t i = 0; i < friendListLength; i++) {
+        if(friends[i].id == id) return friends + i;
+    }
+    // If the friend was not found :(
+    return NULL;
 }
