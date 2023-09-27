@@ -31,3 +31,6 @@
 *.elf
 *.hex
 *.o
+
+# Exclude binary from basisstation
+basisstation
