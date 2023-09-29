@@ -19,7 +19,7 @@ static void list(char *command);
 static void dest(char *command);
 static void runCommand(char *command);
 
-static void messageReceive(uint8_t *data, uint8_t length);
+static void messageReceive(uint8_t *payload, uint8_t length);
 
 static uint8_t receivedMessage[32];
 static uint8_t receivedMessageLength = 0;
@@ -127,9 +127,9 @@ void printReceivedMessage(void) {
 }
 
 
-void messageReceive(uint8_t *data, uint8_t length) {
+void messageReceive(uint8_t *payload, uint8_t length) {
     receivedFlag = 1;
-    memcpy(receivedMessage, data, length);
+    memcpy(receivedMessage, payload, length);
     receivedMessageLength = length;
 }
 
@@ -189,7 +189,7 @@ void rpip(char *command) {
 }
 
 void send(char *command) {
-    isoSend(destinationId, (uint8_t*) command, strlen(command));    
+    isoSendPacket(destinationId, (uint8_t*) command, strlen(command));    
 }
 
 void help(char *command) {

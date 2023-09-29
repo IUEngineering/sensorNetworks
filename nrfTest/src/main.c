@@ -13,9 +13,6 @@
  *  send <waarde>
     Verstuurt wat je invoert op waarde naar de geselecteerde pipe
     
- *  wpip <pipenaam>
-    Verander de writing pipe
-    
  *  rpip <pipenaamm> <index>
     Verander de reading pipes
 
@@ -37,7 +34,6 @@
 #include "serialF0.h"
 #include "clock.h"
 #include "nrfChat.h"
-
 
 
 

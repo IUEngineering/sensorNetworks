@@ -25,7 +25,7 @@
 // Define list of neighbors (neighbors are friends :)
 static uint8_t myId = 0;
 static void pingOfLife(void);
-static void (*receiveCallback)(uint8_t *data, uint8_t length);
+static void (*receiveCallback)(uint8_t *payload, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
 static void openPrivateWritingPipe(uint8_t destId);
 
@@ -90,13 +90,14 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
         myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
 }
 
-void isoSend(uint8_t dest, uint8_t *data, uint8_t len) {
+void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     // Prevent segfault
     if(len > 31) len = 31;
 
+    // Build pay
     uint8_t sendData[32];
     sendData[0] = dest;
-    memcpy(sendData + 1, data, len);
+    memcpy(sendData + 1, payload, len);
 
     // Check if it's a direct neighbor. If it isn't, send it to the via neighbor.
     friend_t *sendFriend = findFriend(dest);
