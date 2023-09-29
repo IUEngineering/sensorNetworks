@@ -5,6 +5,12 @@
 
 #define INITIAL_FRIEND_LIST_LENGTH 8
 
+#define ACTIVATE_FRIEND
+#define DEACTIVATE_FRIEND
+#define MAX_TRUST
+#define FRIEND_ACTIVE
+#define FRIEND_INACTIVE
+
 uint8_t friendListLength = INITIAL_FRIEND_LIST_LENGTH;
 uint8_t friendAmount = 0;
 friend_t *friends;
