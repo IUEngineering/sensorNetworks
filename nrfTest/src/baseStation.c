@@ -9,6 +9,8 @@
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
 
+#define WAIT_FOR_RPY        'c'
+
 // Callback for when received data is meant for this node
 static void messageReceive(uint8_t *payload, uint8_t length);
 
@@ -19,8 +21,12 @@ void baseStationInit(void) {
 }
 
 void baseStationLoop(void) {
+    // wait until the RPI is ready for data from the Xmega
+    while (!(uartF0_getc() == WAIT_FOR_RPY));
+
     while (1) {
         isoUpdate();
+        printFriendsList();
     }
     
 }
@@ -34,7 +40,7 @@ static void messageReceive(uint8_t *payload, uint8_t length) {
 
 static void printFriendsList(void) {
     cli(); // Disable global interrupts
-    
+
     uint16_t numFriends = getNumFriends();
     uint16_t len = 5 * numFriends;
 
