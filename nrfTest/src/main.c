@@ -58,7 +58,7 @@ int main(void) {
         if (DEBUG)
             printf("I am a sensor node\n");
         
-        initChat();
+        nrfChatInit();
         nrfChatLoop();
 
     } else {
