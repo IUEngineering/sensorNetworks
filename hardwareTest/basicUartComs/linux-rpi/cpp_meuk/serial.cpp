@@ -61,6 +61,7 @@ uint8_t Serial::get(uint8_t* nByte) {
 
   // Read one byte only
   nSize = read(nStream_, nByte, 1);
+
   if (nSize == 0) {
     return SERIAL_WARNING + 1;
   };
