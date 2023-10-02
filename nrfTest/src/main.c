@@ -36,6 +36,7 @@
 #include "serialF0.h"
 #include "clock.h"
 #include "nrfChat.h"
+#include "baseStation.h"
 
 
 
@@ -64,6 +65,8 @@ int main(void) {
         if (DEBUG)
             printf("I am a base-station");
         
+        baseStationInit();
+        baseStationLoop();
     }
 }
 

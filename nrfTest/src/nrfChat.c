@@ -53,7 +53,7 @@ void nrfChatLoop(void) {
     }
 }
 
-void initChat(void) {
+void nrfChatInit(void) {
     // Send welcome message
     printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
     isoInit(messageReceive);

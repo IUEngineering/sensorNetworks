@@ -14,7 +14,7 @@ extern char receivedPacket[];
 // This contains the while(1) of the nrfChat program
 void nrfChatLoop(void);
 
-void initChat(void);
+void nrfChatInit(void);
 void interpretNewChar(char newChar);
 uint8_t getUserInputLength(void);
 char *getCurrentInputBuffer(void);
