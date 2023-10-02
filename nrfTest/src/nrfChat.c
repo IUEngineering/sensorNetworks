@@ -140,8 +140,10 @@ void printReceivedMessage(void) {
     printf("\n\n");
 
     // Print the input buffer back onto the terminal.
-    if(bufferPtr != inputBuffer)
+    if(bufferPtr != inputBuffer) {
+        *bufferPtr = '\0';
         printf("%s", inputBuffer);
+    }
 
     receivedFlag = 0;
 }

@@ -17,7 +17,6 @@ friend_t *friends;
 
 static void removeFriend(friend_t *friend);
 static friend_t *newFriend(uint8_t id, uint8_t hops, uint8_t via);
-static void removeViaReferences(uint8_t id);
 
 
 void initFriendList() {
@@ -29,24 +28,29 @@ friend_t *updateFriend(uint8_t id, uint8_t hops, uint8_t via) {
 
     // Check if we already know this friend.
     friend_t *oldFriend = findFriend(id);
-    if(oldFriend != NULL) {
-        if(hops == 0) {
-            oldFriend->trust += TRUST_ADDER;
-            if(oldFriend->trust > ACTIVATE_TRUST) oldFriend->active = 1;
 
-            // Make sure the friend doesn't get too trusted (we have trust issues).
-            if(oldFriend->trust > MAX_TRUST) oldFriend->trust = MAX_TRUST;
-        }
-        else if(hops < oldFriend->hops) {
-            // Replace old friend if it has a longer path.
-            oldFriend->via = via;
-            oldFriend->hops = hops;
-        }
-        return oldFriend;
-    }
-    else {
+    // If we don't, create a new one.
+    if(oldFriend == NULL) {
         return newFriend(id, hops, via);
     }
+    
+    // If it's a direct connection:
+    if(hops == 0) {
+        oldFriend->trust += TRUST_ADDER;
+
+        // Make sure the friend doesn't get too trusted (we have trust issues).
+        if(oldFriend->trust > MAX_TRUST) oldFriend->trust = MAX_TRUST;
+
+        // Activate the friend when we trust it enough.
+        if(oldFriend->trust > ACTIVATE_TRUST) oldFriend->active = 1;
+    }
+    // Replace old friend if it has more hops.
+    else if(hops < oldFriend->hops) {
+        oldFriend->via = via;
+        oldFriend->hops = hops;
+    }
+
+    return oldFriend;
 }
 
 friend_t *newFriend(uint8_t id, uint8_t hops, uint8_t via) {
@@ -56,23 +60,24 @@ friend_t *newFriend(uint8_t id, uint8_t hops, uint8_t via) {
     if(friendListLength == friendAmount) {
         // Resize the list to add 8 bytes.
         friends = (friend_t *) realloc(friends, friendListLength + INITIAL_FRIEND_LIST_LENGTH);
-        friendListLength += 8;
+        friendListLength += INITIAL_FRIEND_LIST_LENGTH;
         friendPtr = friends + friendAmount;
+        printf("Made the array bigger :)\n");
     }
     else {
         // Find the nearest hole in the list.
         friendPtr = friends;
         while(friendPtr->id != 0) friendPtr++;
-        friendAmount++;
     }
 
     friendPtr->id = id;
     friendPtr->via = via;
     friendPtr->hops = hops;
     friendPtr->active = 0;
+    friendAmount++;
 
     // Make sure all directly connected friends get a trust boost.
-    if(via == 0) friendPtr->trust = 3;
+    if(hops == 0) friendPtr->trust = TRUST_ADDER;
     else friendPtr->trust = 0;
 
     return friendPtr;
@@ -91,13 +96,12 @@ void printFriends() {
 
     printf("My %d friends :)\n", friendAmount);
     printf("\t\e[0;31mID\tTrust\tActive\tHops\tVia\e[0m\n");
-    friend_t *friend = friends;
-    for(uint8_t i = 0; i < friendAmount;) {
-        if(friend->id != 0) {
-            printf("%3d\t\e[0;35m0x%02x\e[0m\t%2d\t%1d\t%02d\t0x%02x\n", friend - friends, friend->id, friend->trust, friend->active, friend->hops, friend->via);
+
+    for(uint8_t i = 0; i < friendListLength; i++) {
+        if(friends[i].id != 0) {
+            printf("%3d\t\e[0;35m0x%02x\e[0m\t%2d\t%1d\t%02d\t0x%02x\n", i, friends[i].id, friends[i].trust, friends[i].active, friends[i].hops, friends[i].via);
             i++;
         }
-        friend++;
     }
     printf("\n");
 }
@@ -105,7 +109,9 @@ void printFriends() {
 void friendTimeTick() {
     for(uint8_t i = 0; i < friendListLength; i++) {
         if(friends[i].id != 0 && friends[i].trust > 0) {
-            friends[i].trust--;
+
+            // Reduce trust.
+            friends[i].trust -= TRUST_SUBTRACTOR;
 
             // Deactivate friend.
             if(friends[i].active && friends[i].trust < DEACTIVATE_TRUST) {
@@ -125,12 +131,12 @@ void friendTimeTick() {
 void removeViaReferences(uint8_t id) {
     for(uint8_t i = 0; i < friendListLength; i++) {
         if(friends[i].id != 0  &&  friends[i].via == id) {
+
             // Only remove the friend if we have no direct connection to it.
             if(friends[i].trust > 0) {
                 friends[i].hops = 0;
                 friends[i].via = 0;
             }
-
             else removeFriend(friends + i);
         }
     }
@@ -143,13 +149,15 @@ friend_t *getFriendsList(uint8_t *listLength) {
 }
 
 void getFriends(friend_t *buf) {
-    uint8_t friendIndex = 0;
-    for(uint8_t i = 0; friendIndex < friendAmount; i++) {
+    uint8_t bufIndex = 0;
+    for(uint8_t i = 0; bufIndex < friendAmount; i++) {
         if(friends[i].id != 0) {
-            buf[friendIndex++] = friends[i];
+            // Copy the friend into the buffer.
+            buf[bufIndex] = friends[i];
+            bufIndex++;
         }
     }
-    buf[friendIndex].id = 0;
+    buf[bufIndex].id = 0;
 }
 
 

@@ -29,6 +29,8 @@ static void (*receiveCallback)(uint8_t *payload, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
+static void receiveFuckAll(void);
+static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower);
 
 
 //TODO: optimize the init
@@ -51,7 +53,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     // Initialize the receiving interrupt
     PORTF.INT0MASK |= PIN6_bm;
     PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
-    PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+    // PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
     
 
     // Read the ID from the GPIO pins.
@@ -77,6 +79,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
 
     initFriendList();
+    // updateFriend(0x39, 0, 0);
 
 
     // Initialize the timer/counter for sending POL's and removing friends.
@@ -93,9 +96,11 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 void isoUpdate(void) {
     // Read the timer counter overflow interrupt flag.
     if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
-
     // Reset said flag.
     TCD0.INTFLAGS |= TC0_OVFIF_bm;
+
+
+    receiveFuckAll();
 }
 
 void timerOverflow(void) {
@@ -103,10 +108,32 @@ void timerOverflow(void) {
     pingOfLife();
     // you've been feeding my veins.
 
+    // updateFriend(0x39, 0, 0);
+
+    cli();
     friendTimeTick();
+    sei();
+}
+
+void receiveFuckAll(void) {
+    uint8_t receivePipe = 0xff;
+
+    // Did I receive something actually valuable? 
+    if(nrfAvailable(&receivePipe)) {
+        uint8_t receivePower = nrfReadRegister(9);
+        uint8_t length = nrfGetDynamicPayloadSize();
+        uint8_t packet[32];
+
+        // Put received data into a buffer.
+        nrfRead(packet, length);
+
+        interpretPacket(packet, length, receivePipe, receivePower);
+    }    
+
 }
 
 void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
+
     // Prevent segfault
     if(len > 31) len = 31;
 
@@ -148,24 +175,87 @@ void send(uint8_t *data, uint8_t len) {
     nrfStartListening();
 }
 
-
 void pingOfLife(void) {
-    uint8_t listLength = 0;
-    friend_t *friends = getFriendsList(&listLength);
-    
-    // Cringe iso implemention.
+
+    // Define the list of friends.
+    friend_t friends[32];
+
+    cli();
+    // Get the list of friends.
+    getFriends(friends);
+    sei();
+
+    // Define and intialize the ping.
     uint8_t ping[32];
-    uint8_t pingSize = 1;
+    memset(ping, 0, 32);
     ping[0] = myId;
 
-    // Build ping message.
-    for(uint8_t i = 0; i < listLength; i++)
-        if(friends[i].id != 0 && friends[i].hops == 0) 
-            ping[pingSize++] = friends[i].id;
+    // For the first byte of the ping.
+    uint8_t foundFirstDirectFriend = 0;
 
+    // Keep track of indeces.
+    uint8_t friendsIndex = 0;
+    uint8_t pingIndex = 3;
+
+
+    // Build ping message.
+    while(friends[friendsIndex].id != 0 && pingIndex < 31 && friendsIndex < 32) {
+
+        // Make sure we're not sending inactive direct friends.
+        if(!friends[friendsIndex].active  &&  !friends[friendsIndex].hops) {
+            friendsIndex++;
+            continue;
+        }
+
+        // Put the first direct friend on index one, as the iso states (I hope).
+        if(!foundFirstDirectFriend  &&  friends[friendsIndex].active) {
+            foundFirstDirectFriend = 1;
+            ping[1] = friends[friendsIndex].id;
+        }
+
+        // Build the rest of the ping.
+        else if(friends[friendsIndex].hops < 16 || friends[friendsIndex].active) {
+            // Ping build:
+            //* Index:      0   1   2   3   4   5   6   7   8   9   10
+            //* Index % 3:  0   1   2   0   1   2   0   1   2   0   1
+            //* Type:       mID Fst Hps id1 id2 Hps id1 id2 Hps id1 id2
+            //
+            //  mID = My ID.
+            //  Fst = First direct friend.
+            //  Hps = Hops of the coming 2 friends.     | Index % 3 = 2
+            //  id1 = First friend of last hops count.  | Index % 3 = 0
+            //  id2 = Second friend of last hops count. | Index % 3 = 1
+
+            // Actually copy the friend's id into the ping.
+            ping[pingIndex] = friends[friendsIndex].id;
+
+            // Make sure to set the hops to 0 if the friend is active.
+            const uint8_t hopsAmount = friends[friendsIndex].active ? 0 : friends[friendsIndex].hops;
+
+            // Find if this is an id1 or id2 situation
+            if(pingIndex % 3 == 0) {
+                ping[pingIndex - 1] |= hopsAmount << 4;
+                pingIndex++;
+            }
+            else {
+                ping[pingIndex - 2] |= hopsAmount;
+                pingIndex += 2;
+            }   
+        }
+        
+        friendsIndex++;
+    }
+
+    for(uint8_t i = 0; i < pingIndex; i++)
+        printf("\e[0%sm%02x\e[0m ", (i % 3) == 2 ? ";34" : "", ping[i]);
+    
+    printf("\n");
+
+    // If it ended with a hops byte, don't include it (it's obviously just going to be 0x00).
+    if(pingIndex % 3 == 0) pingIndex--;
 
     nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
-    send(ping, pingSize);
+    send(ping, pingIndex);
 }
 
 
@@ -175,7 +265,7 @@ void openPrivateWritingPipe(uint8_t destId) {
     nrfOpenWritingPipe(writingPipe);
 }
 
-static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
+void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
     
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
@@ -183,25 +273,43 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
         // Add the sender as a new direct neighbor friend.
         friend_t *directFriend = updateFriend(packet[0], 0, 0);
 
-        // If we trust this friend enough:
-        if(directFriend->active)
-            // Add all the sender's friends.
-            for(uint8_t i = 1; i < length; i++)
-                // Make sure you're not adding yourself as friend (you can't be schizophrenic).
-                if(packet[i] != myId) 
-                    updateFriend(packet[i], 1, packet[0]);
+        // Do we trust this friend enough?
+        if(!directFriend->active) return;
 
+        removeViaReferences(packet[0]);
+
+        // Add the first direct friend.
+        if(packet[1] != myId) updateFriend(packet[1], 1, packet[0]);
+
+        // Add the rest of sender's friends.
+        for(uint8_t i = 3; i < length;) {
+            // See the comments in pingOfLife() for an explanation of this.
+            // If it's the first of the 2 ID's:
+            if(i % 3 == 0) {
+                if(packet[i] != myId) 
+                    updateFriend(packet[i], (packet[i - 1] >> 4) + 1, packet[0]);
+                i++;
+            }
+            // Else if it's the second:
+            else {
+                if(packet[i] != myId) 
+                    updateFriend(packet[i], (packet[i - 2] & 0x0f) + 1, packet[0]);
+                i += 2;
+            }
+        }
+
+        // receiveCallback(packet, length);
+    
         return;
     }
+
 
     PORTF.OUTTGL = PIN1_bm;
     if(receivePower) PORTF.OUTSET = PIN0_bm;
     else PORTF.OUTCLR = PIN0_bm;
 
-
     // If it's a message for me.
     if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
-    
 
     // If it's a message for someone else.
     else {
@@ -213,20 +321,4 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
 
 uint8_t isoGetId(void) {
     return myId;
-}
-
-ISR(PORTF_INT0_vect) {
-    uint8_t receivePipe = 0xff;
-
-    // Did I receive something actually valuable? 
-    if(nrfAvailable(&receivePipe)) {
-        uint8_t receivePower = nrfReadRegister(9);
-        uint8_t length = nrfGetDynamicPayloadSize();
-        uint8_t packet[32];
-
-        // Put received data into a buffer.
-        nrfRead(packet, length);
-
-        interpretPacket(packet, length, receivePipe, receivePower);
-    }    
 }
