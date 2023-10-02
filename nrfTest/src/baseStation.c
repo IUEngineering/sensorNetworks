@@ -15,7 +15,10 @@ void baseStationInit(void) {
 }
 
 void baseStationLoop(void) {
-
+    while (1) {
+        isoUpdate();
+    }
+    
 }
 
 static void messageReceive(uint8_t *payload, uint8_t length) {
