@@ -17,7 +17,7 @@ int UpdateTouchWindow(WINDOW *pWin) {
 
     // Draw window border
     box(pWin, 0, 0);
-    mvwprintw(pWin, 0, 1, "TOUCH jochem hi");
+    mvwprintw(pWin, 0, 1, "Hi Nielsie ");
     // Show mouse status
     mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
     mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
@@ -66,7 +66,7 @@ int main(int nArgc, char* aArgv[]) {
     cbreak();
 
     attron(A_REVERSE);
-    mvprintw(1, 1, "[ESC] to quit, LB>RB>RO to restart, LB>LO>RO to shutdown");
+    mvprintw(1, 1, "[ESC] to quit, LT->RT->RB to restart, LT->LB-> RB to shutdown, LB->LM->RM->RB to reboot");
     
     refresh();
     attroff(A_REVERSE);
