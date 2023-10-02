@@ -136,6 +136,9 @@ void removeViaReferences(uint8_t id) {
     }
 }
 
+uint8_t getNumFriends(void) {
+    return friendAmount;
+}
 
 friend_t *getFriendsList(uint8_t *listLength) {
     *listLength = friendListLength;
