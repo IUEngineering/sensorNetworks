@@ -45,10 +45,10 @@ static void sendFriendsList(void) {
     // adding friends halve way through this function
     cli(); 
 
-    uint16_t numFriends = getFriendAmount();
-    uint16_t len = 5 * numFriends;
+    uint16_t friendAmount = getFriendAmount();
+    uint16_t len = 5 * friendAmount;
 
-    friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * numFriends);
+    friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * friendAmount);
 
     getFriends(friends);
 
@@ -56,7 +56,7 @@ static void sendFriendsList(void) {
     uartF0_putc((uint8_t) len >> 8);
     uartF0_putc((uint8_t) len);
 
-    for (uint16_t i = 0; i < numFriends; i++) {
+    for (uint16_t i = 0; i < friendAmount; i++) {
         uartF0_putc(friends[i].id);
         uartF0_putc(friends[i].hops);
         uartF0_putc(friends[i].via);
