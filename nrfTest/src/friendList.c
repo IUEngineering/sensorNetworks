@@ -110,9 +110,9 @@ void friendTimeTick() {
             // Deactivate friend.
             if(friends[i].active && friends[i].trust < DEACTIVATE_TRUST) {
                 friends[i].active = 0;
+                
                 // Remove all via references to this friend.
                 removeViaReferences(friends[i].id);
-                printf("Deactivated friend 0x%02x\n", friends[i].id);
             }
 
             // Remove friend if we have no way of reaching it anymore.

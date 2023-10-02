@@ -28,6 +28,7 @@ static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *payload, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
 static void openPrivateWritingPipe(uint8_t destId);
+static void timerOverflow(void);
 
 
 //TODO: optimize the init
@@ -82,12 +83,27 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     TCD0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
     TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
     TCD0.CCA      = TC_CCA;
-    TCD0.INTCTRLA |= TC_OVFINTLVL_LO_gc;
 
     receiveCallback = callback;
 
     printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", \
         myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
+}
+
+void isoUpdate(void) {
+    // Read the timer counter overflow interrupt flag.
+    if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
+
+    // Reset said flag.
+    TCD0.INTFLAGS |= TC0_OVFIF_bm;
+}
+
+void timerOverflow(void) {
+    // Cut the
+    pingOfLife();
+    // you've been feeding my veins.
+
+    friendTimeTick();
 }
 
 void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
@@ -186,7 +202,7 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
     // If it's a message for me.
     if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
     
-    
+
     // If it's a message for someone else.
     else {
         // Relay packet
@@ -213,11 +229,4 @@ ISR(PORTF_INT0_vect) {
 
         interpretPacket(packet, length, receivePipe, receivePower);
     }    
-}
-
-ISR(TCD0_OVF_vect) {
-    // Cut the
-    pingOfLife();
-    // you've been feeding my veins.
-    friendTimeTick();
 }

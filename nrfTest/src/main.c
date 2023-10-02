@@ -58,6 +58,7 @@ int main(void) {
         }
 
         printReceivedMessage();
+        isoUpdate();
     }
 }
 
