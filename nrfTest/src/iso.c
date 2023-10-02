@@ -99,13 +99,20 @@ void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     sendData[0] = dest;
     memcpy(sendData + 1, payload, len);
 
-    // Check if it's a direct neighbor. If it isn't, send it to the via neighbor.
     friend_t *sendFriend = findFriend(dest);
     if(sendFriend == NULL) {
         printf("I don't know friend %02x\n\n", dest);
         return;
     }
-    if(sendFriend->hops != 0) sendFriend = findFriend(sendFriend->via);
+
+    // Check if the friend is active. If it isn't, send via another friend.
+    if(sendFriend->active == 0) sendFriend = findFriend(sendFriend->via);
+
+    // Does the via friend exist?
+    if(sendFriend == NULL) {
+        printf("Friend isn't trusted. Found no active vias.\n\n");
+        return;
+    }
 
     TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
     openPrivateWritingPipe(sendFriend->id);
@@ -187,6 +194,11 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
         openPrivateWritingPipe(destFriend->via);
         send(packet, length);
     }
+}
+
+
+uint8_t isoGetId(void) {
+    return myId;
 }
 
 ISR(PORTF_INT0_vect) {

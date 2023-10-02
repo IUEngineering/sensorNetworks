@@ -8,7 +8,7 @@
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
-#define COMMANDS 6
+#define COMMANDS 7
 #define INPUT_BUFFER_LENGTH 38
 
 static void rpip(char *command);
@@ -17,6 +17,7 @@ static void chan(char *command);
 static void send(char *command);
 static void list(char *command);
 static void dest(char *command);
+static void myid(char *command);
 static void runCommand(char *command);
 
 static void messageReceive(uint8_t *payload, uint8_t length);
@@ -136,12 +137,12 @@ void messageReceive(uint8_t *payload, uint8_t length) {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        rpip, send, help, chan, list, dest
+        rpip, send, help, chan, list, dest, myid
     };
 
     // Make a corresponding array of 4 letter function names.
     const char commands[COMMANDS][4] = {
-        "rpip", "send", "help", "chan", "list", "dest"
+        "rpip", "send", "help", "chan", "list", "dest", "myid"
     };
 
     
@@ -199,8 +200,9 @@ void help(char *command) {
     printf("*    /rpip <pipename> [index]\n\tChange one of the reading pipes. The reading pipe index can be provided, the default is 0.\n\n");
     printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n");
     printf("*    /list\n\tPrint a list of friends :)\n\n");
-    printf("*    /dest <id>\n\tChange the id of the destination node.\n\n\n");
-    printf("The program continually prints what it is receiving on all open reading pipes.\n\n");
+    printf("*    /dest <id>\n\tChange the id of the destination node.\n\n");
+    printf("*    /myid\n\tGet your ID.\n\n");
+    printf("\nThe program continually prints what it is receiving on all open reading pipes.\n\n");
 }
 
 // Function to change the frequency channel.
@@ -224,4 +226,8 @@ void dest(char *command) {
         destinationId = newId;
         printf("New destination ID is 0x%02x\n\n", newId);
     }
+}
+
+void myid(char *command) {
+    printf("Your ID is 0x%02x\n", isoGetId());
 }
