@@ -5,10 +5,10 @@
 
 #define INITIAL_FRIEND_LIST_LENGTH 8
 
-#define ACTIVATE_TRUST      5
-#define DEACTIVATE_TRUST    4
-#define MAX_TRUST           8
-#define TRUST_ADDER         3   
+#define ACTIVATE_TRUST      7
+#define DEACTIVATE_TRUST    5
+#define MAX_TRUST           10
+#define TRUST_ADDER         2   
 #define TRUST_SUBTRACTOR    1
 
 uint8_t friendListLength = INITIAL_FRIEND_LIST_LENGTH;
@@ -90,11 +90,11 @@ void printFriends() {
     }
 
     printf("My %d friends :)\n", friendAmount);
-    printf("\e[0;31mID Trust Active Hops Via\e[0m\n");
+    printf("\t\e[0;31mID\tTrust\tActive\tHops\tVia\e[0m\n");
     friend_t *friend = friends;
     for(uint8_t i = 0; i < friendAmount;) {
         if(friend->id != 0) {
-            printf("  %3d  \e[0;35m0x%02x\e[0m  %1d  %1d  %02d  0x%02x\n", friend - friends, friend->id, friend->trust, friend->active, friend->hops, friend->via);
+            printf("%3d\t\e[0;35m0x%02x\e[0m\t%2d\t%1d\t%02d\t0x%02x\n", friend - friends, friend->id, friend->trust, friend->active, friend->hops, friend->via);
             i++;
         }
         friend++;

@@ -36,7 +36,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     nrfBegin();
     
     nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_NORETRANSMIT_gc);
-    nrfSetPALevel(NRF_RF_SETUP_PWR_0DBM_gc);
+    nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
     nrfSetDataRate(NRF_RF_SETUP_RF_DR_2M_gc);
     nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
     nrfSetChannel(STANDARD_CHANNEL);
