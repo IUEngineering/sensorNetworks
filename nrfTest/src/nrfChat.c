@@ -39,6 +39,20 @@ static char *bufferPtr = inputBuffer;
 static uint8_t receivedFlag = 0;
 
 
+void nrfChatLoop(void) {
+    while (1) {
+        // Get the character from the user.
+        char newInputChar = uartF0_getc();
+
+        if(newInputChar != '\0') {
+           interpretNewChar(newInputChar);
+        }
+
+        printReceivedMessage();
+        isoUpdate();
+    }
+}
+
 void initChat(void) {
     // Send welcome message
     printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
