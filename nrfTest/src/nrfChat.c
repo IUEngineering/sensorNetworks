@@ -18,7 +18,9 @@ static void send(char *command);
 static void list(char *command);
 static void dest(char *command);
 static void myid(char *command);
+
 static void runCommand(char *command);
+static void interpretInput(char *buffer, uint8_t repeat);
 
 static void messageReceive(uint8_t *payload, uint8_t length);
 
@@ -59,11 +61,12 @@ void interpretNewChar(char newChar) {
 
     // Things like minicom and teraterm send return characters as \r. Very annoying.
     else if(newChar == '\r') {
-        *bufferPtr = '\0';
-        printf("\n");
 
-        if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else send(inputBuffer); 
+        printf("\n");
+        // Just repeat last message if nothing is entered.
+        if(inputBuffer != bufferPtr) *bufferPtr = '\0';
+
+        interpretInput(inputBuffer, inputBuffer == bufferPtr);
 
         // Reset the bufferPtr to the start of the buffer again.
         bufferPtr = inputBuffer;
@@ -77,6 +80,22 @@ void interpretNewChar(char newChar) {
         // Provide an echo of what the user is typing.
         // Otherwise the user's input would be invisible to the user.
         uartF0_putc(newChar);
+    }
+}
+
+void interpretInput(char *buffer, uint8_t repeat) {
+    static uint8_t repeatCount = 0;
+
+    if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
+    else if(repeat) {
+        char sendBuf[INPUT_BUFFER_LENGTH + 4];
+        sprintf(sendBuf, "%s %d", buffer, repeatCount++);
+        printf("Sent %s\n", sendBuf);
+        send(sendBuf);
+    }
+    else {
+        send(inputBuffer);
+        repeatCount = 0;
     }
 }
 
