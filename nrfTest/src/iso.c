@@ -99,6 +99,7 @@ void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     sendData[0] = dest;
     memcpy(sendData + 1, payload, len);
 
+    // Find the destination
     friend_t *sendFriend = findFriend(dest);
     if(sendFriend == NULL) {
         printf("I don't know friend %02x\n\n", dest);
@@ -114,13 +115,13 @@ void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
         return;
     }
 
-    TCD0.CTRLA    = TC_CLKSEL_OFF_gc;
+    if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
+    else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);
+
+    TCD0.CTRLA = TC_CLKSEL_OFF_gc;
     openPrivateWritingPipe(sendFriend->id);
     send(sendData, len + 1);
-    TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
-
-    if(sendFriend->id == dest) printf("Sent to %02x\n\n", dest);
-    else printf("Sent to %02x via %02x.\n\n", dest, sendFriend->id);
+    TCD0.CTRLA = TC_CLKSEL_DIV256_gc;
 }
 
 void send(uint8_t *data, uint8_t len) {
@@ -180,19 +181,16 @@ static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe
     PORTF.OUTTGL = PIN1_bm;
     if(receivePower) PORTF.OUTSET = PIN0_bm;
     else PORTF.OUTCLR = PIN0_bm;
-    printf("Receive Power: %d\n", receivePower);
+
 
     // If it's a message for me.
     if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
     
+    
     // If it's a message for someone else.
     else {
-        friend_t *destFriend = findFriend(packet[0]);
-        if(destFriend == NULL) return;
-
-        // Relay the message.
-        openPrivateWritingPipe(destFriend->via);
-        send(packet, length);
+        // Relay packet
+        isoSendPacket(packet[0], packet + 1, length - 1);
     }
 }
 

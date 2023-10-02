@@ -30,7 +30,7 @@ friend_t *updateFriend(uint8_t id, uint8_t hops, uint8_t via) {
     // Check if we already know this friend.
     friend_t *oldFriend = findFriend(id);
     if(oldFriend != NULL) {
-        if(via == 0) {
+        if(hops == 0) {
             oldFriend->trust += TRUST_ADDER;
             if(oldFriend->trust > ACTIVATE_TRUST) oldFriend->active = 1;
 
@@ -112,6 +112,7 @@ void friendTimeTick() {
                 friends[i].active = 0;
                 // Remove all via references to this friend.
                 removeViaReferences(friends[i].id);
+                printf("Deactivated friend 0x%02x\n", friends[i].id);
             }
 
             // Remove friend if we have no way of reaching it anymore.
@@ -144,9 +145,13 @@ friend_t *getFriendsList(uint8_t *listLength) {
 
 // Find a friend, and return a pointer to that friend.
 friend_t *findFriend(uint8_t id) {
+    // ID 0x00 is invalid.   
+    if(id == 0x00) return NULL;
+
     for(uint8_t i = 0; i < friendListLength; i++) {
         if(friends[i].id == id) return friends + i;
     }
     // If the friend was not found :(
     return NULL;
 }
+
