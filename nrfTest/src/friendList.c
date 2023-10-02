@@ -110,7 +110,7 @@ void friendTimeTick() {
             // Deactivate friend.
             if(friends[i].active && friends[i].trust < DEACTIVATE_TRUST) {
                 friends[i].active = 0;
-                
+
                 // Remove all via references to this friend.
                 removeViaReferences(friends[i].id);
             }
@@ -140,6 +140,16 @@ void removeViaReferences(uint8_t id) {
 friend_t *getFriendsList(uint8_t *listLength) {
     *listLength = friendListLength;
     return friends;
+}
+
+void getFriends(friend_t *buf) {
+    uint8_t friendIndex = 0;
+    for(uint8_t i = 0; friendIndex < friendAmount; i++) {
+        if(friends[i].id != 0) {
+            buf[friendIndex++] = friends[i];
+        }
+    }
+    buf[friendIndex].id = 0;
 }
 
 
