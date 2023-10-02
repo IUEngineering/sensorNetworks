@@ -13,11 +13,24 @@
 #include <ncurses.h>
 #include <rpitouch.h>
 
+#define BESTTEXT_PAIR     1
+#define EMPTY_PAIR     1
+#define WATER_PAIR     2
+#define MOUNTAIN_PAIR  3
+#define PLAYER_PAIR    4
+
 int UpdateTouchWindow(WINDOW *pWin) {
 
     // Draw window border
     box(pWin, 0, 0);
+    
+    init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
+    attron(COLOR_PAIR(BESTTEXT_PAIR));
+
+    attron()
     mvwprintw(pWin, 0, 1, "Hi Nielsie ");
+    attroff(COLOR_PAIR(BESTTEXT_PAIR));
+
     // Show mouse status
     mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
     mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
@@ -65,9 +78,15 @@ int main(int nArgc, char* aArgv[]) {
     noecho();
     cbreak();
 
-    attron(A_REVERSE);
-    mvprintw(1, 1, "[ESC] to quit, LT->RT->RB to restart, LT->LB-> RB to shutdown, LB->LM->RM->RB to reboot");
     
+
+    attron(A_REVERSE);
+    start_color();
+    init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
+    attron(COLOR_PAIR(BESTTEXT_PAIR));
+    mvprintw(1, 1, "[ESC] to quit, LT->RT->RB to restart, LT->LB-> RB to shutdown, LB->LM->RM->RB to reboot");
+    attroff(COLOR_PAIR(BESTTEXT_PAIR));
+
     refresh();
     attroff(A_REVERSE);
 
