@@ -38,12 +38,12 @@ void printFriends(void);
 //* Deactivate friends if they are not trustworthy
 void friendTimeTick(void);
 
+friend_t *getFriendsList(uint8_t *listLength);
+
 //* Get a list of the direct friends
 //* 
-//* *dFriends: array to store n direct friends. If there are not enough direct friends a 0x00 will be added
-//* length: Gives the length of the dFriends array
-void getDirectFriends(uint8_t *dFriends, uint8_t length);
-friend_t *getFriendsList(uint8_t *listLength);  // TODO: change with getDirectFriends(uint8_t *dFriends, uint8_t length);
+//* *buf: Buffer to store the friends in.
+void getFriends(friend_t *buf);
 
 //* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
 friend_t *findFriend(uint8_t id);
