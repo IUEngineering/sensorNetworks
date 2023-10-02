@@ -17,9 +17,9 @@ int UpdateTouchWindow(WINDOW *pWin) {
 
     // Draw window border
     box(pWin, 0, 0);
-
+    mvwprintw(pWin, 0, 1, "TOUCH jochem hi");
     // Show mouse status
-    mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch" : "-----"));
+    mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
     mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
 
     // Show touches
@@ -35,17 +35,22 @@ int UpdateTouchWindow(WINDOW *pWin) {
 
     // Update window
     wrefresh(pWin);
-
     return 0;
 }
 
-/** -----------------------------------
- *
- */
+
 int main(int nArgc, char* aArgv[]) {
+    refresh();
+
+
 
     int nRet;
     WINDOW *pMenuWindow;
+
+    mvwprintw(pMenuWindow, 1, 4, "%s", ("-----"));
+
+    wborder(pMenuWindow, '|', '|', '-', '-', '+', '+', '+', '+');
+
 
     // Start to search for the correct event-stream
     nRet = RPiTouch_InitTouch();
@@ -62,13 +67,13 @@ int main(int nArgc, char* aArgv[]) {
 
     attron(A_REVERSE);
     mvprintw(1, 1, "[ESC] to quit, LB>RB>RO to restart, LB>LO>RO to shutdown");
+    
     refresh();
     attroff(A_REVERSE);
 
     pMenuWindow = newwin(1 + 2 + RPITOUCH_DEVICE_SLOT_COUNT + 1, 40, 6, 1);
     keypad(pMenuWindow, true);
     nodelay(pMenuWindow, true);
-    UpdateTouchWindow(pMenuWindow);
 
     // Cheange touch settings
     _oRPiTouch_Settings.bRestartApply = false;
