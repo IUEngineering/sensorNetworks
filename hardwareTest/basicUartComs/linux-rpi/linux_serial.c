@@ -24,7 +24,7 @@
         printf("> Fault: there are no active serial devices chosen\n");
         printf("> The active options are:\n");
         chosenDir = opendir("/dev/");
-        if (chosenDir != NULL) {
+        if(chosenDir != NULL) {
             while((item = readdir(chosenDir)) != NULL) {
                 if (strncmp(item->d_name, "ttyACM", 6) ==0 ){
                     printf("%s ", item->d_name);
@@ -52,39 +52,18 @@
         printf(" OK\n");
     }
 
-    printf("Wait 2 sec: "); fflush(stdout);
-    sleep(2);
-    printf("OK"); fflush(stdout);
+    // Start char
+    serialPutChar('c');
 
-    // Stuur de test bytes
-    uint8_t cw = 0, cr = 0;
-    uint8_t retAmount;
-    do {
-        printf("> put "); fflush(stdout);
-        putChar(cw);
-        printf("%d =?= ", cw); fflush(stdout);
-
-    printf("get "); fflush(stdout);
-    do {
-      retAmount = getChar(&cr);
-      if (retAmount > SERIAL_WARNING) {
-        // Fatale fout
-        printf("\nFAULT! %d: device can't be connected\n", retAmount);
-        return 2;
-      };
-
-    } while (retAmount > 0);
-    printf("%d ", cr); fflush(stdout);
-
-    printf("\n"); fflush(stdout);
-    cw++;
-  }
-  while (cw != 0);
-
-  // Afsluiten
-  printf("\nClosed :D \n");
-
-  return 0;
-
-
-  }
+    while(1) {
+        uint8_t inByte;
+        uint8_t err = serialGetChar(&inByte);
+        if(err) {
+            //printf("fuck off %d\n", err);
+        }
+        else {
+            printf("%c ", inByte); 
+        }
+        //printf("%02x ", inByte); 
+    }
+}

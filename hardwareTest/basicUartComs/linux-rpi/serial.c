@@ -44,13 +44,12 @@ uint8_t initUartStream(char *name, uint32_t baudrate) {
     return 1;
 }
 
-uint8_t getChar(uint8_t *byte) {
+uint8_t serialGetChar(uint8_t *byte) {
     ssize_t size;
 
     if (streamIndex <= 0) {
         return SERIAL_WARNING;
     }
-
 
     // Read one byte only
     size = read(streamIndex, byte, 1);
@@ -82,7 +81,7 @@ uint8_t getChar(uint8_t *byte) {
 }
 
 
-uint8_t putChar(uint8_t byte) {
+uint8_t serialPutChar(uint8_t byte) {
     ssize_t size;
 
     // Check if the connection is valid
@@ -94,6 +93,15 @@ uint8_t putChar(uint8_t byte) {
     size = write(streamIndex, &byte, 1);
     if (size != 0) {
         return -1;
+    }
+
+    return 0;
+}
+
+
+uint8_t sendBuffer(uint8_t *buffer, uint8_t length) {
+    for(uint8_t i = 0; i < length; i++) {
+        if(serialPutChar(buffer[i])) return -1;
     }
 
     return 0;
