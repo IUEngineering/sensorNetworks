@@ -152,17 +152,20 @@ void openPrivateWritingPipe(uint8_t destId) {
 }
 
 static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
-    // If it's the broadcast pipe, it's probably a ping of life from another node.
+    
+    // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
 
         // Add the sender as a new direct neighbor friend.
-        addFriend(packet[0], 0, packet[0]);
+        friend_t *directFriend = updateFriend(packet[0], 0, 0);
 
-        // Add all the sender's friends.
-        for(uint8_t i = 1; i < length; i++)
-            // Make sure you're not adding yourself as friend (you can't be schizophrenic).
-            if(packet[i] != myId) 
-                addFriend(packet[i], 1, packet[0]);
+        // If we trust this friend enough:
+        if(directFriend->active)
+            // Add all the sender's friends.
+            for(uint8_t i = 1; i < length; i++)
+                // Make sure you're not adding yourself as friend (you can't be schizophrenic).
+                if(packet[i] != myId) 
+                    updateFriend(packet[i], 1, packet[0]);
 
         return;
     }
