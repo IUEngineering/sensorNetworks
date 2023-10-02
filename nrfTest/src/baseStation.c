@@ -14,12 +14,15 @@
 // Callback for when received data is meant for this node
 static void messageReceive(uint8_t *payload, uint8_t length);
 
-static void printFriendsList(void);
+// Send the friendslist to the RPI
+static void sendFriendsList(void);
 
+// Initialization of the baseStation program 
 void baseStationInit(void) {
     isoInit(messageReceive);
 }
 
+// The continues loop of the baseStation program 
 void baseStationLoop(void) {
     // wait until the RPI is ready for data from the Xmega
     while (!(uartF0_getc() == WAIT_FOR_RPY));
@@ -28,7 +31,6 @@ void baseStationLoop(void) {
         isoUpdate();
         printFriendsList();
     }
-    
 }
 
 static void messageReceive(uint8_t *payload, uint8_t length) {
@@ -38,10 +40,12 @@ static void messageReceive(uint8_t *payload, uint8_t length) {
         uartF0_putc(payload[i]);
 }
 
-static void printFriendsList(void) {
-    cli(); // Disable global interrupts
+static void sendFriendsList(void) {
+    // Disable global interrupts to prevent interrupts from 
+    // adding friends halve way through this function
+    cli(); 
 
-    uint16_t numFriends = getNumFriends();
+    uint16_t numFriends = getFriendAmount();
     uint16_t len = 5 * numFriends;
 
     friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * numFriends);

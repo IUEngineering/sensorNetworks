@@ -39,7 +39,7 @@ void printFriends(void);
 void friendTimeTick(void);
 
 //* Return the number of friends
-uint8_t getNumFriends(void);
+uint8_t getFriendAmount(void);
 
 friend_t *getFriendsList(uint8_t *listLength);
 

@@ -136,7 +136,7 @@ void removeViaReferences(uint8_t id) {
     }
 }
 
-uint8_t getNumFriends(void) {
+uint8_t getFriendAmount(void) {
     return friendAmount;
 }
 
