@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <avr/interrupt.h>
 #include "serialF0.h"
 
@@ -29,7 +30,7 @@ void baseStationLoop(void) {
 
     while (1) {
         isoUpdate();
-        printFriendsList();
+        sendFriendsList();
     }
 }
 
