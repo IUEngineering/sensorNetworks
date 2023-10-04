@@ -227,7 +227,8 @@ void help(char *command) {
     printf("\nThe program continually prints what it is receiving on all open reading pipes.\n\n");
 
     uint8_t len = strlen(command);
-    uint8_t *encryptedData = xorEncrypt((uint8_t*)command, len , 0xAB);
+    uint8_t key[] = {0xAB, 0x0F}; 
+    uint8_t *encryptedData = xorMultiEncrypt((uint8_t*)command, len , key, 2);
 
     for (uint8_t i = 0; i < len; i++) {
         printf("%x ", encryptedData[i]);

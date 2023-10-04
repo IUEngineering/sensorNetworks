@@ -11,10 +11,10 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
-#define BROADCAST_PIPE "BROAD"
+#define BROADCAST_PIPE "FNAFP"
 #define BROADCAST_PIPE_INDEX 0
 
-#define PRIVATE_PIPE "TYCH"
+#define PRIVATE_PIPE "FNAF"
 #define PRIVATE_PIPE_INDEX 1
 
 // Counter every 250 ms formula:
