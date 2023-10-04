@@ -7,6 +7,8 @@
 
 void isoInit(void (*callback)(uint8_t *payload, uint8_t length));
 void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len);
+void isoUpdate(void);
+uint8_t isoGetId(void);
 
 
 #endif
