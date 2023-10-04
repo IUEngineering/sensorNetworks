@@ -29,7 +29,6 @@ static void (*receiveCallback)(uint8_t *payload, uint8_t length);
 static void send(uint8_t *data, uint8_t len);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
-static void receiveFuckAll(void);
 static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower);
 
 
@@ -99,23 +98,6 @@ void isoUpdate(void) {
     // Reset said flag.
     TCD0.INTFLAGS |= TC0_OVFIF_bm;
 
-
-    receiveFuckAll();
-}
-
-void timerOverflow(void) {
-    // Cut the
-    pingOfLife();
-    // you've been feeding my veins.
-
-    // updateFriend(0x39, 0, 0);
-
-    cli();
-    friendTimeTick();
-    sei();
-}
-
-void receiveFuckAll(void) {
     uint8_t receivePipe = 0xff;
 
     // Did I receive something actually valuable? 
@@ -126,10 +108,20 @@ void receiveFuckAll(void) {
 
         // Put received data into a buffer.
         nrfRead(packet, length);
-
         interpretPacket(packet, length, receivePipe, receivePower);
-    }    
+    }
+}
 
+void timerOverflow(void) {
+    // Cut the
+    pingOfLife();
+    // you've been feeding my veins.
+
+    // updateFriend(0x39, 0, 0);
+
+    // cli();
+    friendTimeTick();
+    // sei();
 }
 
 void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
@@ -176,14 +168,13 @@ void send(uint8_t *data, uint8_t len) {
 }
 
 void pingOfLife(void) {
-
     // Define the list of friends.
     friend_t friends[32];
 
-    cli();
+    // cli();
     // Get the list of friends.
     getFriends(friends);
-    sei();
+    // sei();
 
     // Define and intialize the ping.
     uint8_t ping[32];
@@ -246,13 +237,13 @@ void pingOfLife(void) {
         friendsIndex++;
     }
 
-    for(uint8_t i = 0; i < pingIndex; i++)
-        printf("\e[0%sm%02x\e[0m ", (i % 3) == 2 ? ";34" : "", ping[i]);
-    
-    printf("\n");
+    // If we don't have any friends, make sure to only send our own ID.
+    if(friends[0].id == 0) pingIndex = 1;
 
     // If it ended with a hops byte, don't include it (it's obviously just going to be 0x00).
-    if(pingIndex % 3 == 0) pingIndex--;
+    // This also works if we only have 1 friend (the pingIndex never changes from 3).
+    else if(pingIndex % 3 == 0) pingIndex--;
+
 
     nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
     send(ping, pingIndex);
@@ -266,11 +257,21 @@ void openPrivateWritingPipe(uint8_t destId) {
 }
 
 void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
-    
+
+
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
 
+        PORTF.OUTTGL = PIN0_bm;
+        printf("Received PoL:\n");
+
+        for(uint8_t i = 0; i < length; i++)
+            printf("\e[0%sm%02x\e[0m ", (i % 3) == 2 ? ";34" : "", packet[i]);
+
+        printf("\n");
+
         // Add the sender as a new direct neighbor friend.
+        printf("D: ");
         friend_t *directFriend = updateFriend(packet[0], 0, 0);
 
         // Do we trust this friend enough?
@@ -279,21 +280,28 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
         removeViaReferences(packet[0]);
 
         // Add the first direct friend.
-        if(packet[1] != myId) updateFriend(packet[1], 1, packet[0]);
+        if(packet[1] != myId  &&  length > 1) {
+            printf("F: ");
+            updateFriend(packet[1], 1, packet[0]);
+        }
 
         // Add the rest of sender's friends.
         for(uint8_t i = 3; i < length;) {
             // See the comments in pingOfLife() for an explanation of this.
             // If it's the first of the 2 ID's:
             if(i % 3 == 0) {
-                if(packet[i] != myId) 
+                if(packet[i] != myId) {
+                    printf("1: ");
                     updateFriend(packet[i], (packet[i - 1] >> 4) + 1, packet[0]);
+                }
                 i++;
             }
             // Else if it's the second:
             else {
-                if(packet[i] != myId) 
+                if(packet[i] != myId) {
+                    printf("2: ");
                     updateFriend(packet[i], (packet[i - 2] & 0x0f) + 1, packet[0]);
+                }
                 i += 2;
             }
         }
