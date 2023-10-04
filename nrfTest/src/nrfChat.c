@@ -7,6 +7,7 @@
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
+#include "encrypt.h"
 
 #define COMMANDS 7
 #define INPUT_BUFFER_LENGTH 38
@@ -224,6 +225,14 @@ void help(char *command) {
     printf("*    /dest <id>\n\tChange the id of the destination node.\n\n");
     printf("*    /myid\n\tGet your ID.\n\n");
     printf("\nThe program continually prints what it is receiving on all open reading pipes.\n\n");
+
+    uint8_t len = strlen(command);
+    uint8_t *encryptedData = xorEncrypt((uint8_t*)command, len , 0xAB);
+
+    for (uint8_t i = 0; i < len; i++) {
+        printf("%x ", encryptedData[i]);
+    }
+    printf("\n");
 }
 
 // Function to change the frequency channel.
