@@ -26,8 +26,6 @@ int UpdateTouchWindow(WINDOW *pWin) {
     
     init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
     attron(COLOR_PAIR(BESTTEXT_PAIR));
-
-    attron()
     mvwprintw(pWin, 0, 1, "Hi Nielsie ");
     attroff(COLOR_PAIR(BESTTEXT_PAIR));
 

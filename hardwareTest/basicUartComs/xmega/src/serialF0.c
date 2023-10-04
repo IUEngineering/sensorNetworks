@@ -260,6 +260,7 @@ void init_stream(uint32_t f_cpu, uint32_t baud)
 } // init_stream
 
 
+
 //@cond
 // from here borrowed from J.D.Bakker md_serial.c
 
