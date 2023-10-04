@@ -262,8 +262,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
 
-        PORTF.OUTTGL = PIN0_bm;
-        printf("Received PoL:\n");
+        printf("Received PoL from 0x%02x\n", packet[0]);
 
         for(uint8_t i = 0; i < length; i++)
             printf("\e[0%sm%02x\e[0m ", (i % 3) == 2 ? ";34" : "", packet[i]);
@@ -271,7 +270,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
         printf("\n");
 
         // Add the sender as a new direct neighbor friend.
-        printf("D: ");
+        // printf("D: ");
         friend_t *directFriend = updateFriend(packet[0], 0, 0);
 
         // Do we trust this friend enough?
@@ -281,7 +280,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
 
         // Add the first direct friend.
         if(packet[1] != myId  &&  length > 1) {
-            printf("F: ");
+            // printf("F: ");
             updateFriend(packet[1], 1, packet[0]);
         }
 
@@ -291,7 +290,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
             // If it's the first of the 2 ID's:
             if(i % 3 == 0) {
                 if(packet[i] != myId) {
-                    printf("1: ");
+                    // printf("1: ");
                     updateFriend(packet[i], (packet[i - 1] >> 4) + 1, packet[0]);
                 }
                 i++;
@@ -299,7 +298,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
             // Else if it's the second:
             else {
                 if(packet[i] != myId) {
-                    printf("2: ");
+                    // printf("2: ");
                     updateFriend(packet[i], (packet[i - 2] & 0x0f) + 1, packet[0]);
                 }
                 i += 2;
