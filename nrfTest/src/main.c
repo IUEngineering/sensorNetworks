@@ -54,10 +54,10 @@ int main(void) {
         char newInputChar = uartF0_getc();
 
         if(newInputChar != '\0') {
-           interpretNewChar(newInputChar);
+           interpretChar(newInputChar);
         }
 
-        printReceivedMessage();
+        printReceivedMessages();
     }
 }
 

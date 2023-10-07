@@ -4,6 +4,8 @@
 
 #include "friendList.h"
 #include "nrfChat.h"
+#include "terminal.h"
+
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
@@ -11,129 +13,65 @@
 #define COMMANDS 6
 #define INPUT_BUFFER_LENGTH 38
 
+// 'Command line' functions.
 static void rpip(char *command);
 static void help(char *command);
 static void chan(char *command);
 static void send(char *command);
 static void list(char *command);
 static void dest(char *command);
-static void runCommand(char *command);
 
+// Callback functions.
+static void interpretInput(char *input);
 static void messageReceive(uint8_t *payload, uint8_t length);
 
 static uint8_t receivedMessage[32];
 static uint8_t receivedMessageLength = 0;
 static uint8_t destinationId = 0xff;
 
-// Make a buffer for the command.
-// Not going to worry about buffer overflow, just don't input too much and you'll be fine.
-static char inputBuffer[INPUT_BUFFER_LENGTH];
-
-// Make a char pointer to insert the next typed character into the buffer.
-static char *bufferPtr = inputBuffer;
-
-// Flag for printing the received message.
-static uint8_t receivedFlag = 0;
-
 
 void initChat(void) {
-    // Send welcome message
-    printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
+    // Send welcome message.
+    printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType \e[32m/help\e[0m for a list of commands.\n");
     isoInit(messageReceive);
+    terminalSetCallback(interpretInput);
+    
+    // Print a nice line (it looks cool).
     for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
     printf("\n\n");
+
+    PORTA.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
 }
 
+void interpretChar(char newChar) {
+    terminalInterpretChar(newChar);
+}
 
-void interpretNewChar(char newChar) {
-    
-    // Backspace support :)
-    if(newChar == '\b') {
-        if(bufferPtr != inputBuffer) {
-            bufferPtr--;
-            // Go back one character, replace the next character with a space, and then go back one character again.
-            printf("\b \b");
-        }
-    }
-
-    // Things like minicom and teraterm send return characters as \r. Very annoying.
-    else if(newChar == '\r') {
-        *bufferPtr = '\0';
-        printf("\n");
-
-        if(inputBuffer[0] == '/') runCommand(inputBuffer + 1);
-        else send(inputBuffer); 
-
-        // Reset the bufferPtr to the start of the buffer again.
-        bufferPtr = inputBuffer;
-    }
-
-    // Check if it's a printable character and if it's not overflowing any buffers.
-    else if(newChar >= ' ' && newChar <= '~' && (bufferPtr - inputBuffer < 31 || inputBuffer[0] == '/') && bufferPtr - inputBuffer < INPUT_BUFFER_LENGTH) {
-        *bufferPtr = newChar;
-        bufferPtr++;
-
-        // Provide an echo of what the user is typing.
-        // Otherwise the user's input would be invisible to the user.
-        uartF0_putc(newChar);
+void printReceivedMessages(void) {
+    if(receivedMessageLength) {
+        terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
+        receivedMessageLength = 0;
     }
 }
 
-uint8_t getUserInputLength(void) {
-    return bufferPtr - inputBuffer;
-}
-
-char *getCurrentInputBuffer(void) {
-    // Make sure there is a terminating \0 character so printf stops at the right place.
-    *bufferPtr = '\0';
-    return inputBuffer;
-}
-
-void printReceivedMessage(void) {
-    if(receivedFlag == 0) return;
-
-    // Make sure to overwrite the current buffer.
-    if(bufferPtr != inputBuffer) {
-        printf("\rReceived: \e[0;34m");
-
-        // Add enough spaces to hide te current buffer. (10 is the length of "Received: ")
-        for(uint8_t i = 0; i < (bufferPtr - inputBuffer) - 10; i++) 
-            uartF0_putc(' ');
-
-        printf("\n");
-    }
-    else 
-        printf("Received: \e[0;34m\n");
-
-    // Print received message as hex values.
-    for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++)
-        printf("%02x ", receivedMessage[i]);
-
-    printf("\e[0m\n");
-
-    // Print received message as characters.
-    for(uint8_t i = 0; i < receivedMessageLength && receivedMessage[i] != '\0'; i++) {
-        if(isprint(receivedMessage[i])) printf("%c  ", receivedMessage[i]);
-        else printf("   ");
-    }
-    
-    printf("\n\n");
-
-    // Print the input buffer back onto the terminal.
-    if(bufferPtr != inputBuffer)
-        printf("%s", inputBuffer);
-
-    receivedFlag = 0;
-}
-
-
+// Callback from iso.c.
+// Sends the received buffer over to terminal.c
 void messageReceive(uint8_t *payload, uint8_t length) {
-    receivedFlag = 1;
     memcpy(receivedMessage, payload, length);
     receivedMessageLength = length;
 }
 
-void runCommand(char *command) {
+void interpretInput(char *input) {
+
+    // If no '/' is given, just send the inputted string.
+    if(input[0] != '/') {
+        send(input + 6);
+        return;
+    }
+
+    // If a '/' is given, we want to interpret from the character after it.
+    input++;
+
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
         rpip, send, help, chan, list, dest
@@ -146,15 +84,15 @@ void runCommand(char *command) {
 
     
     for(uint8_t i = 0; i < COMMANDS; i++) {
-        if(strncmp(commands[i], command, 4) == 0) {
+        if(strncmp(commands[i], input, 4) == 0) {
             // Run the command, with the text after it as argument.
-            comFunc[i](command + 5);
+            comFunc[i](input + 5);
             return;
         }
     }
     printf("I don't know that command :(\n");
-
 }
+
 
 //TODO: Refactor perhaps
 void rpip(char *command) {
@@ -194,13 +132,13 @@ void send(char *command) {
 
 void help(char *command) {
     printf("\n\nThere are %d commands:\n\n", COMMANDS);
-    printf("*    /help\n\tPrint this list.\n\n");
-    printf("*    /send <message>\n\tSend a message. This can also be done by just typing a message and pressing enter.\n\n");
-    printf("*    /rpip <pipename> [index]\n\tChange one of the reading pipes. The reading pipe index can be provided, the default is 0.\n\n");
-    printf("*    /chan <channel>\n\tVerander de channel frequentie.\n\n");
-    printf("*    /list\n\tPrint a list of friends :)\n\n");
-    printf("*    /dest <id>\n\tChange the id of the destination node.\n\n\n");
-    printf("The program continually prints what it is receiving on all open reading pipes.\n\n");
+    printf("*    \e[32m/help\e[0m\n\tPrint this list.\n\n");
+    printf("*    \e[32m/send\e[0m <message>\n\tSend a message. This can also be done by just typing a message and pressing enter.\n\n");
+    printf("*    \e[32m/rpip\e[0m <pipename> [index]\n\tChange one of the reading pipes. The reading pipe index can be provided, the default is 0.\n\n");
+    printf("*    \e[32m/chan\e[0m <channel>\n\tChange the channel frequency.\n\n");
+    printf("*    \e[32m/list\e[0m\n\tPrint a list of friends :)\n\n");
+    printf("*    \e[32m/dest\e[0m <id>\n\tChange the id of the destination node.\n\n\n");
+    printf("The program always prints what it is receiving on all open reading pipes.\n\n");
 }
 
 // Function to change the frequency channel.
