@@ -22,7 +22,6 @@ static void list(char *command);
 static void dest(char *command);
 static void myid(char *command);
 
-static void runCommand(char *command);
 static void interpretInput(char *buffer);
 
 // Callback functions.
@@ -47,10 +46,12 @@ void initChat(void) {
     PORTA.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
 }
 
+// This function should be run when a new character has been inputted by the user.
 void interpretChar(char newChar) {
     terminalInterpretChar(newChar);
 }
 
+// This function has to be run run repeatedly by the main.
 void printReceivedMessages(void) {
     if(receivedMessageLength) {
         terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
@@ -142,6 +143,7 @@ void help(char *command) {
     printf("*    \e[32m/chan\e[0m <channel>\n\tChange the channel frequency.\n\n");
     printf("*    \e[32m/list\e[0m\n\tPrint a list of friends :)\n\n");
     printf("*    \e[32m/dest\e[0m <id>\n\tChange the id of the destination node.\n\n\n");
+    printf("*    \e[32m/myid\e[0m\n\tPrints your ID.");
     printf("The program always prints what it is receiving on all open reading pipes.\n\n");
 }
 
@@ -164,10 +166,10 @@ void dest(char *command) {
     if(newId == 0) printf("Invalid ID entered.\n\n");
     else {
         destinationId = newId;
-        printf("New destination ID is 0x%02x\n\n", newId);
+        printf("New destination ID is \e[35m0x%02x\e[0m\n\n", newId);
     }
 }
 
 void myid(char *command) {
-    printf("Your ID is 0x%02x\n", isoGetId());
+    printf("Your ID is \e[35m0x%02x\e[0m\n\n", isoGetId());
 }
