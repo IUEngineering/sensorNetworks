@@ -126,7 +126,7 @@ void timerOverflow(void) {
     friendTimeTick();
 }
 
-void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
+uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
 
     // Prevent segfault
     if(len > 31) len = 31;
@@ -139,8 +139,7 @@ void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     // Find the destination
     friend_t *sendFriend = findFriend(dest);
     if(sendFriend == NULL) {
-        printf("I don't know friend %02x\n\n", dest);
-        return;
+        return -1;
     }
 
     // Check if the friend is active. If it isn't, send via another friend.
@@ -148,17 +147,18 @@ void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
 
     // Does the via friend exist?
     if(sendFriend == NULL) {
-        printf("Friend isn't trusted. Found no active vias.\n\n");
-        return;
+        return -1;
     }
-
-    if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
-    else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);
 
     TCD0.CTRLA = TC_CLKSEL_OFF_gc;
     openPrivateWritingPipe(sendFriend->id);
     send(sendData, len + 1);
     TCD0.CTRLA = TC_CLKSEL_DIV256_gc;
+
+    if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
+    else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);
+
+    return 0;
 }
 
 void send(uint8_t *data, uint8_t len) {

@@ -54,7 +54,7 @@ void interpretChar(char newChar) {
 // This function has to be run run repeatedly by the main.
 void printReceivedMessages(void) {
     isoUpdate();
-    
+
     if(receivedMessageLength) {
         terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
         receivedMessageLength = 0;
@@ -134,7 +134,8 @@ void rpip(char *command) {
 }
 
 void send(char *command) {
-    isoSendPacket(destinationId, (uint8_t*) command, strlen(command));    
+    if(isoSendPacket(destinationId, (uint8_t*) command, strlen(command))) 
+        printf("Failed to send message\n");    
 }
 
 void help(char *command) {
