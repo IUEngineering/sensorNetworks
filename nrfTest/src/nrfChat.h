@@ -12,9 +12,7 @@
 extern char receivedPacket[];
 
 void initChat(void);
-void interpretNewChar(char newChar);
-uint8_t getUserInputLength(void);
-char *getCurrentInputBuffer(void);
-void printReceivedMessage(void);
+void interpretChar(char newChar);
+void printReceivedMessages(void);
 
 #endif // _NRFCHAT_H_

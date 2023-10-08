@@ -41,7 +41,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
     nrfSetDataRate(NRF_RF_SETUP_RF_DR_2M_gc);
     nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-    nrfSetChannel(STANDARD_CHANNEL);
+    nrfSetChannel(DEFAULT_CHANNEL);
     nrfSetAutoAck(0);
     nrfEnableDynamicPayloads();
     
@@ -57,11 +57,12 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     // Read the ID from the GPIO pins.
     // Enable pullup for the first 4 pins of PORT D
-    PORTCFG.MPCMASK = 0b1111; 
-    PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
-
+    // Also invert their inputs. (We're using pullup, button to ground.)
     PORTD.DIRCLR = 0b1111;
-    myId = ~PORTD.IN & 0b1111;
+    PORTCFG.MPCMASK = 0b1111; 
+    PORTD.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
+
+    myId = PORTD.IN & 0b1111;
     myId |= TEAM_ID;
     uint8_t privatePipe[5] = PRIVATE_PIPE;
     privatePipe[4] = myId;
@@ -88,8 +89,8 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     receiveCallback = callback;
 
-    printf("My ID is 0x%02x, my pipe is %c%c%c%c\e[0;31m%c\e[0m\n", \
-        myId, privatePipe[0], privatePipe[1], privatePipe[2], privatePipe[3], privatePipe[4]);
+    printf("My ID is \e[34m0x%02x\e[0m, my pipe is \e[34m%.4s\e[0;31m%c\e[0m, I am set to channel \e[34m%d\e[0m\n", \
+        myId, (char*)privatePipe, privatePipe[4], DEFAULT_CHANNEL);
 }
 
 void isoUpdate(void) {
