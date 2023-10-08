@@ -53,6 +53,8 @@ void interpretChar(char newChar) {
 
 // This function has to be run run repeatedly by the main.
 void printReceivedMessages(void) {
+    isoUpdate();
+    
     if(receivedMessageLength) {
         terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
         receivedMessageLength = 0;

@@ -7,6 +7,7 @@
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
+#include "terminal.h"
 
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
@@ -49,7 +50,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     nrfFlushRx();
     nrfFlushTx();
     
-    // Initialize the receiving interrupt
+    // Initialize the receiving interrupt (Currently not in use)
     PORTF.INT0MASK |= PIN6_bm;
     PORTF.PIN6CTRL = PORT_ISC_FALLING_gc;
     // PORTF.INTCTRL |= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
@@ -57,10 +58,13 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     // Read the ID from the GPIO pins.
     // Enable pullup for the first 4 pins of PORT D
-    // Also invert their inputs. (We're using pullup, button to ground.)
+    // Also invert their inputs. (We're using pullup, with a button to ground.)
     PORTD.DIRCLR = 0b1111;
     PORTCFG.MPCMASK = 0b1111; 
     PORTD.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
+
+    // It apparently takes some time for MPCMASK to do its thing.
+    _delay_loop_1(1);
 
     myId = PORTD.IN & 0b1111;
     myId |= TEAM_ID;
@@ -69,6 +73,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     
     nrfPowerUp();
 
+    // TODO: Check if these delays are necessary.
     _delay_ms(5);
     nrfOpenWritingPipe((uint8_t *) "HVA01");
     _delay_ms(5);
@@ -79,8 +84,6 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
 
     initFriendList();
-    // updateFriend(0x39, 0, 0);
-
 
     // Initialize the timer/counter for sending POL's and removing friends.
     TCD0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
@@ -91,6 +94,8 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     printf("My ID is \e[34m0x%02x\e[0m, my pipe is \e[34m%.4s\e[0;31m%c\e[0m, I am set to channel \e[34m%d\e[0m\n", \
         myId, (char*)privatePipe, privatePipe[4], DEFAULT_CHANNEL);
+
+    DEBUG_PRINT("\e[31mDebugging is enabled.\e[0m");
 }
 
 void isoUpdate(void) {
@@ -118,11 +123,7 @@ void timerOverflow(void) {
     pingOfLife();
     // you've been feeding my veins.
 
-    // updateFriend(0x39, 0, 0);
-
-    // cli();
     friendTimeTick();
-    // sei();
 }
 
 void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
@@ -172,10 +173,8 @@ void pingOfLife(void) {
     // Define the list of friends.
     friend_t friends[32];
 
-    // cli();
     // Get the list of friends.
     getFriends(friends);
-    // sei();
 
     // Define and intialize the ping.
     uint8_t ping[32];
@@ -263,15 +262,21 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
 
-        printf("Received PoL from 0x%02x\n", packet[0]);
+        #ifdef DEBUG
+        terminalPrintf("Received PoL from 0x%02x\n", packet[0]);
+        char printPOLBuf[MAX_PACKET_SIZE * 12];
+        char *printPOLPtr = printPOLBuf;
 
         for(uint8_t i = 0; i < length; i++)
-            printf("\e[0%sm%02x\e[0m ", (i % 3) == 2 ? ";34" : "", packet[i]);
+            printPOLPtr += sprintf(printPOLPtr, "\e[%sm%02x\e[0m ", (i % 3) == 2 ? "34" : "0", packet[i]);
 
-        printf("\n");
+        sprintf(printPOLPtr, "\n");
+        terminalPrint(printPOLBuf);
+
+        #endif
 
         // Add the sender as a new direct neighbor friend.
-        // printf("D: ");
+        DEBUG_PRINT("Direct:");
         friend_t *directFriend = updateFriend(packet[0], 0, 0);
 
         // Do we trust this friend enough?
@@ -281,7 +286,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
 
         // Add the first direct friend.
         if(packet[1] != myId  &&  length > 1) {
-            // printf("F: ");
+            DEBUG_PRINT("packet[1]:");
             updateFriend(packet[1], 1, packet[0]);
         }
 
@@ -291,7 +296,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
             // If it's the first of the 2 ID's:
             if(i % 3 == 0) {
                 if(packet[i] != myId) {
-                    // printf("1: ");
+                    DEBUG_PRINT("First ID:");
                     updateFriend(packet[i], (packet[i - 1] >> 4) + 1, packet[0]);
                 }
                 i++;
@@ -299,7 +304,7 @@ void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8
             // Else if it's the second:
             else {
                 if(packet[i] != myId) {
-                    // printf("2: ");
+                    DEBUG_PRINT("Second ID:");
                     updateFriend(packet[i], (packet[i - 2] & 0x0f) + 1, packet[0]);
                 }
                 i += 2;

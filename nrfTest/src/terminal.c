@@ -36,7 +36,7 @@ void terminalSetCallback(void (*callback)(char *inputBuffer)) {
 void terminalInterpretChar(char inChar) {
 
     // Handle backspaces.
-    if(inChar == '\b') {
+    if(inChar == '\b' && inputBufferIndex) {
         printf("\b \b");
         inputBufferIndex--;
         return;
@@ -62,7 +62,7 @@ void terminalInterpretChar(char inChar) {
 
 
 // This function assumes the string is printable with a printf %s.
-void terminalPrintString(char *str) {
+void terminalPrint(char *str) {
     // Erase the current line and go to the start of it.
     if(inputBufferIndex != 0) printf("\e[1K\r");
 
