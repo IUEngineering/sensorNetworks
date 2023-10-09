@@ -44,11 +44,11 @@ void terminalInterpretChar(char inChar) {
 
     // Handle an enter press.
     if(inChar == '\r') {
-        // Rerun the last command if no input is given.
         if(inputBufferIndex != 0) inputBuffer[inputBufferIndex] = '\0';
         printf("\n");
         inputBufferIndex = 0;
 
+        // Run the callback function.
         commandCallback(inputBuffer);
         return;
     }
