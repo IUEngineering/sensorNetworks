@@ -24,6 +24,8 @@
 
 #define F_CPU 32000000UL
 
+#define DEBUG 1
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -34,6 +36,7 @@
 #include "serialF0.h"
 #include "clock.h"
 #include "nrfChat.h"
+#include "baseStation.h"
 
 
 
@@ -46,18 +49,24 @@ int main(void) {
     PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
     clear_screen();
-    
-    initChat();
 
-    while (1) {
-        // Get the character from the user.
-        char newInputChar = uartF0_getc();
+    // This bit is used to select the mode of the network node
+    PORTE.PIN0CTRL = 0x03 << 3;
+    PORTE.DIRCLR = PIN0_bm;
 
-        if(newInputChar != '\0') {
-           interpretChar(newInputChar);
-        }
+    if ((PORTE.IN & 0x01)) {
+        if (DEBUG)
+            printf("I am a sensor node\n");
+        
+        nrfChatInit();
+        nrfChatLoop();
 
-        printReceivedMessages();
+    } else {
+        if (DEBUG)
+            printf("I am a base-station");
+        
+        baseStationInit();
+        baseStationLoop();
     }
 }
 
