@@ -52,7 +52,7 @@ void nrfChatLoop(void) {
         char newInputChar = uartF0_getc();
 
         if(newInputChar != '\0') {
-           interpretNewChar(newInputChar);
+           terminalInterpretChar(newInputChar);
         }
 
         printReceivedMessage();
@@ -60,14 +60,8 @@ void nrfChatLoop(void) {
     }
 }
 
-// This function should be run when a new character has been inputted by the user.
-void interpretChar(char newChar) {
-    terminalInterpretChar(newChar);
-}
-
 // This function has to be run run repeatedly by the main.
-void printReceivedMessages(void) {
-    isoUpdate();
+void printReceivedMessage(void) {
 
     if(receivedMessageLength) {
         terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
