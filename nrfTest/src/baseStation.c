@@ -21,13 +21,14 @@ static void sendFriendsList(void);
 // Initialization of the baseStation program 
 void baseStationInit(void) {
     isoInit(messageReceive);
+
+    // wait until the RPI is ready for data from the Xmega
+    while (!(uartF0_getc() == WAIT_FOR_RPY));
 }
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
-    // wait until the RPI is ready for data from the Xmega
-    while (!(uartF0_getc() == WAIT_FOR_RPY));
-
+    
     while (1) {
         isoUpdate();
         sendFriendsList();
