@@ -34,48 +34,56 @@ void baseStationInit(void) {
 
     isoInit(messageReceive);
 
+    DEBUG_PRINTF("Waiting till %c is pressed\n", WAIT_FOR_RPY);
+
     // wait until the RPI is ready for data from the Xmega
     while (!(uartF0_getc() == WAIT_FOR_RPY));
 }
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
+
+    uint16_t debug = 0;
     
     while (1) {
+        debug++;
+        if(!(debug%200))
+            printf("%d\n", debug);
         isoUpdate();
         sendFriendsList();
     }
 }
 
 static void messageReceive(uint8_t *payload, uint8_t length) {
-    uartF0_putc(RECEIVED_PAYLOAD);
-    uartF0_putc(length);
+    putchar(RECEIVED_PAYLOAD);
+    putchar(length);
     for (uint8_t i = 0; i < length; i++)
-        uartF0_putc(payload[i]);
+        putchar(payload[i]);
 }
 
 static void sendFriendsList(void) {
-    // Disable global interrupts to prevent interrupts from 
-    // adding friends halve way through this function
-    cli(); 
-
     uint16_t friendAmount = getFriendAmount();
     uint16_t len = 5 * friendAmount;
 
-    friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * friendAmount);
+    // friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * friendAmount);
+    friend_t friends[friendAmount];
+
+    if (friends == NULL) {
+        DEBUG_PRINT("Yo I need memory\n");
+        return;
+    }
 
     getFriends(friends);
 
-    uartF0_putc(FRIENDS_LIST);
-    uartF0_putc((uint8_t) len >> 8);
-    uartF0_putc((uint8_t) len);
+    putchar(FRIENDS_LIST);
+    putchar((uint8_t) (len >> 8));
+    putchar((uint8_t) len);
 
     for (uint16_t i = 0; i < friendAmount; i++) {
-        uartF0_putc(friends[i].id);
-        uartF0_putc(friends[i].hops);
-        uartF0_putc(friends[i].via);
-        uartF0_putc(friends[i].trust);
-        uartF0_putc(friends[i].active);
+        putchar(friends[i].id);
+        putchar(friends[i].hops);
+        putchar(friends[i].via);
+        putchar(friends[i].trust);
+        putchar(friends[i].active);
     }
-    sei(); // Enable global interrupts
 }
