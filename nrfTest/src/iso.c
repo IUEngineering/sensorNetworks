@@ -18,6 +18,14 @@
 #define PRIVATE_PIPE "TYCH"
 #define PRIVATE_PIPE_INDEX 1
 
+#define PRIVATE_MESSAGE_RETRIES     NRF_SETUP_ARC_NORETRANSMIT_gc
+#define PRIVATE_MESSAGE_ACK_DELAY   NRF_SETUP_ARD_500US_gc
+
+#define ISO_SEND_SUCCESS 0
+#define ISO_FAILED_UNKNOWN_FRIEND -1
+#define ISO_FAILED_NOT_TRUSTED -2
+
+
 // Counter every 250 ms formula:
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
@@ -33,17 +41,21 @@ static void timerOverflow(void);
 static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower);
 
 
+//lighthouse eyezic remix quix
+//kill to fail van IM
+
 //TODO: optimize the init
 void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     nrfspiInit();
     nrfBegin();
     
-    nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_NORETRANSMIT_gc);
+    nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, NRF_SETUP_ARC_NORETRANSMIT_gc);
     nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
     nrfSetDataRate(NRF_RF_SETUP_RF_DR_2M_gc);
     nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
     nrfSetChannel(DEFAULT_CHANNEL);
     nrfSetAutoAck(0);
+    nrfSetAutoAckPipe(PRIVATE_PIPE_INDEX, 1);
     nrfEnableDynamicPayloads();
     
     nrfClearInterruptBits();
@@ -81,8 +93,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
-
-
+    
     initFriendList();
 
     // Initialize the timer/counter for sending POL's and removing friends.
@@ -92,7 +103,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
 
     receiveCallback = callback;
 
-    printf("My ID is \e[34m0x%02x\e[0m, my pipe is \e[34m%.4s\e[0;31m%c\e[0m, I am set to channel \e[34m%d\e[0m\n", \
+    printf("My ID is \e[34m0x%02x\e[0m, my pipe is \e[34m%.4s\e[0;31m%c\e[0m, I am set to channel \e[34m%d\e[0m\n",
         myId, (char*)privatePipe, privatePipe[4], DEFAULT_CHANNEL);
 
     DEBUG_PRINT("\e[31mDebugging is enabled.\e[0m");
@@ -139,7 +150,7 @@ uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     // Find the destination
     friend_t *sendFriend = findFriend(dest);
     if(sendFriend == NULL) {
-        return -1;
+        return ISO_FAILED_UNKNOWN_FRIEND;
     }
 
     // Check if the friend is active. If it isn't, send via another friend.
@@ -147,13 +158,14 @@ uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
 
     // Does the via friend exist?
     if(sendFriend == NULL) {
-        return -1;
-    }
+        return ISO_FAILED_UNKNOWN_FRIEND;
+    }       
 
-    TCD0.CTRLA = TC_CLKSEL_OFF_gc;
+    nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, PRIVATE_MESSAGE_RETRIES);
     openPrivateWritingPipe(sendFriend->id);
     send(sendData, len + 1);
-    TCD0.CTRLA = TC_CLKSEL_DIV256_gc;
+    nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, NRF_SETUP_ARC_NORETRANSMIT_gc);
+
 
     if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
     else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);

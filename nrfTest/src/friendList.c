@@ -8,7 +8,7 @@
 #define INITIAL_FRIEND_LIST_LENGTH 8
 
 #define ACTIVATE_TRUST      7
-#define DEACTIVATE_TRUST    5
+#define DEACTIVATE_TRUST    7
 #define MAX_TRUST           10
 #define TRUST_ADDER         2   
 #define TRUST_SUBTRACTOR    1

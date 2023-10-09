@@ -1,26 +1,7 @@
-/*
- * nrftester.c
- *
- * Created: 18/03/2021 21:13:47
- * Author : Jochem Leijenhorst
- TODO: Verander dit naar van NL naar EN! 
- Dit programma heeft variabele pipes. Deze voer je in op tera term/putty
- Er zijn 4 commandos:
- TODO: Change the commands that they are correct, since that we've implemented the / command method. 
- *  help
-    Print deze lijst
- 
- *  send <waarde>
-    Verstuurt wat je invoert op waarde naar de geselecteerde pipe
-    
- *  rpip <pipenaamm> <index>
-    Verander de reading pipes
-
- *  chan <channel>
-    Verander de channel frequentie
-    
-    Het programma print continu uit wat hij ontvangt.
- */ 
+//* nrftester.c
+//*
+//* Created: 18/03/2021 21:13:47
+//* Author : Jochem Leijenhorst
 
 #define F_CPU 32000000UL
 
