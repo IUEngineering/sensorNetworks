@@ -63,9 +63,6 @@ static void messageReceive(uint8_t *payload, uint8_t length) {
 
 static void sendFriendsList(void) {
     uint16_t friendAmount = getFriendAmount();
-    uint16_t len = 5 * friendAmount;
-
-    // friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * friendAmount);
     friend_t friends[friendAmount];
 
     if (friends == NULL) {
@@ -76,8 +73,7 @@ static void sendFriendsList(void) {
     getFriends(friends);
 
     putchar(FRIENDS_LIST);
-    putchar((uint8_t) (len >> 8));
-    putchar((uint8_t) len);
+    putchar(friendAmount);
 
     for (uint16_t i = 0; i < friendAmount; i++) {
         putchar(friends[i].id);
