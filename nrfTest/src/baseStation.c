@@ -12,6 +12,16 @@
 
 #define WAIT_FOR_RPY        'c'
 
+#define DEBUG
+
+#ifdef DEBUG
+    #define DEBUG_PRINTF(fmt, args...) printf(fmt, args)
+    #define DEBUG_PRINT(str) printf(str)
+#else
+    #define DEBUG_PRINTF(fmt, args...) {}
+    #define DEBUG_PRINT(fmt, args...) {}
+#endif // DEBUG
+
 // Callback for when received data is meant for this node
 static void messageReceive(uint8_t *payload, uint8_t length);
 
@@ -20,6 +30,8 @@ static void sendFriendsList(void);
 
 // Initialization of the baseStation program 
 void baseStationInit(void) {
+    DEBUG_PRINT("I am a base-station\n");
+
     isoInit(messageReceive);
 
     // wait until the RPI is ready for data from the Xmega
