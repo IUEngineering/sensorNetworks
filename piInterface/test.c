@@ -12,6 +12,7 @@
 
 #include <ncurses.h>
 #include <rpitouch.h>
+#include "libs/buttons.h"
 
 #define BESTTEXT_PAIR     1
 #define EMPTY_PAIR     1
@@ -26,9 +27,17 @@ int UpdateTouchWindow(WINDOW *pWin) {
     
     init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
     attron(COLOR_PAIR(BESTTEXT_PAIR));
-    mvwprintw(pWin, 0, 1, "Hi Nielsie ");
+    //mvwprintw(pWin, 0, 1, "Hi Nielsie ");
     attroff(COLOR_PAIR(BESTTEXT_PAIR));
 
+    button_t button = makeButton(NULL, 54, 6, 8, 4);
+
+    if(isButtonTouched(button, _oRPiTouch_Touched)){
+        mvwprintw(pWin, 0, 1, "kkr");
+    }
+    else {
+        mvwprintw(pWin, 0, 1, "---");
+    }
     // Show mouse status
     mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
     mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
@@ -43,7 +52,6 @@ int UpdateTouchWindow(WINDOW *pWin) {
             mvwprintw(pWin, 3 + i, 4, "-                                 ");
         }
     }
-
     // Update window
     wrefresh(pWin);
     return 0;
@@ -124,17 +132,6 @@ int main(int nArgc, char* aArgv[]) {
             return 2;
         }
 
-        // Check for key press
-        nKey = wgetch(pMenuWindow);
-        if (nKey == 27 || nKey == 'q') {
-            // Exit the program
-            bExit = true;
-        }
-        if (nKey == KEY_RESIZE) {
-            // Terminal size is changed
-            UpdateTouchWindow(pMenuWindow);
-        }
-        //refresh();
     }
 
     // Close the device
