@@ -54,17 +54,11 @@ int main(void) {
     PORTE.PIN0CTRL = 0x03 << 3;
     PORTE.DIRCLR = PIN0_bm;
 
-    if ((PORTE.IN & 0x01)) {
-        if (DEBUG)
-            printf("I am a sensor node\n");
-        
+    if ((PORTE.IN & 0x01)) {        
         nrfChatInit();
         nrfChatLoop();
 
-    } else {
-        if (DEBUG)
-            printf("I am a base-station");
-        
+    } else {        
         baseStationInit();
         baseStationLoop();
     }
