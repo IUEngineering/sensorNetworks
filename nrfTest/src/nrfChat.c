@@ -34,6 +34,7 @@ static uint8_t destinationId = 0xff;
 
 void nrfChatInit(void) {
     // Send welcome message
+    DEBUG_PRINT("I am a sensor node\n");
     printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
     isoInit(messageReceive);
     terminalSetCallback(interpretInput);
