@@ -11,10 +11,11 @@
 // without interrupting user's the current text input.
 extern char receivedPacket[];
 
+void nrfChatInit(void);
+
 // This contains the while(1) of the nrfChat program
 void nrfChatLoop(void);
 
-void nrfChatInit(void);
 void interpretNewChar(char newChar);
 uint8_t getUserInputLength(void);
 char *getCurrentInputBuffer(void);

@@ -51,5 +51,8 @@ void getFriends(friend_t *buf);
 //* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
 friend_t *findFriend(uint8_t id);
 
+// Fuck off
+void removeViaReferences(uint8_t id);
+
 
 #endif // _FRIENDLIST_H_
