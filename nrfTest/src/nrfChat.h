@@ -16,7 +16,6 @@ void nrfChatInit(void);
 // This contains the while(1) of the nrfChat program
 void nrfChatLoop(void);
 
-void interpretNewChar(char newChar);
 uint8_t getUserInputLength(void);
 char *getCurrentInputBuffer(void);
 void printReceivedMessage(void);
