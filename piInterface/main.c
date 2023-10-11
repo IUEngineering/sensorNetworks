@@ -13,45 +13,22 @@
 #include <ncurses.h>
 #include <rpitouch.h>
 #include "libs/buttons.h"
+#include "libs/interface.h"
 
-#define BESTTEXT_PAIR     1
-#define EMPTY_PAIR     1
-#define WATER_PAIR     2
-#define MOUNTAIN_PAIR  3
-#define PLAYER_PAIR    4
 
 int UpdateTouchWindow(WINDOW *pWin) {
+
+    wattron(pWin, COLOR_PAIR(9));
 
     // Draw window border
     box(pWin, 0, 0);
     
-    init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
-    attron(COLOR_PAIR(BESTTEXT_PAIR));
-    //mvwprintw(pWin, 0, 1, "Hi Nielsie ");
-    attroff(COLOR_PAIR(BESTTEXT_PAIR));
-
-    button_t button = makeButton(NULL, 54, 6, 8, 4);
-
-    if(isButtonTouched(button, _oRPiTouch_Touched)){
-        mvwprintw(pWin, 0, 1, "kkr");
-    }
-    else {
-        mvwprintw(pWin, 0, 1, "---");
-    }
     // Show mouse status
     mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
     mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
 
-    // Show touches
-    for (int i = 0; i < RPITOUCH_DEVICE_SLOT_COUNT; i++) {
-        mvwprintw(pWin, 3 + i, 1, "T%01d", i);
-        if (_aRPiTouch_Slot[i].bUsed) {
-            mvwprintw(pWin, 3 + i, 4, "(%4d, %4d) -> (%4d, %4d)", _aRPiTouch_Slot[i].nX, _aRPiTouch_Slot[i].nY, _aRPiTouch_Slot[i].nCol, _aRPiTouch_Slot[i].nRow);
-        }
-        else {
-            mvwprintw(pWin, 3 + i, 4, "-                                 ");
-        }
-    }
+    wattroff(pWin, COLOR_PAIR(9));
+    //wie is deze man
     // Update window
     wrefresh(pWin);
     return 0;
@@ -59,6 +36,7 @@ int UpdateTouchWindow(WINDOW *pWin) {
 
 
 int main(int nArgc, char* aArgv[]) {
+    initMcuComm();
     refresh();
 
 
@@ -66,9 +44,9 @@ int main(int nArgc, char* aArgv[]) {
     int nRet;
     WINDOW *pMenuWindow;
 
-    mvwprintw(pMenuWindow, 1, 4, "%s", ("-----"));
+    // mvwprintw(pMenuWindow, 1, 4, "%s", ("-----"));
 
-    wborder(pMenuWindow, '|', '|', '-', '-', '+', '+', '+', '+');
+    // wborder(pMenuWindow, '|', '|', '-', '-', '+', '+', '+', '+');
 
 
     // Start to search for the correct event-stream
@@ -84,17 +62,14 @@ int main(int nArgc, char* aArgv[]) {
     noecho();
     cbreak();
 
-    
+    initInterface();
 
-    attron(A_REVERSE);
-    start_color();
-    init_pair(BESTTEXT_PAIR, COLOR_MAGENTA, COLOR_BLACK);
-    attron(COLOR_PAIR(BESTTEXT_PAIR));
+
+    attron(COLOR_PAIR(BANNER_PAIR));
     mvprintw(1, 1, "[ESC] to quit, LT->RT->RB to restart, LT->LB-> RB to shutdown, LB->LM->RM->RB to reboot");
-    attroff(COLOR_PAIR(BESTTEXT_PAIR));
+    attroff(COLOR_PAIR(BANNER_PAIR));
 
     refresh();
-    attroff(A_REVERSE);
 
     pMenuWindow = newwin(1 + 2 + RPITOUCH_DEVICE_SLOT_COUNT + 1, 40, 6, 1);
     keypad(pMenuWindow, true);
@@ -109,7 +84,14 @@ int main(int nArgc, char* aArgv[]) {
     // Do UI
     bool bExit = false;
     int nKey;
+
     while (!bExit) {
+        //drawTouchCords(50, 22);
+        runInterface();
+
+        
+
+        checkTouchedButtons(_oRPiTouch_Touched);
 
         // Update touch
         if (RPiTouch_UpdateTouch()) {
