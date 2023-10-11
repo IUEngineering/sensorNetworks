@@ -13,7 +13,7 @@
 #define WAIT_FOR_RPY        'c'
 
 // Callback for when received data is meant for this node
-static void messageReceive(uint8_t *payload, uint8_t length);
+static void messageReceive(uint8_t *payload);
 
 // Send the friendslist to the RPI
 static void sendFriendsList(void);
@@ -35,10 +35,9 @@ void baseStationLoop(void) {
     }
 }
 
-static void messageReceive(uint8_t *payload, uint8_t length) {
+static void messageReceive(uint8_t *payload) {
     uartF0_putc(RECEIVED_PAYLOAD);
-    uartF0_putc(length);
-    for (uint8_t i = 0; i < length; i++)
+    for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
         uartF0_putc(payload[i]);
 }
 
