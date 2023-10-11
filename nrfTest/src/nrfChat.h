@@ -11,8 +11,10 @@
 // without interrupting user's the current text input.
 extern char receivedPacket[];
 
-void initChat(void);
-void interpretChar(char newChar);
-void printReceivedMessages(void);
+// Initialize the chat program.
+void nrfChatInit(void);
+
+// This contains the while(1) of the nrfChat program.
+void nrfChatLoop(void);
 
 #endif // _NRFCHAT_H_

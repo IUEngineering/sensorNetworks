@@ -31,10 +31,9 @@ static uint8_t receivedMessage[32];
 static uint8_t receivedMessageLength = 0;
 static uint8_t destinationId = 0xff;
 
-
-void initChat(void) {
-    // Send welcome message.
-    printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType \e[32m/help\e[0m for a list of commands.\n");
+void nrfChatInit(void) {
+    // Send welcome message
+    printf("Welcome to the nrfTester\nMade by Jochem Leijenhorst.\n\nType /help for a list of commands.\n");
     isoInit(messageReceive);
     terminalSetCallback(interpretInput);
     
@@ -45,9 +44,18 @@ void initChat(void) {
     PORTA.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
 }
 
-// This function should be run when a new character has been inputted by the user.
-void interpretChar(char newChar) {
-    terminalInterpretChar(newChar);
+void nrfChatLoop(void) {
+    while (1) {
+        // Get the character from the user.
+        char newInputChar = uartF0_getc();
+
+        if(newInputChar != '\0') {
+           terminalInterpretChar(newInputChar);
+        }
+
+        printReceivedMessage();
+        isoUpdate();
+    }
 }
 
 // This function has to be run run repeatedly by the main.
