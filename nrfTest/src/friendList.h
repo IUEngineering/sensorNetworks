@@ -38,9 +38,6 @@ void printFriends(void);
 //* Deactivate friends if they are not trustworthy
 void friendTimeTick(void);
 
-//* Return the number of friends
-uint8_t getFriendAmount(void);
-
 friend_t *getFriendsList(uint8_t *listLength);
 
 //* Get a list of the direct friends
