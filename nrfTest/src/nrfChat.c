@@ -25,7 +25,7 @@ static void interpretInput(char *buffer);
 
 // Callback functions.
 static void interpretInput(char *input);
-static void messageReceive(uint8_t *payload, uint8_t length);
+static void messageReceive(uint8_t *payload);
 
 static uint8_t receivedMessage[32];
 static uint8_t receivedMessageLength = 0;
@@ -62,9 +62,9 @@ void printReceivedMessages(void) {
 
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
-void messageReceive(uint8_t *payload, uint8_t length) {
-    memcpy(receivedMessage, payload, length);
-    receivedMessageLength = length;
+void messageReceive(uint8_t *payload) {
+    memcpy(receivedMessage, payload, PAYLOAD_SIZE);
+    receivedMessageLength = strnlen((char *)payload, PAYLOAD_SIZE);
 }
 
 // Callback from terminal.c.

@@ -54,7 +54,7 @@ void terminalInterpretChar(char inChar) {
     }
 
     // Store and echo the character if it's printable and there aren't too many characters already.
-    if(inputBufferIndex < INPUT_BUFFER_SIZE && isprint(inChar) && (inputBufferIndex < MAX_PACKET_SIZE || inputBuffer[0] == '/')) {
+    if(inputBufferIndex < INPUT_BUFFER_SIZE && isprint(inChar) && (inputBufferIndex < PAYLOAD_SIZE || inputBuffer[0] == '/')) {
         inputBuffer[inputBufferIndex++] = inChar;
         uartF0_putc(inChar);
     }

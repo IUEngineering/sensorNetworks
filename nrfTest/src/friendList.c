@@ -186,6 +186,10 @@ void getFriends(friend_t *buf) {
     buf[bufIndex].id = 0;
 }
 
+uint8_t getFriendAmount(void) {
+    return friendAmount;
+}
+
 
 // Find a friend, and return a pointer to that friend.
 friend_t *findFriend(uint8_t id) {

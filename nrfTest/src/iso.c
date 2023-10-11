@@ -25,6 +25,18 @@
 #define ISO_FAILED_UNKNOWN_FRIEND -1
 #define ISO_FAILED_NOT_TRUSTED -2
 
+#define SNAPSHOT_SENDER_ID      0
+#define SNAPSHOT_FIRST_ID       2
+#define SNAPSHOT_TYPE           1
+#define SNAPSHOT_TYPE_LENGTH_bm 0x7f
+#define SNAPSHOT_TYPE_UPDATE_bm 0x80
+
+#define MESSAGE_DESTINATION_ID 0
+
+#define PACKET_SIZE 32
+
+#define HOPS_LIMIT 16
+
 
 // Counter every 250 ms formula:
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
@@ -34,18 +46,18 @@
 // Define list of neighbors (neighbors are friends :)
 static uint8_t myId = 0;
 static void pingOfLife(void);
-static void (*receiveCallback)(uint8_t *payload, uint8_t length);
-static void send(uint8_t *data, uint8_t len);
+static void (*receiveCallback)(uint8_t *payload);
+static void send(uint8_t *data);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
-static void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower);
+static void interpretPacket(uint8_t *packet, uint8_t receivePipe);
 
-
-//lighthouse eyezic remix quix
-//kill to fail van IM
+// Nieuwe liedjes :)
+//  lighthouse eyezic remix quix
+//  kill to fail van IM
 
 //TODO: optimize the init
-void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
+void isoInit(void (*callback)(uint8_t *data)) {
     nrfspiInit();
     nrfBegin();
     
@@ -55,8 +67,6 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
     nrfSetChannel(DEFAULT_CHANNEL);
     nrfSetAutoAck(0);
-    nrfSetAutoAckPipe(PRIVATE_PIPE_INDEX, 1);
-    nrfEnableDynamicPayloads();
     
     nrfClearInterruptBits();
     nrfFlushRx();
@@ -76,7 +86,7 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     PORTD.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
 
     // It apparently takes some time for MPCMASK to do its thing.
-    _delay_loop_1(1);
+    _delay_loop_1(5);
 
     myId = PORTD.IN & 0b1111;
     myId |= TEAM_ID;
@@ -93,12 +103,12 @@ void isoInit(void (*callback)(uint8_t *data, uint8_t length)) {
     _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
-    
+
     initFriendList();
 
     // Initialize the timer/counter for sending POL's and removing friends.
     TCD0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;
+    TCD0.CTRLA    = TC_CLKSEL_DIV1024_gc;
     TCD0.CCA      = TC_CCA;
 
     receiveCallback = callback;
@@ -117,15 +127,13 @@ void isoUpdate(void) {
 
     uint8_t receivePipe = 0xff;
 
-    // Did I receive something actually valuable? 
+    // Did I receive something? 
     if(nrfAvailable(&receivePipe)) {
-        uint8_t receivePower = nrfReadRegister(9);
-        uint8_t length = nrfGetDynamicPayloadSize();
-        uint8_t packet[32];
+        uint8_t packet[PACKET_SIZE];
 
         // Put received data into a buffer.
-        nrfRead(packet, length);
-        interpretPacket(packet, length, receivePipe, receivePower);
+        nrfRead(packet, PACKET_SIZE);
+        interpretPacket(packet, receivePipe);
     }
 }
 
@@ -140,12 +148,14 @@ void timerOverflow(void) {
 uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
 
     // Prevent segfault
-    if(len > 31) len = 31;
+    if(len > PAYLOAD_SIZE) len = PAYLOAD_SIZE;
 
-    // Build pay
-    uint8_t sendData[32];
-    sendData[0] = dest;
-    memcpy(sendData + 1, payload, len);
+    // Build packet
+    uint8_t packet[PACKET_SIZE];
+    memset(packet, 0, PACKET_SIZE);
+    
+    packet[MESSAGE_DESTINATION_ID] = dest;
+    memcpy(packet + 1, payload, len);
 
     // Find the destination
     friend_t *sendFriend = findFriend(dest);
@@ -161,11 +171,11 @@ uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
         return ISO_FAILED_UNKNOWN_FRIEND;
     }       
 
-    nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, PRIVATE_MESSAGE_RETRIES);
+    // Turn on acknowledgements and send the packet.
     openPrivateWritingPipe(sendFriend->id);
-    send(sendData, len + 1);
-    nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, NRF_SETUP_ARC_NORETRANSMIT_gc);
+    send(packet);
 
+    terminalPrintStrex(packet, PACKET_SIZE, "Sending:");
 
     if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
     else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);
@@ -173,11 +183,13 @@ uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     return 0;
 }
 
-void send(uint8_t *data, uint8_t len) {
+void send(uint8_t *data) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
-    nrfWrite(data, len);
+
+    // The data is always 32 bytes because for some reason it was decided to not use dynamic payload.
+    nrfWrite(data, PACKET_SIZE);
     nrfStartListening();
 }
 
@@ -192,73 +204,39 @@ void pingOfLife(void) {
     uint8_t ping[32];
     memset(ping, 0, 32);
     ping[0] = myId;
-
-    // For the first byte of the ping.
-    uint8_t foundFirstDirectFriend = 0;
+    // ping[1] is set after the while loop.
 
     // Keep track of indeces.
     uint8_t friendsIndex = 0;
-    uint8_t pingIndex = 3;
 
+    // Ping build:
+    //* Index:      0   1   2   3   4   5   6   7   8   9   10  11
+    //* Type:       mID Typ ID0 Hp0 ID1 Hp1 ID2 Hp2 ID3 Hp3 ID4 Hp4
+    //
+    //  mID = My ID.
+    //  Typ = Type (snapshot/update) and length. Byte: [tlllllll].
+    //  IDn = nth friend ID.
+    //  Hpn = Hops of nth friend.
 
+    // TODO: Handle max hops.
     // Build ping message.
-    while(friends[friendsIndex].id != 0 && pingIndex < 31 && friendsIndex < 32) {
+    // The getFriends() function sets the ID of the friend after the last friend to 0,
+    // which is how we know when the friend list has ended.
+    for(uint8_t i = 2; i < PACKET_SIZE && friends[friendsIndex].id != 0; i += 2) {
 
-        // Make sure we're not sending inactive direct friends.
-        if(!friends[friendsIndex].active  &&  !friends[friendsIndex].hops) {
-            friendsIndex++;
-            continue;
-        }
+        ping[i] = friends[friendsIndex].id;
 
-        // Put the first direct friend on index one, as the iso states (I hope).
-        if(!foundFirstDirectFriend  &&  friends[friendsIndex].active) {
-            foundFirstDirectFriend = 1;
-            ping[1] = friends[friendsIndex].id;
-        }
+        // If we know the friend directly, the hops are 0.
+        if(friends[friendsIndex].active) ping[i + 1] = 0;
+        else ping[i + 1] = friends[friendsIndex].hops;
 
-        // Build the rest of the ping.
-        else if(friends[friendsIndex].hops < 16 || friends[friendsIndex].active) {
-            // Ping build:
-            //* Index:      0   1   2   3   4   5   6   7   8   9   10
-            //* Index % 3:  0   1   2   0   1   2   0   1   2   0   1
-            //* Type:       mID Fst Hps id1 id2 Hps id1 id2 Hps id1 id2
-            //
-            //  mID = My ID.
-            //  Fst = First direct friend.
-            //  Hps = Hops of the coming 2 friends.     | Index % 3 = 2
-            //  id1 = First friend of last hops count.  | Index % 3 = 0
-            //  id2 = Second friend of last hops count. | Index % 3 = 1
-
-            // Actually copy the friend's id into the ping.
-            ping[pingIndex] = friends[friendsIndex].id;
-
-            // Make sure to set the hops to 0 if the friend is active.
-            const uint8_t hopsAmount = friends[friendsIndex].active ? 0 : friends[friendsIndex].hops;
-
-            // Find if this is an id1 or id2 situation
-            if(pingIndex % 3 == 0) {
-                ping[pingIndex - 1] |= hopsAmount << 4;
-                pingIndex++;
-            }
-            else {
-                ping[pingIndex - 2] |= hopsAmount;
-                pingIndex += 2;
-            }   
-        }
-        
         friendsIndex++;
     }
 
-    // If we don't have any friends, make sure to only send our own ID.
-    if(friends[0].id == 0) pingIndex = 1;
-
-    // If it ended with a hops byte, don't include it (it's obviously just going to be 0x00).
-    // This also works if we only have 1 friend (the pingIndex never changes from 3).
-    else if(pingIndex % 3 == 0) pingIndex--;
-
+    ping[SNAPSHOT_TYPE] = friendsIndex;
 
     nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
-    send(ping, pingIndex);
+    send(ping);
 }
 
 
@@ -268,78 +246,48 @@ void openPrivateWritingPipe(uint8_t destId) {
     nrfOpenWritingPipe(writingPipe);
 }
 
-void interpretPacket(uint8_t *packet, uint8_t length, uint8_t receivePipe, uint8_t receivePower) {
-
+void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
 
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
-
-        #ifdef DEBUG
-        terminalPrintf("Received PoL from 0x%02x\n", packet[0]);
-        char printPOLBuf[MAX_PACKET_SIZE * 12];
-        char *printPOLPtr = printPOLBuf;
-
-        for(uint8_t i = 0; i < length; i++)
-            printPOLPtr += sprintf(printPOLPtr, "\e[%sm%02x\e[0m ", (i % 3) == 2 ? "34" : "0", packet[i]);
-
-        sprintf(printPOLPtr, "\n");
-        terminalPrint(printPOLBuf);
-
-        #endif
+        terminalPrintStrex(packet, PACKET_SIZE, "Packet:");
 
         // Add the sender as a new direct neighbor friend.
         DEBUG_PRINT("Direct:");
-        friend_t *directFriend = updateFriend(packet[0], 0, 0);
+        friend_t *directFriend = updateFriend(packet[SNAPSHOT_SENDER_ID], 0, 0);
 
         // Do we trust this friend enough?
         if(!directFriend->active) return;
 
-        removeViaReferences(packet[0]);
+        // Delete all friends of the sender.
+        removeViaReferences(packet[SNAPSHOT_SENDER_ID]);
 
-        // Add the first direct friend.
-        if(packet[1] != myId  &&  length > 1) {
-            DEBUG_PRINT("packet[1]:");
-            updateFriend(packet[1], 1, packet[0]);
-        }
+        // The packet length is the header length (2) plus the friend data.
+        // Every friend takes 2 bytes: ID and Hops, so the friend data is 2 times the amount of friends.
+        uint8_t packetLength = 2 + 2 * (packet[SNAPSHOT_TYPE] & SNAPSHOT_TYPE_LENGTH_bm);
+        
+        // Prevent easily being bricked by array index overflow, caused by data from a malicious or incompetent source.
+        if(packetLength > PACKET_SIZE) packetLength = PACKET_SIZE;
 
-        // Add the rest of sender's friends.
-        for(uint8_t i = 3; i < length;) {
-            // See the comments in pingOfLife() for an explanation of this.
-            // If it's the first of the 2 ID's:
-            if(i % 3 == 0) {
-                if(packet[i] != myId) {
-                    DEBUG_PRINT("First ID:");
-                    updateFriend(packet[i], (packet[i - 1] >> 4) + 1, packet[0]);
-                }
-                i++;
-            }
-            // Else if it's the second:
-            else {
-                if(packet[i] != myId) {
-                    DEBUG_PRINT("Second ID:");
-                    updateFriend(packet[i], (packet[i - 2] & 0x0f) + 1, packet[0]);
-                }
-                i += 2;
-            }
-        }
-
-        // receiveCallback(packet, length);
+        for(uint8_t i = 2; i < packetLength; i += 2)
+            // Make sure to not add yourself as friend (prevent becoming schizophrenic).
+            if(packet[i] != myId)
+                updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
     
         return;
     }
 
-
     PORTF.OUTTGL = PIN1_bm;
-    if(receivePower) PORTF.OUTSET = PIN0_bm;
-    else PORTF.OUTCLR = PIN0_bm;
 
-    // If it's a message for me.
-    if(packet[0] == myId) receiveCallback(packet + 1, length - 1);
+    // Is for me???
+    if(packet[MESSAGE_DESTINATION_ID] == myId) {
+        receiveCallback(packet + 1);
+    }
 
     // If it's a message for someone else.
     else {
         // Relay packet
-        isoSendPacket(packet[0], packet + 1, length - 1);
+        isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
     }
 }
 
