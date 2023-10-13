@@ -5,7 +5,7 @@
 
 #define F_CPU 32000000UL
 
-#define DEBUG 1
+#define DEBUG 0
 
 
 #include <avr/io.h>
@@ -29,7 +29,6 @@ int main(void) {
     
     PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
-    clear_screen();
 
     // This bit is used to select the mode of the network node
     PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
@@ -38,7 +37,8 @@ int main(void) {
     if ((PORTE.IN & PIN0_bm)) {
         if (DEBUG)
             printf("I am a sensor node\n");
-        
+            
+        clear_screen();
         nrfChatInit();
         nrfChatLoop();
 

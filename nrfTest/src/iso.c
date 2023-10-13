@@ -113,9 +113,6 @@ void isoInit(void (*callback)(uint8_t *data)) {
 
     receiveCallback = callback;
 
-    printf("My ID is \e[34m0x%02x\e[0m, my pipe is \e[34m%.4s\e[0;31m%c\e[0m, I am set to channel \e[34m%d\e[0m\n",
-        myId, (char*)privatePipe, privatePipe[4], DEFAULT_CHANNEL);
-
     DEBUG_PRINT("\e[31mDebugging is enabled.\e[0m");
 }
 
@@ -174,11 +171,6 @@ uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len) {
     // Turn on acknowledgements and send the packet.
     openPrivateWritingPipe(sendFriend->id);
     send(packet);
-
-    terminalPrintStrex(packet, PACKET_SIZE, "Sending:");
-
-    if(sendFriend->id == dest) printf("Sending directly to %02x\n\n", dest);
-    else printf("Sending to %02x via %02x.\n\n", dest, sendFriend->id);
 
     return 0;
 }
@@ -250,7 +242,6 @@ void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
 
     // If it's a Ping of Life:
     if(receivePipe == BROADCAST_PIPE_INDEX) {
-        terminalPrintStrex(packet, PACKET_SIZE, "Packet:");
 
         // Add the sender as a new direct neighbor friend.
         DEBUG_PRINT("Direct:");

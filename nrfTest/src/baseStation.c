@@ -12,6 +12,15 @@
 
 #define WAIT_FOR_RPY        'c'
 
+
+#ifdef DEBUG
+    #define DEBUG_PRINTF(fmt, args...) printf(fmt, args)
+    #define DEBUG_PRINT(str) printf(str)
+#else
+    #define DEBUG_PRINTF(fmt, args...) {}
+    #define DEBUG_PRINT(fmt, args...) {}
+#endif // DEBUG
+
 // Callback for when received data is meant for this node
 static void messageReceive(uint8_t *payload);
 
@@ -20,49 +29,57 @@ static void sendFriendsList(void);
 
 // Initialization of the baseStation program 
 void baseStationInit(void) {
+    DEBUG_PRINT("I am a base-station\n");
+
     isoInit(messageReceive);
 
-    // wait until the RPI is ready for data from the Xmega
-    while (!(uartF0_getc() == WAIT_FOR_RPY));
+    DEBUG_PRINTF("Waiting till %c is pressed\n", WAIT_FOR_RPY);
 }
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
-    
+    uint8_t count = 0;
+    uint8_t doSend = 1;
+
     while (1) {
+        char inChar = uartF0_getc();
+        if(inChar == 'e') {
+            PORTF.OUTCLR = PIN0_bm;
+            doSend = 0;
+        }
+        else if(inChar == 'c') {
+            PORTF.OUTSET = PIN0_bm;
+            doSend = 1;
+        }
+
         isoUpdate();
-        sendFriendsList();
+        count++;
+        if(!count && doSend) {
+            sendFriendsList();
+        }
     }
 }
 
 static void messageReceive(uint8_t *payload) {
-    uartF0_putc(RECEIVED_PAYLOAD);
+    putchar(RECEIVED_PAYLOAD);
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
-        uartF0_putc(payload[i]);
+        putchar(payload[i]);
 }
 
 static void sendFriendsList(void) {
-    // Disable global interrupts to prevent interrupts from 
-    // adding friends halve way through this function
-    cli(); 
-
-    uint16_t friendAmount = getFriendAmount();
-    uint16_t len = 5 * friendAmount;
-
-    friend_t *friends = (friend_t*)malloc(sizeof(friend_t) * friendAmount);
-
-    getFriends(friends);
+    uint8_t friendAmount = getFriendAmount();
+    uint8_t listLength = 0;
+    friend_t *friends = getFriendsList(&listLength);
 
     uartF0_putc(FRIENDS_LIST);
-    uartF0_putc((uint8_t) len >> 8);
-    uartF0_putc((uint8_t) len);
+    uartF0_putc(friendAmount);
 
-    for (uint16_t i = 0; i < friendAmount; i++) {
+    for (uint8_t i = 0; i < listLength; i++) {
+        if(friends[i].id == 0) continue;
         uartF0_putc(friends[i].id);
         uartF0_putc(friends[i].hops);
         uartF0_putc(friends[i].via);
         uartF0_putc(friends[i].trust);
         uartF0_putc(friends[i].active);
     }
-    sei(); // Enable global interrupts
 }
