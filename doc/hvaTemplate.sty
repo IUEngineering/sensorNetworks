@@ -60,7 +60,21 @@
 	Alle rechten voorbehouden. Niets uit deze uitgave mag worden verveelvoudigd, 
 	opgeslagen in een geautomatiseerd gegevensbestand, of openbaar gemaakt, 
 	in enige vorm of op enige wijze, hetzij elektronisch, mechanisch, door print-outs, kopieën, 
-	of op welke manier dan ook, zonder voorafgaande schriftelijke toestemming van de Hogeschool Amsterdam.
+	of op welke manier dan ook, zonder voorafgaande schriftelijke toestemming van de Hogeschool van Amsterdam.
+	\newpage
+}
+
+\newcommand{\authorsCopyright}{
+	\mbox{}
+    \vfill
+    \noindent
+	\copyright 2023 Copyright
+
+	\noindent
+	Alle rechten voorbehouden. Niets uit dit verslag mag worden verveelvoudigd, 
+	opgeslagen in een geautomatiseerd gegevensbestand, of openbaar gemaakt, 
+	in enige vorm of op enige wijze, hetzij elektronisch, mechanisch, door print-outs, kopieën, 
+	of op welke manier dan ook, zonder voorafgaande schriftelijke toestemming van de auteurs.
 	\newpage
 }
 
@@ -75,17 +89,20 @@
 
 % c
 \lstdefinestyle{c}{
-	language		= C,
-	numbers 		= left,
-	numberstyle		= \small,
-	basicstyle   	= \footnotesize\ttfamily,
-	showstringspaces= false,
-    otherkeywords={define,include,\# },
-	commentstyle 	= \color{comment},
-	keywordstyle	= \color{keyword},
-	stringstyle  	= \color{string},
-	firstnumber		= \lst@firstline,
-    belowcaptionskip	= \baselineskip
+	language		    = C,
+	numbers 		    = left,
+	numberstyle		    = \small,
+	basicstyle   	    = \footnotesize\ttfamily,
+	showstringspaces    = false,
+    otherkeywords       = {define,include,\# },
+	commentstyle 	    = \color{comment},
+	keywordstyle	    = \color{keyword},
+	stringstyle  	    = \color{string},
+	firstnumber		    = \lst@firstline,
+    frame               = tblr
+    belowcaptionskip    = \baselineskip,
+    xleftmargin         =.2\textwidth, 
+    xrightmargin        =.2\textwidth
 }
 
 
