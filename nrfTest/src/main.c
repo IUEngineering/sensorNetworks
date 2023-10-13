@@ -1,30 +1,11 @@
-/*
- * nrftester.c
- *
- * Created: 18/03/2021 21:13:47
- * Author : Jochem Leijenhorst
- TODO: Verander dit naar van NL naar EN! 
- Dit programma heeft variabele pipes. Deze voer je in op tera term/putty
- Er zijn 4 commandos:
- TODO: Change the commands that they are correct, since that we've implemented the / command method. 
- *  help
-    Print deze lijst
- 
- *  send <waarde>
-    Verstuurt wat je invoert op waarde naar de geselecteerde pipe
-    
- *  rpip <pipenaamm> <index>
-    Verander de reading pipes
-
- *  chan <channel>
-    Verander de channel frequentie
-    
-    Het programma print continu uit wat hij ontvangt.
- */ 
+//* nrftester.c
+//*
+//* Created: 18/03/2021 21:13:47
+//* Author : Jochem Leijenhorst
 
 #define F_CPU 32000000UL
 
-#define DEBUG 1
+#define DEBUG 0
 
 
 #include <avr/io.h>
@@ -48,17 +29,24 @@ int main(void) {
     
     PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
-    clear_screen();
 
     // This bit is used to select the mode of the network node
-    PORTE.PIN0CTRL = 0x03 << 3;
+    PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
     PORTE.DIRCLR = PIN0_bm;
 
-    if ((PORTE.IN & 0x01)) {        
+    if ((PORTE.IN & PIN0_bm)) {
+        if (DEBUG)
+            printf("I am a sensor node\n");
+            
+        clear_screen();
         nrfChatInit();
         nrfChatLoop();
 
-    } else {        
+    }
+    else {
+        if (DEBUG)
+            printf("I am a base-station");
+        
         baseStationInit();
         baseStationLoop();
     }

@@ -8,7 +8,7 @@
 #define INITIAL_FRIEND_LIST_LENGTH 8
 
 #define ACTIVATE_TRUST      7
-#define DEACTIVATE_TRUST    5
+#define DEACTIVATE_TRUST    7
 #define MAX_TRUST           10
 #define TRUST_ADDER         2   
 #define TRUST_SUBTRACTOR    1
@@ -55,7 +55,6 @@ friend_t *updateFriend(uint8_t id, uint8_t hops, uint8_t via) {
 
     // Replace old friend if it has more hops.
     else if(hops < oldFriend->hops || oldFriend->hops == 0) {
-        if(hops > 1 || oldFriend->hops > 1) DEBUG_PRINTF("\t%02x: hops: (old: %2d new: %2d) via: (old: %02x new: %02x)\n", id, oldFriend->hops, hops, oldFriend->via, via);
         oldFriend->via = via;
         oldFriend->hops = hops;
         DEBUG_PRINT("\tNot direct. Replacing hops and via.\e[0m\n");
@@ -75,7 +74,6 @@ friend_t *newFriend(uint8_t id, uint8_t hops, uint8_t via) {
         friends = (friend_t *) realloc(friends, friendListLength + INITIAL_FRIEND_LIST_LENGTH);
         friendListLength += INITIAL_FRIEND_LIST_LENGTH;
         friendPtr = friends + friendAmount;
-        terminalPrint("Made the array bigger :)");
     }
     else {
         // Find the nearest hole in the list.
@@ -168,9 +166,6 @@ void removeViaReferences(uint8_t id) {
     }
 }
 
-uint8_t getFriendAmount(void) {
-    return friendAmount;
-}
 
 friend_t *getFriendsList(uint8_t *listLength) {
     *listLength = friendListLength;
@@ -187,6 +182,10 @@ void getFriends(friend_t *buf) {
         }
     }
     buf[bufIndex].id = 0;
+}
+
+uint8_t getFriendAmount(void) {
+    return friendAmount;
 }
 
 

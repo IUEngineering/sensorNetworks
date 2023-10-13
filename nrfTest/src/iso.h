@@ -4,9 +4,9 @@
 #include <avr/io.h>
 
 #define DEFAULT_CHANNEL 54
-#define MAX_PACKET_SIZE 31
+#define PAYLOAD_SIZE 31
 
-void isoInit(void (*callback)(uint8_t *payload, uint8_t length));
+void isoInit(void (*callback)(uint8_t *payload));
 uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len);
 void isoUpdate(void);
 uint8_t isoGetId(void);
