@@ -1,4 +1,5 @@
 \section{Communicatie}
+
 In dit hoofdstuk wordt ingegaan op hoe de ISO die in het vak sensor netwerken gemaakt is, is geïmplementeerd door team 2. De implementatie is in twee delen opgesplitst: iso en vriendjes lijst. Iso wordt gebruikt om de nrf24l01p aan te sturen terwijl de vriendjes lijst is een erg eenvoudige database voor in een microcontroller is.
 \subsection{ISO}
     \subsubsection{Init}
@@ -56,7 +57,7 @@ if(hops < oldFriend->hops || oldFriend->hops == 0) {
         In het geval geen van de situaties die hierboven zijn beschreven het geval zijn zal het nieuwe vriendje niet worden meegenomen.
     \subsubsection{Vriendjes verwijderen}
     \subsubsection{Vind vriendje}
-    \subsubsection{Vriendjes lijst}
+    \subsubsection{Vriendjes lijst} \label{ch:printFriends}
 
 \section{Base station}
     \subsection{Functionele blokken}
@@ -82,15 +83,7 @@ De commando's die in het nrfChat programma kunnen worden gebruikt.
 \subsection{Functionele blokken}
 
 \subsection{nrfChat}
-    \subsubsection{Init}
-    \subsubsection{Loop}
-    \subsubsection{Intrepeteer input}
-    \subsubsection{Help}
-    \subsubsection{Chan}
-    \subsubsection{Send}
-    \subsubsection{List}
-    \subsubsection{Dest}
-    \subsubsection{MyID}
+    \input{sections/chat.tex}
 
 \subsection{Terminal}
     \subsubsection{Intrepeteer input}
@@ -98,3 +91,6 @@ De commando's die in het nrfChat programma kunnen worden gebruikt.
     \subsubsection{Terminal print}
     \subsubsection{Terminal print hex}
     \subsubsection{Terminal print strex}
+
+
+    

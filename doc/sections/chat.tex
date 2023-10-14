@@ -1,0 +1,93 @@
+\subsubsection{Init}
+
+
+\subsubsection{Loop}
+
+
+\subsubsection{Interpreteer input}
+
+De input wordt in meerdere stappen geïnterpreteerd. De interpreteer functie heeft de ingevoerde regel tekst als argument, en wordt uitgevoerd wanneer er op enter wordt gedrukt door de gebruiker.
+Het eerste deel van de functie is te zien in \autoref{lst:interpretInputStart}. Hier kijkt de functie eerst of de input begint met een slash. Als dit niet het geval is, wordt de volledige input direct verstuurd naar de geselecteerde bestemming. Wanneer de input wel met een slash begint, wordt de pointer naar de input met 1 verhoogt, zodat de rest van de code geen rekening meer hoeft te houden met deze slash.
+
+\begin{lstlisting}[caption={Eerste deel van de interpreter},captionpos=b,label={lst:interpretInputStart},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+// If no '/' is given, just send the inputted string.
+if(input[0] != '/') {
+    send(input);
+    return;
+}
+
+// If a '/' is given, we want to interpret from the character after it.
+input++;
+\end{lstlisting}
+
+Er worden vervolgens twee constante en statische arrays aangemaakt (zie \autoref{lst:interpretInputFPointers}). Eén van de arrays bevat al de commando's die uitgevoerd kunnen worden door de gebruiker. De andere array bevat de functie pointers naar de corresponderende functies.
+Aangezien de functienamen op de zelfde index zitten als de functie pointers, kunnen de arrays gebruikt worden als look-up table.
+
+\begin{lstlisting}[caption={De look-up table van de interpreter},captionpos=b,label={lst:interpretInputFPointers},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+// Make a corresponding array of 4 letter function names.
+static const char commands[COMMANDS][4] = {
+    "send", "help", "chan", "list", "dest", "myid"
+};
+// Make an array of functions.
+static const void (*functions[COMMANDS])(char*) = {
+    send, help, chan, list, dest, myid
+};
+\end{lstlisting}
+
+De code gaat vervolgens langs elk van de functienamen. Wanneer het ingevoerde commando gelijk is aan een van de functienamen in de \texttt{commands} array, wordt de functie op dezelfde index uit de \texttt{functions} array uitgevoerd. De functie krijgt de input pointer mee als argument, waar 5 bij op wordt geteld. Dit is zodat de functie alleen het begin van de argumenten van het commando meekrijgt.
+
+Wanneer de gebruiker echter maar 5 karakters heeft ingevoerd (Zoals \texttt{/dest}), lopen we tegen een probleem aan. De pointer die de functie meekrijgt ligt dan namelijk in de gebruikersinput buffer, \textit{na} de \textbackslash0 die wordt toegevoegd. Hierdoor weet de functie niet waar het einde van de gebruikersinput is, en kunnen er geheugenproblemen ontstaan. Dit is opgelost door een extra \textbackslash0 in de buffer te zetten wanneer de invoer maar 5 karakters lang is. Zo wordt aan de functie een pointer meegegeven naar een \textbackslash0, zodat deze kan weten dat de gebruiker geen verdere argumenten heeft meegegeven.
+
+\begin{lstlisting}[caption={De code die het ingevoerde commando als functie uitvoert},captionpos=b,label={lst:interpretInputRun},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+for(uint8_t i = 0; i < COMMANDS; i++) {
+    if(strncmp(commands[i], input, 4) == 0) {
+        // Prevent problems relating to inputs with no arguments.
+        if(input[4] == '\0') input[5] = '\0';
+
+        // Run the command, with the text after it as argument.
+        functions[i](input + 5);
+        return;
+    }
+}
+printf("I don't know that command :(\n");
+\end{lstlisting}
+
+
+
+\subsubsection{Help}
+
+
+\subsubsection{Chan}
+Chan is een erg simpel commando. Het enige wat het doet is de frequentie veranderen waar de nrf chip op zendt en ontvangt. De werking van de functie is te zien in \autoref{lst:chan}.
+\begin{lstlisting}[caption={De chan functie},captionpos=b,label={lst:chan},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+void chan(char *arguments) {
+    uint8_t channel = atoi(arguments);
+
+    nrfStopListening();
+    nrfSetChannel(channel);
+    nrfStartListening();
+
+    printf("\nSwitched to channel %d\n\n", channel);
+}
+\end{lstlisting}
+
+De functie heeft geen afhandeling van een ongeldige input. Dit is omdat \texttt{atoi} altijd een 0 teruggeeft wanneer hij tegen een probleem aanloopt bij het parsen van een getal. Hierdoor wordt de channel gewoon naar 0 gezet wanneer de gebruiker een ongeldige invoer geeft. Hier wordt de gebruiker ook van op de hoogte gesteld, door de \texttt{printf} mededeling.
+
+
+\subsubsection{Send}
+De send functie stuurt alles wat er meegegeven wordt op via de \texttt{isoSendPacket} functie, zoals te zien in \autoref{lst:send}
+\begin{lstlisting}[caption={De send functie},captionpos=b,label={lst:send},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+void send(char *command) {
+    if(isoSendPacket(destinationId, (uint8_t*)command, strlen(command))) 
+        printf("Failed to send message\n");    
+}
+\end{lstlisting}
+
+\subsubsection{List}
+Het enige wat de list functie doet is de \texttt{printFriends} functie uitvoeren, te vinden in \autoref{ch:printFriends}.
+
+\subsubsection{Dest}
+
+
+\subsubsection{MyID}
+
