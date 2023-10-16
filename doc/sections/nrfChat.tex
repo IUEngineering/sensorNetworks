@@ -53,10 +53,32 @@ if(hops < oldFriend->hops || oldFriend->hops == 0) {
     DEBUG_PRINT("\tNot direct. Replacing hops and via.\e[0m\n");
 }
 \end{lstlisting}
-        In het geval geen van de situaties die hierboven zijn beschreven het geval zijn zal het nieuwe vriendje niet worden meegenomen.
+        In het geval geen van de situaties die hierboven beschreven het geval zijn zal het nieuwe vriendje niet worden opgeslagen.
+
     \subsubsection{Vriendjes verwijderen}
+        Om een vriendje te verwijdere is er een functie gemaakt waar het friend\_t object aan moet worden meegegeven. Als het friend\_t object een ID heeft anders dan NULL zal het aantal vrienden met 1 omlaag worden gehaald. De implementatie hiervan is te zien in \autoref{lst:verwijderFriend}.
+        \begin{lstlisting}[caption={Verwijder vriendje},captionpos=b,label={lst:verwijderFriend},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+void removeFriend(friend_t *friend) {
+    friendAmount -= (friend->id != 0);
+    friend->id = 0;
+}
+        \end{lstlisting}
+
     \subsubsection{Vind vriendje}
-    \subsubsection{Vriendjes lijst}
+        Om te checken of een vriend bekend is met een ID kan de findFriend functie gebruikt worden. Deze functie checkt eerst of het opgegeven ID een valide waarde heeft, in het geval dit niet is zal de functie NULL returnen. Als het meegegeven ID wel valide is wordt stapsgewijs de hele friend\_t array doorgezocht tot of het ID gevonden wordt of tot er het ID niet is gevonden in de hele friend\_t array. In het geval er niet een friend\_t element in de array is gevonden met het opgegeven ID returned de functie NULL. Op het moment dat er wel een friend\_t element in de array is gevonden met het opgegeven ID returned de functie een pointer naar dit friend\_t object. De implementatie hiervan is te zien in \autoref{lst:vindFriend}.
+        \begin{lstlisting}[caption={Vind vriendje},captionpos=b,label={lst:vindFriend},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+// Find a friend, and return a pointer to that friend.
+friend_t *findFriend(uint8_t id) {
+    // ID 0x00 is invalid.   
+    if(id == 0x00) return NULL;
+
+    for(uint8_t i = 0; i < friendListLength; i++) {
+        if(friends[i].id == id) return friends + i;
+    }
+    // If the friend was not found :(
+    return NULL;
+}
+        \end{lstlisting}
 
 \section{Base station}
     \subsection{Functionele blokken}
