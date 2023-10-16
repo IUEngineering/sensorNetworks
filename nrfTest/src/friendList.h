@@ -5,6 +5,9 @@
 
 #define FORGET_FRIEND_TIME 8
 
+// 256 ID's - 2 standard ID's (0x00 and 0xff) - 1 (your own ID) = 253
+#define MAX_FRIENDS 253
+
 //* Define neighbor datatype
 //* Holds al the necessairy information about a friend
 typedef struct {
@@ -13,6 +16,7 @@ typedef struct {
     uint8_t via;
     uint8_t trust;
     uint8_t active;
+    uint16_t lastPingTime;
 }friend_t;
 
 
@@ -40,9 +44,9 @@ void friendTimeTick(void);
 
 friend_t *getFriendsList(uint8_t *listLength);
 
-//* Get a list of the direct friends
-//* 
-//* *buf: Buffer to store the friends in.
+//* Get a list of all ping-worthy friends.
+//* This includes active friends, as well as friends that are known via an active friend.
+//* Adds a friend with an ID of 0 to the end of the array as a terminator.
 void getFriends(friend_t *buf);
 
 //* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist

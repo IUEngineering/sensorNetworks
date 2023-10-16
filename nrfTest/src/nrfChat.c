@@ -27,8 +27,6 @@ static void list(char *arguments);
 static void dest(char *arguments);
 static void myid(char *arguments);
 
-static void interpretInput(char *buffer);
-
 // Callback functions.
 static void interpretInput(char *input);
 static void messageReceive(uint8_t *payload);
@@ -60,6 +58,8 @@ void nrfChatLoop(void) {
         }
 
         isoUpdate();
+    }
+}
 
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
