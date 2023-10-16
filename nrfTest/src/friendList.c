@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "friendList.h"
-#include "serialF0.h"
+// #include "serialF0.h"
 #include "terminal.h"
 
 #define INITIAL_FRIEND_LIST_LENGTH 8

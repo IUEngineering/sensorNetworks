@@ -61,9 +61,9 @@ void baseStationLoop(void) {
 }
 
 static void messageReceive(uint8_t *payload) {
-    putchar(RECEIVED_PAYLOAD);
+    uartF0_putc(RECEIVED_PAYLOAD);
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
-        putchar(payload[i]);
+        uartF0_putc(payload[i]);
 }
 
 static void sendFriendsList(void) {
