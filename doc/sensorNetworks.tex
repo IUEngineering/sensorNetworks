@@ -15,13 +15,23 @@
 
 \numberwithin{equation}{section}
 
+\def\figureautorefname{Figuur}
+\def\tableautorefname{Tabel}
+\def\equationautorefname{Formule}
+\def\chapterautorefname{Hoofdstuk}
+\def\sectionautorefname{Paragraaf}
+\def\subsectionautorefname{Paragraaf}
+\def\subsubsectionautorefname{Paragraaf}
+\def\listingautorefname{Vermelding}
+
 \begin{document}
     \makeTitlepage
+    \authorsCopyright
     \onecolumn
     \tableofcontents
     \newpage
 
-    
+    \input{sections/nrfChat}
 
     \printbibliography
 
@@ -29,3 +39,4 @@
     \input{appendices/blink}
 
 \end{document}
+

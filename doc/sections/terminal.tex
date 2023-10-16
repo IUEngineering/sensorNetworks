@@ -1,0 +1,28 @@
+
+Terminal.c is een library die gemaakt is voor nrfChat.c, maar ook voor andere debugging doeleinden. De library is gemaakt omdat, wanneer er iets op de terminal uitgeprint wordt, dit dwars door de huidige input heengaat van de gebruiker. De input staat nog steeds in de buffer, en kan nog steeds uitgevoerd worden, hij is alleen niet meer leesbaar. Dit beloofde uiteindelijk frustrerend genoeg om snel een library te schrijven die gebruikt kan worden om zowel debug informatie als ontvangen berichten uit te printen. Ook regelt de library het bufferen van alle gebruikersinput.
+
+\subsubsection{Intrepeteer input}
+Aangezien programma's zoals Minicom, TeraTerm en PuTTY elk getypte karakter direct naar de microcontroller sturen, moeten we onze eigen linebuffer bijhouden. Hier is de functie \texttt{terminalInterpretChar} voor bedoelt. Deze functie moet elke keer aangeroepen worden wanneer de gebruiker een toets op het toetsenbord intikt. De functie zet dan het getypte karakter dan in een buffer. 
+
+Doordat backspaces niet behandelt worden door een linebuffer van de terminal, zoals normaal bij C programma's, moeten we deze zelf afhandelen. In \autoref{lst:backspaces} is te zien hoe dit gebeurt. De buffer index wordt met 1 vermindert, en in de terminal wordt het vorige karakter vervangen door een spatie.
+
+
+
+\begin{lstlisting}[caption={Backspaces afhandelen},captionpos=b,label={lst:backspaces},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Handle backspaces.
+    if(inChar == '\b' && inputBufferIndex) {
+        // Go back 1, make the char empty, and go back again.
+        // If we only print \b the cursor would simply move
+    // to the left without removing any characters.
+    printf("\b \b");
+    inputBufferIndex--;
+    return;
+}
+\end{lstlisting}
+
+\subsubsection{Command callback}
+Wanneer het programma een return karakter (\textbackslash~n) tegenkomt, moet het ingevoerde commando uitgevoerd worden. Dit wordt gedaan door middel van een callback functie. De callback functie kan worden ingesteld met een initialisatie functie. De 
+
+\subsubsection{Print string}
+\subsubsection{Print hex}
+\subsubsection{Print string en hex} \label{ch:printStrex}

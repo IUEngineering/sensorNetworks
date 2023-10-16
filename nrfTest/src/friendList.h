@@ -48,7 +48,13 @@ void getFriends(friend_t *buf);
 //* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
 friend_t *findFriend(uint8_t id);
 
-// Fuck off
+
+// Get the amount of friends we currently have.
+// Includes friends that are inactive and don't have an active connection.
+uint8_t getFriendAmount(void);
+
+// Removes all references to the friend with the specified ID.
+// If a friend was only known through this friend, it will be deleted.
 void removeViaReferences(uint8_t id);
 
 

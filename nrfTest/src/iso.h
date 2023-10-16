@@ -3,13 +3,13 @@
 
 #include <avr/io.h>
 
-#define STANDARD_CHANNEL 54
+#define DEFAULT_CHANNEL 54
+#define PAYLOAD_SIZE 31
 
-void isoInit(void (*callback)(uint8_t *payload, uint8_t length));
-void isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len);
+void isoInit(void (*callback)(uint8_t *payload));
+uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len);
 void isoUpdate(void);
 uint8_t isoGetId(void);
 
 
 #endif
-
