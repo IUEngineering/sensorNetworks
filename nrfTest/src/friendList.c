@@ -97,8 +97,8 @@ friend_t *newFriend(uint8_t id, uint8_t hops, uint8_t via) {
 }
 
 void removeFriend(friend_t *friend) {
+    friendAmount -= (friend->id != 0);
     friend->id = 0;
-    friendAmount--;
 }
 
 void printFriends() {
