@@ -33,8 +33,6 @@ static void interpretInput(char *buffer);
 static void interpretInput(char *input);
 static void messageReceive(uint8_t *payload);
 
-static uint8_t receivedMessage[32];
-static uint8_t receivedMessageLength = 0;
 static uint8_t destinationId = 0xff;
 
 void nrfChatInit(void) {
@@ -43,19 +41,18 @@ void nrfChatInit(void) {
     isoInit(messageReceive);
     terminalSetCallback(interpretInput);
 
-    printf("Welcome to the nrfTester\nMade partly by Jochem Leijenhorst.\n\nType " COMMAND_COLOR "/help" NO_COLOR " for a list of commands.\n");
+    printf("Welcome to the nrfTester\nMade by Team 2.\n\nType " COMMAND_COLOR "/help" NO_COLOR " for a list of commands.\n");
     printf("Started with ID " ID_COLOR "0x%02x" NO_COLOR " on channel " ID_COLOR "%d" NO_COLOR ".\n", isoGetId(), DEFAULT_CHANNEL);
     
     // Print a nice line (it looks cool).
     for(uint8_t i = 0; i < 64; i++) uartF0_putc('-');
     printf("\n\n");
-
-    PORTA.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
 }
 
 void nrfChatLoop(void) {
     while (1) {
         // Get the character from the user.
+        // Use a char instead of a uint16_t because we're only expecting user input (ASCII characters), not individual bytes.
         char newInputChar = uartF0_getc();
 
         if(newInputChar != '\0') {
@@ -63,19 +60,13 @@ void nrfChatLoop(void) {
         }
 
         isoUpdate();
-
-        if(receivedMessageLength) {
-            terminalPrintStrex(receivedMessage, receivedMessageLength, "Received:");
-            receivedMessageLength = 0;
-        }
     }
 }
 
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
 void messageReceive(uint8_t *payload) {
-    memcpy(receivedMessage, payload, PAYLOAD_SIZE);
-    receivedMessageLength = strnlen((char *)payload, PAYLOAD_SIZE);
+    terminalPrintStrex(payload, strlen((char *)payload), "Received:");
 }
 
 // Callback from terminal.c.
