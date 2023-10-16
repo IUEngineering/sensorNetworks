@@ -9,7 +9,7 @@
 #include "serialF0.h"
 #include "encrypt.h"
 
-#define COMMANDS 7
+#define COMMANDS 8
 #define INPUT_BUFFER_LENGTH 38
 
 static void rpip(char *command);
@@ -19,6 +19,7 @@ static void send(char *command);
 static void list(char *command);
 static void dest(char *command);
 static void myid(char *command);
+static void priv(char *command);
 
 static void runCommand(char *command);
 static void interpretInput(char *buffer, uint8_t repeat);
@@ -28,6 +29,9 @@ static void messageReceive(uint8_t *payload, uint8_t length);
 static uint8_t receivedMessage[32];
 static uint8_t receivedMessageLength = 0;
 static uint8_t destinationId = 0xff;
+
+static uint8_t key[] = {0xAB, 0x56};
+static uint8_t key2[] = {0x12, 0x23, 0x83};
 
 // Make a buffer for the command.
 // Not going to worry about buffer overflow, just don't input too much and you'll be fine.
@@ -159,12 +163,12 @@ void messageReceive(uint8_t *payload, uint8_t length) {
 void runCommand(char *command) {
     // Make an array of functions.
     const void (*comFunc[COMMANDS])(char*) = {
-        rpip, send, help, chan, list, dest, myid
+        rpip, send, help, chan, list, dest, myid, priv
     };
 
     // Make a corresponding array of 4 letter function names.
     const char commands[COMMANDS][4] = {
-        "rpip", "send", "help", "chan", "list", "dest", "myid"
+        "rpip", "send", "help", "chan", "list", "dest", "myid", "priv"
     };
 
     
@@ -224,16 +228,7 @@ void help(char *command) {
     printf("*    /list\n\tPrint a list of friends :)\n\n");
     printf("*    /dest <id>\n\tChange the id of the destination node.\n\n");
     printf("*    /myid\n\tGet your ID.\n\n");
-    printf("\nThe program continually prints what it is receiving on all open reading pipes.\n\n");
-
-    uint8_t len = strlen(command);
-    uint8_t key[] = {0xAB, 0x0F}; 
-    uint8_t *encryptedData = xorMultiEncrypt((uint8_t*)command, len , key, 2);
-
-    for (uint8_t i = 0; i < len; i++) {
-        printf("%x ", encryptedData[i]);
-    }
-    printf("\n");
+    printf("\nThe program continually prints what it is receiving on all open reading pipes.\n\n");    
 }
 
 // Function to change the frequency channel.
@@ -261,4 +256,9 @@ void dest(char *command) {
 
 void myid(char *command) {
     printf("Your ID is 0x%02x\n", isoGetId());
+}
+
+void priv(char *command) {
+    uint8_t data = dif_encrypt((uint8_t*)command, strlen(command) , key, sizeof(key), key2, sizeof(key2));
+    isoSendPacket(destinationId, (uint8_t*) data, strlen(data)); 
 }
