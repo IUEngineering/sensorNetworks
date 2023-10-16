@@ -2,6 +2,6 @@
 #define _DUMMYDATA_H_
 
 void dummyDataInit(void);
-void dummyDataInit(void);
+void dummyDataLoop(void);
 
 #endif // _DUMMYDATA_H_
