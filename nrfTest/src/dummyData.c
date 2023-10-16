@@ -1,3 +1,5 @@
+#include <avr/io.h>
+
 #include "iso.h"
 #include "serialF0.h"
 
