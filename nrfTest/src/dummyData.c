@@ -3,6 +3,16 @@
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
+// Initialise the dummyData program
+void dummyDataInit(void) {
+
+}
+
+// The continues loop of the dummyData program 
+void dummyDataLoop(void) {
+
+}
+
 //read data from potmeter placed on PA2/PA3
 void ADCInit(void) {
     PORTA.DIRCLR     = PIN2_bm|PIN3_bm;
