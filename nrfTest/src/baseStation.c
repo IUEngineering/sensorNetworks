@@ -68,13 +68,12 @@ static void messageReceive(uint8_t *payload) {
 
 static void sendFriendsList(void) {
     uint8_t friendAmount = getFriendAmount();
-    uint8_t listLength = 0;
-    friend_t *friends = getFriendsList(&listLength);
+    friend_t *friends = getFriendsList();
 
     uartF0_putc(FRIENDS_LIST);
     uartF0_putc(friendAmount);
-
-    for (uint8_t i = 0; i < listLength; i++) {
+    
+    for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
         if(friends[i].id == 0) continue;
         uartF0_putc(friends[i].id);
         uartF0_putc(friends[i].hops);

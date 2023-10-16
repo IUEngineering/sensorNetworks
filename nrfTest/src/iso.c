@@ -12,7 +12,7 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
-#define BROADCAST_PIPE "katje"
+#define BROADCAST_PIPE (uint8_t *)"katje"
 #define BROADCAST_PIPE_INDEX 0
 
 #define PRIVATE_PIPE "420P"
@@ -29,7 +29,16 @@
 #define SNAPSHOT_FIRST_ID       2
 #define SNAPSHOT_TYPE           1
 #define SNAPSHOT_TYPE_LENGTH_bm 0x7f
-#define SNAPSHOT_TYPE_UPDATE_bm 0x80
+
+#define UPDATE_TYPE             1
+#define UPDATE_COUNT            2
+#define UPDATE_FIRST_ID         3
+#define UPDATE_TYPE_UPDATE_bm   0x80
+#define UPDATE_TYPE_DECAY_bm    0x7f
+#define UPDATE_COUNT_ADD_bm     0xf0
+#define UPDATE_COUNT_ADD_bp     4
+#define UPDATE_COUNT_REMOVE_bm  0x0f
+#define UPDATE_MAX_DECAY        5
 
 #define MAX_MULTIPACKET_TIME_INTERVAL 256
 #define MAX_MULTIPACKETS 3
@@ -45,6 +54,7 @@
 // TC_CCA = ((t * F_CPU) / (2* N)) - 1 
 #define TC_CCA  15624
 
+
 // #define FILLIST 3
 
 
@@ -57,7 +67,10 @@ static void (*receiveCallback)(uint8_t *payload);
 static void send(uint8_t *data);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
-static void interpretPacket(uint8_t *packet, uint8_t receivePipe);
+static void parsePacket(uint8_t *packet, uint8_t receivePipe);
+static void parseUpdate(uint8_t *packet);
+static void parsePing(uint8_t *packet);
+
 
 //TODO: optimize the init
 void isoInit(void (*callback)(uint8_t *data)) {
@@ -100,7 +113,7 @@ void isoInit(void (*callback)(uint8_t *data)) {
 
     // TODO: Check if these delays are necessary.
     _delay_ms(5);
-    nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, (uint8_t *) BROADCAST_PIPE);
+    nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, BROADCAST_PIPE);
     _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
@@ -151,7 +164,7 @@ void isoUpdate(void) {
 
         // Put received data into a buffer.
         nrfRead(packet, PACKET_SIZE);
-        interpretPacket(packet, receivePipe);
+        parsePacket(packet, receivePipe);
     }
 }
 
@@ -254,7 +267,7 @@ void pingOfLife(void) {
     while(friends[friendsIndex].id && multipacketIndex <= MAX_MULTIPACKETS);
 
     // Open the public pipe.
-    nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
+    nrfOpenWritingPipe(BROADCAST_PIPE);
     
     // With only a maximum of 3 multipackets, I'm pretty doing it this way is easier to read than doing it with a for loop.
     // I'm also pretty sure it's not that much less efficient (if at all).
@@ -270,7 +283,7 @@ void openPrivateWritingPipe(uint8_t destId) {
     nrfOpenWritingPipe(writingPipe);
 }
 
-void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
+void parsePacket(uint8_t *packet, uint8_t receivePipe) {
 
 
     // If it's a Ping of Life (snapshot):
@@ -279,38 +292,10 @@ void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
         return;
         #endif
 
-        // Add the sender as a new direct neighbor friend.
-        friend_t *directFriend = updateFriend(packet[SNAPSHOT_SENDER_ID], 0, 0);
-
-        uint8_t isMultiPacket = currentTime - directFriend->lastPingTime < MAX_MULTIPACKET_TIME_INTERVAL;
-
-        // Update the friend's timer.
-        directFriend->lastPingTime = currentTime;
-
-
-        // Do we trust this friend enough?
-        if(!directFriend->active) return;
-
-        // Remove all the friend's previous via links if this is a brand new packet.
-        // There will be a small period in which no data can be sent to these, which we'll just have to accept for now.
-        if(!isMultiPacket) {
-            // Delete all friends of the sender if it's not.
-            removeViaReferences(packet[SNAPSHOT_SENDER_ID]);
-        }
-
-        // The packet length is the header length (2) plus the friend data.
-        // Every friend takes 2 bytes: ID and Hops, so the friend data is 2 times the amount of friends.
-        uint8_t packetLength = 2 + 2 * (packet[SNAPSHOT_TYPE] & SNAPSHOT_TYPE_LENGTH_bm);
+        // Check which parser to use:
+        if(packet[1] & UPDATE_TYPE_UPDATE_bm) parseUpdate(packet);
+        else parsePing(packet);
         
-        // Prevent easily being bricked by array index overflow, caused by data from a malicious or incompetent source.
-        if(packetLength > PACKET_SIZE) packetLength = PACKET_SIZE;
-
-        for(uint8_t i = 2; i < packetLength; i += 2)
-            // Make sure to not add yourself as friend (prevents becoming schizophrenic).
-            if(packet[i] != myId)
-                updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
-    
-        return;
     }
 
     PORTF.OUTTGL = PIN1_bm;
@@ -325,6 +310,69 @@ void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
         // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
     }
+}
+
+void parseUpdate(uint8_t *packet) {
+    uint8_t adders = (packet[1] & UPDATE_COUNT_ADD_bm) >> UPDATE_COUNT_ADD_bp;
+    uint8_t removers = packet[1] & UPDATE_COUNT_REMOVE_bm;   
+    uint8_t decay = packet[UPDATE_TYPE] & UPDATE_TYPE_DECAY_bm;
+
+    // If it's actually useful in any way, shape or form:
+    if(findFriend(packet[0])->active) { 
+        for(uint8_t i = 0; i < adders; i++) {
+            // Well this is going to be run like 28 times every time a nerd decides to send an update,
+            // because literally EVERYONE is repeating them, woo :D.
+            updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);
+        }
+        removeVias(packet[0], packet + adders + UPDATE_FIRST_ID, removers);
+    }
+
+    // We have literally NO idea who sent this if the first byte is not a direct friend.
+    // Because of this, we can basically not get ANY information from updates in that case.
+    // Oh well time to still relay it for some reason I guess.
+    if(packet[1] & UPDATE_TYPE_DECAY_bm) {
+
+        // Subtract one from the decay value.
+        packet[1] = UPDATE_TYPE_UPDATE_bm | (decay - 1);
+
+        // Make it someone else's problem.
+        nrfOpenWritingPipe(BROADCAST_PIPE);
+        send(packet);
+    }
+}
+
+void parsePing(uint8_t *packet) {
+    // Add the sender as a new direct neighbor friend.
+    friend_t *directFriend = updateFriend(packet[SNAPSHOT_SENDER_ID], 0, 0);
+
+    uint8_t isMultiPacket = currentTime - directFriend->lastPingTime < MAX_MULTIPACKET_TIME_INTERVAL;
+
+    // Update the friend's timer.
+    directFriend->lastPingTime = currentTime;
+
+
+    // Do we trust this friend enough?
+    if(!directFriend->active) return;
+
+    // Remove all the friend's previous via links if this is a brand new packet.
+    // There will be a small period in which no data can be sent to these, which we'll just have to accept for now.
+    if(!isMultiPacket) {
+        // Delete all friends of the sender if it's not.
+        removeViaReferences(packet[SNAPSHOT_SENDER_ID]);
+    }
+
+    // The packet length is the header length (2) plus the friend data.
+    // Every friend takes 2 bytes: ID and Hops, so the friend data is 2 times the amount of friends.
+    uint8_t packetLength = 2 + 2 * (packet[SNAPSHOT_TYPE] & SNAPSHOT_TYPE_LENGTH_bm);
+    
+    // Prevent easily being bricked by array index overflow, caused by data from a malicious or incompetent source.
+    if(packetLength > PACKET_SIZE) packetLength = PACKET_SIZE;
+
+    for(uint8_t i = 2; i < packetLength; i += 2)
+        // Make sure to not add yourself as friend (prevents becoming schizophrenic).
+        if(packet[i] != myId)
+            updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
+
 }
 
 

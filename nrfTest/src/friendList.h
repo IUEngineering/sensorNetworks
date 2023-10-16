@@ -15,9 +15,13 @@ typedef struct {
     uint8_t hops;
     uint8_t via;
     uint8_t trust;
-    uint8_t active;
+    uint8_t active : 1;
     uint16_t lastPingTime;
 }friend_t;
+
+// TODO: Memory optimization possibilities:
+// - Make active and trust a single byte (implemented by myself instead of the compiler, which should save some progmem)
+// - Make lastPingTime a byte somehow (very possible).
 
 
 //* Initialise the friendlist
@@ -42,7 +46,7 @@ void printFriends(void);
 //* Deactivate friends if they are not trustworthy
 void friendTimeTick(void);
 
-friend_t *getFriendsList(uint8_t *listLength);
+friend_t *getFriendsList(void);
 
 //* Get a list of all ping-worthy friends.
 //* This includes active friends, as well as friends that are known via an active friend.
@@ -60,6 +64,10 @@ uint8_t getFriendAmount(void);
 // Removes all references to the friend with the specified ID.
 // If a friend was only known through this friend, it will be deleted.
 void removeViaReferences(uint8_t id);
+
+// Removes all friends from the given `vias` array,
+// given that they are known through `from`.
+void removeVias(uint8_t from, uint8_t *vias, uint8_t viaAmount);  
 
 
 #endif // _FRIENDLIST_H_
