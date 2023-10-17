@@ -70,6 +70,7 @@ void nrfChatLoop(void) {
 
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
+// Gets message encrypted, decrypts the message first
 void messageReceive(uint8_t *payload) {
     uint8_t *decrypted = KeysEncrypt((uint8_t*)payload, strlen((char *)payload) , Key1Data, strlen(Key1Data), Key2Data, strlen(Key2Data));
     terminalPrintStrex(decrypted, strlen((char *)decrypted), "Received:");
@@ -113,6 +114,7 @@ void interpretInput(char *input) {
     printf("I don't know that command :(\n");
 }
 
+// Function to send a message which is encrypted
 void send(char *arguments) {
     uint8_t *data = KeysEncrypt((uint8_t*)arguments, strlen(arguments) , Key1Data, sizeof(Key1Data), Key2Data, sizeof(Key2Data));
     if(isoSendPacket(destinationId, (uint8_t*) data, strlen(arguments))) 
@@ -166,6 +168,7 @@ void myid(char *arguments) {
     printf("Your ID is 0x%02x\n", isoGetId());
 }
 
+// Function to show the keys in Hex
 void keys(char *arguments){
     printf("Your keys are:\n");
     printf(ID_COLOR "Key 1:\n" NO_COLOR);
@@ -190,10 +193,12 @@ void keys(char *arguments){
     printf("\n");
 }
 
+// Function to change Key 1
 void key1(char *arguments) {
     strcpy(Key1Data, arguments);
 }
 
+// Function to change Key 2
 void key2(char *arguments) {
     strcpy(Key2Data, arguments);
 }
