@@ -12,7 +12,7 @@
 #include "serialF0.h"
 #include "encrypt.h"
 
-#define COMMANDS 7
+#define COMMANDS 9
 #define INPUT_BUFFER_LENGTH 38
 
 #define NO_COLOR        "\e[0m"
@@ -27,7 +27,9 @@ static void send(char *arguments);
 static void list(char *arguments);
 static void dest(char *arguments);
 static void myid(char *arguments);
-static void priv(char *arguments);
+static void keys(char *arguments);
+static void key1(char *arguments);
+static void key2(char *arguments);
 
 // Callback functions.
 static void interpretInput(char *input);
@@ -35,8 +37,8 @@ static void messageReceive(uint8_t *payload);
 
 static uint8_t destinationId = 0xff;
 
-static uint8_t key[] = {0xAB, 0x56};
-static uint8_t key2[] = {0x12, 0x23, 0x83};
+static char Key1Data[32] = {};
+static char Key2Data[32] = {};
 
 void nrfChatInit(void) {
     // Send welcome message
@@ -69,7 +71,8 @@ void nrfChatLoop(void) {
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
 void messageReceive(uint8_t *payload) {
-    terminalPrintStrex(payload, strlen((char *)payload), "Received:");
+    uint8_t *decrypted = KeysEncrypt((uint8_t*)payload, strlen((char *)payload) , Key1Data, strlen(Key1Data), Key2Data, strlen(Key2Data));
+    terminalPrintStrex(decrypted, strlen((char *)decrypted), "Received:");
 }
 
 // Callback from terminal.c.
@@ -87,12 +90,12 @@ void interpretInput(char *input) {
 
     // Make a corresponding array of 4 letter function names.
     static const char commands[COMMANDS][4] = {
-        "send", "help", "chan", "list", "dest", "myid", "priv"
+        "send", "help", "chan", "list", "dest", "myid", "keys", "key1", "key2"
     };
 
     // Make an array of functions.
     static const void (*functions[COMMANDS])(char*) = {
-        send, help, chan, list, dest, myid, priv
+        send, help, chan, list, dest, myid, keys, key1, key2
     };
 
     
@@ -111,8 +114,9 @@ void interpretInput(char *input) {
 }
 
 void send(char *arguments) {
-    if(isoSendPacket(destinationId, (uint8_t*)arguments, strlen(arguments))) 
-        printf("Failed to send message\n");    
+    uint8_t *data = KeysEncrypt((uint8_t*)arguments, strlen(arguments) , Key1Data, sizeof(Key1Data), Key2Data, sizeof(Key2Data));
+    if(isoSendPacket(destinationId, (uint8_t*) data, strlen(arguments))) 
+        printf("Failed to send message\n");     
 }
 
 void help(char *arguments) {
@@ -122,7 +126,10 @@ void help(char *arguments) {
     printf("*    " COMMAND_COLOR "/chan" NO_COLOR " <channel>\n\tChange the channel frequency.\n\n");
     printf("*    " COMMAND_COLOR "/list" NO_COLOR "\n\tPrint a list of friends :)\n\n");
     printf("*    " COMMAND_COLOR "/dest" NO_COLOR " <id>\n\tChange the id of the destination node.\n\n");
-    printf("*    " COMMAND_COLOR "/myid" NO_COLOR "\n\tPrints your ID.");
+    printf("*    " COMMAND_COLOR "/myid" NO_COLOR "\n\tPrints your ID.\n\n");
+    printf("*    " COMMAND_COLOR "/keys" NO_COLOR "\n\tPrints the keys.\n\n");
+    printf("*    " COMMAND_COLOR "/key1" NO_COLOR "\n\t<Password> Defines Key 1.\n\n");
+    printf("*    " COMMAND_COLOR "/key2" NO_COLOR "\n\t<Password> Defines Key 2.\n\n");
     printf("The program always prints what it is receiving on all open reading pipes.\n\n");
 }
 
@@ -159,7 +166,34 @@ void myid(char *arguments) {
     printf("Your ID is 0x%02x\n", isoGetId());
 }
 
-void priv(char *arguments) {
-    uint8_t *data = dif_encrypt((uint8_t*)arguments, strlen(arguments) , key, sizeof(key), key2, sizeof(key2));
-    isoSendPacket(destinationId, (uint8_t*) data, strlen(arguments)); 
+void keys(char *arguments){
+    printf("Your keys are:\n");
+    printf(ID_COLOR "Key 1:\n" NO_COLOR);
+    for (int i = 0; i < strlen(Key1Data); i++){
+        printf("%02x ", Key1Data[i]);
+
+        if(i % 8 == 7) {
+            printf("\n");
+        }
+    }
+
+    printf("\n");
+    printf(ID_COLOR "Key 2:\n" NO_COLOR);
+    for (int i = 0; i < strlen(Key2Data); i++){
+        printf("%02x ", Key2Data[i]);
+
+        if(i % 8 == 7) {
+            printf("\n");
+        }
+    }
+
+    printf("\n");
+}
+
+void key1(char *arguments) {
+    strcpy(Key1Data, arguments);
+}
+
+void key2(char *arguments) {
+    strcpy(Key2Data, arguments);
 }
