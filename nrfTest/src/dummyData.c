@@ -7,6 +7,8 @@
 static uint16_t ADCReadCH0(void);
 static uint16_t ADCReadCH1(void);
 
+static void receivePayload(uint8_t *data);
+
 // Initialise the dummyData program
 void dummyDataInit(void) {
 
@@ -66,6 +68,11 @@ uint16_t ADCReadCH1(void) {
     ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
 
     return res;
+}
+
+// Callback for iso when data is received for this node
+void receivePayload(uint8_t *data) {
+    return;
 }
 
 // // Send potmeter data from button PA0 to hardcoded XMEGA-ID
