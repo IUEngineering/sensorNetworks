@@ -19,6 +19,7 @@ typedef struct {
     uint16_t lastPingTime;
 }friend_t;
 
+
 // TODO: Memory optimization possibilities:
 // - Make active and trust a single byte (implemented by myself instead of the compiler, which should save some progmem)
 // - Make lastPingTime a byte somehow (very possible).
@@ -51,6 +52,7 @@ friend_t *getFriendsList(void);
 //* Get a list of all ping-worthy friends.
 //* This includes active friends, as well as friends that are known via an active friend.
 //* Adds a friend with an ID of 0 to the end of the array as a terminator.
+//* buf has to be large enough to store the current amount of friends.
 void getFriends(friend_t *buf);
 
 //* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
