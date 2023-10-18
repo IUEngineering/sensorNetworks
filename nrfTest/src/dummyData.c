@@ -13,6 +13,11 @@ static void receivePayload(uint8_t *data);
 void dummyDataInit(void) {
     isoInit(receivePayload);
     ADCInit();
+
+    // Configure TCE0 to set its interrupt flag every second
+    TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
+    TCE0.CTRLA     = TC_CLKSEL_DIV1024_gc;    // prescaling 8
+    TCE0.PER       = 31249; // PER = (t*FCPU / N)-1 = (32000000/1024)-1=31249
 }
 
 // The continues loop of the dummyData program 
