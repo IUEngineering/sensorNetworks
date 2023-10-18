@@ -11,7 +11,8 @@ static void receivePayload(uint8_t *data);
 
 // Initialise the dummyData program
 void dummyDataInit(void) {
-
+    isoInit(receivePayload);
+    ADCInit();
 }
 
 // The continues loop of the dummyData program 
