@@ -21,16 +21,16 @@ uint8_t *xorMultiEncrypt(uint8_t *message, uint8_t length, uint8_t *key, uint8_t
 }
 
 // Encryption and Decryption using multiple key arrays with different lengths
-uint8_t *KeysEncrypt(uint8_t* message, uint8_t length, char* key0, uint8_t keyLength, char * key2, uint8_t keyLength2) {
+uint8_t *keysEncrypt(uint8_t* message, uint8_t length, char* key1, uint8_t keyLength1, char * key2, uint8_t keyLength2) {
     static uint8_t data[32];
-        for (uint8_t i = 0; i < length; i++) {
-            if ( i % 2 == 0) {  
-                data[i] = (message[i] ^ key0[(i/2) % keyLength]);
-            }
-            else {
-              data[i] = (message[i] ^ key2[(i/2) % keyLength2]);
-            }
+    for (uint8_t i = 0; i < length; i++) {
+        if (i % 2 == 0) {  
+            data[i] = (message[i] ^ key1[(i/2) % keyLength1]);
         }
-        
-        return data;
+        else {
+            data[i] = (message[i] ^ key2[(i/2) % keyLength2]);
+        }
+    }
+    
+    return data;
 }

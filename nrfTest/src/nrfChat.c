@@ -37,8 +37,8 @@ static void messageReceive(uint8_t *payload);
 
 static uint8_t destinationId = 0xff;
 
-static char Key1Data[32] = {};
-static char Key2Data[32] = {};
+static char key1Data[32] = {0};
+static char key2Data[32] = {0};
 
 void nrfChatInit(void) {
     // Send welcome message
@@ -72,8 +72,8 @@ void nrfChatLoop(void) {
 // Sends the received buffer over to terminal.c
 // Gets message encrypted, decrypts the message first
 void messageReceive(uint8_t *payload) {
-    uint8_t *decrypted = KeysEncrypt((uint8_t*)payload, strlen((char *)payload) , Key1Data, strlen(Key1Data), Key2Data, strlen(Key2Data));
-    terminalPrintStrex(decrypted, strlen((char *)decrypted), "Received:");
+    uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    terminalPrintStrex(decrypted, PAYLOAD_SIZE, "Received:");
 }
 
 // Callback from terminal.c.
@@ -116,8 +116,12 @@ void interpretInput(char *input) {
 
 // Function to send a message which is encrypted
 void send(char *arguments) {
-    uint8_t *data = KeysEncrypt((uint8_t*)arguments, strlen(arguments) , Key1Data, sizeof(Key1Data), Key2Data, sizeof(Key2Data));
-    if(isoSendPacket(destinationId, (uint8_t*) data, strlen(arguments))) 
+    // Set the rest of the inputbuffer to zero so that we don't accidentally send previous messages with the message.
+    uint8_t argLength = strlen(arguments);
+    memset(arguments + argLength, 0, PAYLOAD_SIZE - argLength);
+
+    uint8_t *data = keysEncrypt((uint8_t*)arguments, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    if(isoSendPacket(destinationId, (uint8_t*) data, PAYLOAD_SIZE)) 
         printf("Failed to send message\n");     
 }
 
@@ -172,8 +176,8 @@ void myid(char *arguments) {
 void keys(char *arguments){
     printf("Your keys are:\n");
     printf(ID_COLOR "Key 1:\n" NO_COLOR);
-    for (int i = 0; i < strlen(Key1Data); i++){
-        printf("%02x ", Key1Data[i]);
+    for (int i = 0; i < strlen(key1Data); i++){
+        printf("%02x ", key1Data[i]);
 
         if(i % 8 == 7) {
             printf("\n");
@@ -182,8 +186,8 @@ void keys(char *arguments){
 
     printf("\n");
     printf(ID_COLOR "Key 2:\n" NO_COLOR);
-    for (int i = 0; i < strlen(Key2Data); i++){
-        printf("%02x ", Key2Data[i]);
+    for (int i = 0; i < strlen(key2Data); i++){
+        printf("%02x ", key2Data[i]);
 
         if(i % 8 == 7) {
             printf("\n");
@@ -195,10 +199,12 @@ void keys(char *arguments){
 
 // Function to change Key 1
 void key1(char *arguments) {
-    strcpy(Key1Data, arguments);
+    strcpy(key1Data, arguments);
+    printf("New key1: %s\n\n", key1Data);
 }
 
 // Function to change Key 2
 void key2(char *arguments) {
-    strcpy(Key2Data, arguments);
+    strcpy(key2Data, arguments);
+    printf("New key2: %s\n\n", key2Data);
 }
