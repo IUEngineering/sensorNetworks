@@ -41,13 +41,13 @@ void ADCInit(void) {
     ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN3_gc | ADC_CH_MUXNEG_GND_MODE3_gc;    
 }
 
-//read data from potmeter placed on PA2/PA3
-// return a signed
-int16_t ADCRead(void) {                                   
-    int16_t res;
+// Start a conversion on CH0, wait until the conversion finishes and return the result
+uint16_t ADCReadCH0(void) {                                   
+    uint16_t res;
 
     ADCA.CH0.CTRL |= ADC_CH_START_bm;
-    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) ) ;
+    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
+
     res = ADCA.CH0.RES;
     ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
 
