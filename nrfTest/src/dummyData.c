@@ -4,7 +4,8 @@
 #include "serialF0.h"
 
 
-
+static uint16_t ADCReadCH0(void);
+static uint16_t ADCReadCH1(void);
 
 // Initialise the dummyData program
 void dummyDataInit(void) {
