@@ -12,10 +12,10 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
-#define BROADCAST_PIPE "AFNAF"
+#define BROADCAST_PIPE (uint8_t *)"kweks"
 #define BROADCAST_PIPE_INDEX 0
 
-#define PRIVATE_PIPE "FNAF"
+#define PRIVATE_PIPE "poes"
 #define PRIVATE_PIPE_INDEX 1
 
 #define PRIVATE_MESSAGE_RETRIES     NRF_SETUP_ARC_NORETRANSMIT_gc
@@ -29,7 +29,19 @@
 #define SNAPSHOT_FIRST_ID       2
 #define SNAPSHOT_TYPE           1
 #define SNAPSHOT_TYPE_LENGTH_bm 0x7f
-#define SNAPSHOT_TYPE_UPDATE_bm 0x80
+
+#define UPDATE_TYPE             1
+#define UPDATE_COUNT            2
+#define UPDATE_FIRST_ID         3
+#define UPDATE_TYPE_UPDATE_bm   0x80
+#define UPDATE_TYPE_DECAY_bm    0x7f
+#define UPDATE_COUNT_ADD_bm     0xf0
+#define UPDATE_COUNT_ADD_bp     4
+#define UPDATE_COUNT_REMOVE_bm  0x0f
+#define UPDATE_MAX_DECAY        5
+
+#define MAX_MULTIPACKET_TIME_INTERVAL 256
+#define MAX_MULTIPACKETS 3
 
 #define MESSAGE_DESTINATION_ID 0
 
@@ -43,18 +55,21 @@
 #define TC_CCA  15624
 
 
+// #define FILLIST 3
+
+
+
 // Define list of neighbors (neighbors are friends :)
+static uint16_t currentTime = 0;
 static uint8_t myId = 0;
 static void pingOfLife(void);
 static void (*receiveCallback)(uint8_t *payload);
 static void send(uint8_t *data);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
-static void interpretPacket(uint8_t *packet, uint8_t receivePipe);
-
-// Nieuwe liedjes :)
-//  lighthouse eyezic remix quix
-//  kill to fail van IM
+static void parsePacket(uint8_t *packet, uint8_t receivePipe);
+static void parseUpdate(uint8_t *packet);
+static void parsePing(uint8_t *packet);
 
 //TODO: optimize the init
 void isoInit(void (*callback)(uint8_t *data)) {
@@ -97,19 +112,34 @@ void isoInit(void (*callback)(uint8_t *data)) {
 
     // TODO: Check if these delays are necessary.
     _delay_ms(5);
-    nrfOpenWritingPipe((uint8_t *) "HVA01");
-    _delay_ms(5);
-    nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, (uint8_t *) BROADCAST_PIPE);
+    nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, BROADCAST_PIPE);
     _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
 
     initFriendList();
+#ifdef FILLIST
+    for(uint8_t i = 1; i <= 20; i++) {
+        updateFriend(i, 0, 0);
+        updateFriend(i, 0, 0);
+        updateFriend(i, 0, 0);
+        updateFriend(i, 0, 0);
+        updateFriend(i, 0, 0);
+    }
+    for(uint8_t i = 0; i < 20; i++) {
+        updateFriend(i + 15, i % 3 + 1, i / 2);
+    }
 
-    // Initialize the timer/counter for sending POL's and removing friends.
-    TCD0.CTRLB    = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD0.CTRLA    = TC_CLKSEL_DIV1024_gc;
-    TCD0.CCA      = TC_CCA;
+#endif
+
+    // Initialize the timer/counter for sending POL's (snapshots) and removing friends.
+    TCD0.CTRLA  = TC_CLKSEL_DIV1024_gc;
+    TCD0.CTRLB  = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
+    TCD0.CCA    = TC_CCA;
+
+    TCD1.CTRLA  = TC_CLKSEL_DIV256_gc;
+    TCD1.CTRLB  = TC1_CCAEN_bm | TC_WGMODE_FRQ_gc;
+    TCD1.CCA    = 16; // Random value I don't really care tbh. It has to be low enough to not fill a uint16_t within like 5 seconds.
 
     receiveCallback = callback;
 
@@ -117,10 +147,14 @@ void isoInit(void (*callback)(uint8_t *data)) {
 }
 
 void isoUpdate(void) {
-    // Read the timer counter overflow interrupt flag.
+
+    // Read the first timer counter overflow interrupt flag.
     if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
-    // Reset said flag.
-    TCD0.INTFLAGS |= TC0_OVFIF_bm;
+    TCD0.INTFLAGS |= TC0_OVFIF_bm; // Reset the flag.
+
+    // Read the second timer counter overflow interrupt flag.
+    if(TCD1.INTFLAGS & TC1_OVFIF_bm) currentTime++;
+    TCD1.INTFLAGS |= TC1_OVFIF_bm; // Reset the flag.
 
     uint8_t receivePipe = 0xff;
 
@@ -130,11 +164,13 @@ void isoUpdate(void) {
 
         // Put received data into a buffer.
         nrfRead(packet, PACKET_SIZE);
-        interpretPacket(packet, receivePipe);
+        parsePacket(packet, receivePipe);
     }
 }
 
 void timerOverflow(void) {
+
+
     // Cut the
     pingOfLife();
     // you've been feeding my veins.
@@ -186,49 +222,60 @@ void send(uint8_t *data) {
 }
 
 void pingOfLife(void) {
-    // Define the list of friends.
-    friend_t friends[32];
+    // Ping build:
+    //* Index:  0    1    2    3    4    5    6    7    8    8    9    8
+    //* Type:   myID Typ  ID0  Hop0 ID1  Hop1 ID2  Hop2 ID3  Hop3 ID4  Hop4
+    
+    // TODO: Handle max hops.
 
     // Get the list of friends.
+    friend_t friends[MAX_FRIENDS + 1]; // One larger for id=0 terminator. 
     getFriends(friends);
 
-    // Define and intialize the ping.
-    uint8_t ping[32];
-    memset(ping, 0, 32);
-    ping[0] = myId;
-    // ping[1] is set after the while loop.
-
-    // Keep track of indeces.
     uint8_t friendsIndex = 0;
+    uint8_t pings[MAX_MULTIPACKETS][PACKET_SIZE] = {0};
+    uint8_t multipacketIndex = 0;
+        
+    // The getFriends() function sets the ID of the friend after the last friend to 0, so we loop until that friend is encountered.
+    // Every time this loop loops, 1 ping packet is built and stored.
+    do {
+        // Put own id at the start.
+        pings[multipacketIndex][0] = myId;
 
-    // Ping build:
-    //* Index:      0   1   2   3   4   5   6   7   8   9   10  11
-    //* Type:       mID Typ ID0 Hp0 ID1 Hp1 ID2 Hp2 ID3 Hp3 ID4 Hp4
-    //
-    //  mID = My ID.
-    //  Typ = Type (snapshot/update) and length. Byte: [tlllllll].
-    //  IDn = nth friend ID.
-    //  Hpn = Hops of nth friend.
+        // Build a ping:parseUpdate
+        uint8_t pingIndex = 2;
+        for(; pingIndex < PACKET_SIZE && friends[friendsIndex].id != 0; pingIndex += 2) {
+            // Put the ID into the ping.
+            pings[multipacketIndex][pingIndex] = friends[friendsIndex].id;
 
-    // TODO: Handle max hops.
-    // Build ping message.
-    // The getFriends() function sets the ID of the friend after the last friend to 0,
-    // which is how we know when the friend list has ended.
-    for(uint8_t i = 2; i < PACKET_SIZE && friends[friendsIndex].id != 0; i += 2) {
+            // Put the hops into the ping.
+            // If we know the friend directly, the hops are 0.
+            if(friends[friendsIndex].active) 
+                pings[multipacketIndex][pingIndex + 1] = 0;
+            else 
+                pings[multipacketIndex][pingIndex + 1] = friends[friendsIndex].hops;
 
-        ping[i] = friends[friendsIndex].id;
+            friendsIndex++;
+        }
 
-        // If we know the friend directly, the hops are 0.
-        if(friends[friendsIndex].active) ping[i + 1] = 0;
-        else ping[i + 1] = friends[friendsIndex].hops;
+        // Set the length byte of the ping which is required because I was forced to turn off dynamic length (yes I'm still salty).
+        pings[multipacketIndex][SNAPSHOT_TYPE] = friendsIndex;
 
-        friendsIndex++;
+        // Onto the next packet.
+        multipacketIndex++;
     }
+    while(friends[friendsIndex].id && multipacketIndex <= MAX_MULTIPACKETS);
 
-    ping[SNAPSHOT_TYPE] = friendsIndex;
+    // Open the public pipe.
+    nrfOpenWritingPipe(BROADCAST_PIPE);
 
-    nrfOpenWritingPipe((uint8_t *) BROADCAST_PIPE);
-    send(ping);
+    
+    // Send the pings.
+    // With only a maximum of 3 packets, I'm pretty doing it this way is easier to read than doing it with a for loop.
+    // It's also probably not that much less efficient (if at all).
+    send(pings[0]);
+    if(multipacketIndex > 1) send(pings[1]);
+    if(multipacketIndex > 2) send(pings[2]);
 }
 
 
@@ -238,33 +285,18 @@ void openPrivateWritingPipe(uint8_t destId) {
     nrfOpenWritingPipe(writingPipe);
 }
 
-void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
+void parsePacket(uint8_t *packet, uint8_t receivePipe) {
 
-    // If it's a Ping of Life:
+    // If it's a Ping of Life (snapshot):
     if(receivePipe == BROADCAST_PIPE_INDEX) {
+        #ifdef FILLIST
+        return;
+        #endif
 
-        // Add the sender as a new direct neighbor friend.
-        DEBUG_PRINT("Direct:");
-        friend_t *directFriend = updateFriend(packet[SNAPSHOT_SENDER_ID], 0, 0);
-
-        // Do we trust this friend enough?
-        if(!directFriend->active) return;
-
-        // Delete all friends of the sender.
-        removeViaReferences(packet[SNAPSHOT_SENDER_ID]);
-
-        // The packet length is the header length (2) plus the friend data.
-        // Every friend takes 2 bytes: ID and Hops, so the friend data is 2 times the amount of friends.
-        uint8_t packetLength = 2 + 2 * (packet[SNAPSHOT_TYPE] & SNAPSHOT_TYPE_LENGTH_bm);
+        // Check which parser to use:
+        if(packet[1] & UPDATE_TYPE_UPDATE_bm) parseUpdate(packet);
+        else parsePing(packet);
         
-        // Prevent easily being bricked by array index overflow, caused by data from a malicious or incompetent source.
-        if(packetLength > PACKET_SIZE) packetLength = PACKET_SIZE;
-
-        for(uint8_t i = 2; i < packetLength; i += 2)
-            // Make sure to not add yourself as friend (prevent becoming schizophrenic).
-            if(packet[i] != myId)
-                updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
-    
         return;
     }
 
@@ -279,6 +311,73 @@ void interpretPacket(uint8_t *packet, uint8_t receivePipe) {
     else {
         // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
+    }
+}
+
+void parsePing(uint8_t *packet) {
+    // Add the sender as a new direct neighbor friend.
+    friend_t *directFriend = updateFriend(packet[SNAPSHOT_SENDER_ID], 0, 0);
+
+    uint8_t isMultiPacket = currentTime - directFriend->lastPingTime < MAX_MULTIPACKET_TIME_INTERVAL;
+
+    // Update the friend's timer.
+    directFriend->lastPingTime = currentTime;
+
+
+    // Do we trust this friend enough?
+    if(!directFriend->active) return;
+
+    // Remove all the friend's previous via links if this is a brand new packet.
+    // There will be a small period in which no data can be sent to these, which we'll just have to accept for now.
+    if(!isMultiPacket) {
+        // Delete all friends of the sender if it's not.
+        removeViaReferences(packet[SNAPSHOT_SENDER_ID]);
+    }
+
+    // The packet length is the header length (2) plus the friend data.
+    // Every friend takes 2 bytes: ID and Hops, so the friend data is 2 times the amount of friends.
+    uint8_t packetLength = 2 + 2 * (packet[SNAPSHOT_TYPE] & SNAPSHOT_TYPE_LENGTH_bm);
+    
+    // Prevent easily being bricked by array index overflow, caused by data from a malicious or incompetent source.
+    if(packetLength > PACKET_SIZE) packetLength = PACKET_SIZE;
+
+    for(uint8_t i = 2; i < packetLength; i += 2)
+        // Make sure to not add yourself as friend (prevents becoming schizophrenic).
+        if(packet[i] != myId)
+            updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
+
+}
+
+
+void parseUpdate(uint8_t *packet) {
+    uint8_t adders = (packet[1] & UPDATE_COUNT_ADD_bm) >> UPDATE_COUNT_ADD_bp;
+    uint8_t removers = packet[1] & UPDATE_COUNT_REMOVE_bm;   
+    uint8_t decay = packet[UPDATE_TYPE] & UPDATE_TYPE_DECAY_bm;
+
+
+    // If it's actually useful in any way, shape or form:
+    if(findFriend(packet[0])->active) { 
+        for(uint8_t i = 0; i < adders; i++) {
+            // Well this is going to be run like 28 times every time a nerd decides to send an update,
+            // because literally EVERYONE is repeating them, woo :D.
+
+            // We can find the hops by subtracting the max decay by the current decay.
+            updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);
+        }
+        removeVias(packet[0], packet + adders + UPDATE_FIRST_ID, removers);
+    }
+
+    // We have literally NO idea who sent this if the first byte is not a direct friend.
+    // Because of this, we can basically not get ANY information from updates in that case.
+    // Oh well time to still relay it for some reason I guess.
+    if(packet[1] & UPDATE_TYPE_DECAY_bm) {
+
+        // Subtract one from the decay value.
+        packet[1] = UPDATE_TYPE_UPDATE_bm | (decay - 1);
+
+        // Make it someone else's problem.
+        nrfOpenWritingPipe(BROADCAST_PIPE);
+        send(packet);
     }
 }
 
