@@ -54,6 +54,18 @@ uint16_t ADCReadCH0(void) {
     return res;
 }
 
+// Start a conversion on CH1, wait until the conversion finishes and return the result
+uint16_t ADCReadCH1(void) {                                   
+    uint16_t res;
+
+    ADCA.CH0.CTRL |= ADC_CH_START_bm;
+    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
+
+    res = ADCA.CH0.RES;
+    ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
+
+    return res;
+}
 
 // // Send potmeter data from button PA0 to hardcoded XMEGA-ID
 // if(PORTA.IN & PIN0_bm) {
