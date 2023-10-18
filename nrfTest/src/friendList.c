@@ -179,20 +179,22 @@ void removeVias(uint8_t from, uint8_t *vias, uint8_t viaAmount) {
     }
 }
 
+
 void getFriends(friend_t *buf) {
-    uint8_t bufIndex = 0;
-    for(uint8_t i = 0; bufIndex < friendAmount; i++) {
+    uint8_t friend = 0;
+    for(uint8_t i = 0; friend < friendAmount; i++) {
 
         // If the friend is not 0, and either active or known via a different friend:
-        if(friends[i].id != 0 && (friends[i].active || friends[i].via != 0)) {
-            // Copy the friend into the buffer.
-            buf[bufIndex] = friends[i];
-            bufIndex++;
+        if(friends[i].id != 0) {
+            // Copy the friend into the buffer if it's ping worthy.
+            if(friends[i].active || friends[i].via) 
+                *buf++ = friends[i];
+                
+            friend++;
         }
     }
-    buf[bufIndex].id = 0;
+    buf->id = 0;
 }
-
 
 
 friend_t *getFriendsList(void) {

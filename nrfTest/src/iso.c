@@ -12,10 +12,10 @@
 // Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
 #define TEAM_ID 0x02 << 5
 
-#define BROADCAST_PIPE (uint8_t *)"katje"
+#define BROADCAST_PIPE (uint8_t *)"kweks"
 #define BROADCAST_PIPE_INDEX 0
 
-#define PRIVATE_PIPE "420P"
+#define PRIVATE_PIPE "poes"
 #define PRIVATE_PIPE_INDEX 1
 
 #define PRIVATE_MESSAGE_RETRIES     NRF_SETUP_ARC_NORETRANSMIT_gc
@@ -70,7 +70,6 @@ static void timerOverflow(void);
 static void parsePacket(uint8_t *packet, uint8_t receivePipe);
 static void parseUpdate(uint8_t *packet);
 static void parsePing(uint8_t *packet);
-
 
 //TODO: optimize the init
 void isoInit(void (*callback)(uint8_t *data)) {
@@ -148,6 +147,7 @@ void isoInit(void (*callback)(uint8_t *data)) {
 }
 
 void isoUpdate(void) {
+
     // Read the first timer counter overflow interrupt flag.
     if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
     TCD0.INTFLAGS |= TC0_OVFIF_bm; // Reset the flag.
@@ -169,12 +169,12 @@ void isoUpdate(void) {
 }
 
 void timerOverflow(void) {
+
+
     // Cut the
     pingOfLife();
     // you've been feeding my veins.
-    #ifdef FILLIST
-    return;
-    #endif
+
     friendTimeTick();
 }
 
@@ -235,14 +235,14 @@ void pingOfLife(void) {
     uint8_t friendsIndex = 0;
     uint8_t pings[MAX_MULTIPACKETS][PACKET_SIZE] = {0};
     uint8_t multipacketIndex = 0;
-    
+        
     // The getFriends() function sets the ID of the friend after the last friend to 0, so we loop until that friend is encountered.
-    // Every time this loop loops, 1 ping packet is built and sent.
+    // Every time this loop loops, 1 ping packet is built and stored.
     do {
         // Put own id at the start.
         pings[multipacketIndex][0] = myId;
 
-        // Build a ping:
+        // Build a ping:parseUpdate
         uint8_t pingIndex = 2;
         for(; pingIndex < PACKET_SIZE && friends[friendsIndex].id != 0; pingIndex += 2) {
             // Put the ID into the ping.
@@ -268,9 +268,11 @@ void pingOfLife(void) {
 
     // Open the public pipe.
     nrfOpenWritingPipe(BROADCAST_PIPE);
+
     
-    // With only a maximum of 3 multipackets, I'm pretty doing it this way is easier to read than doing it with a for loop.
-    // I'm also pretty sure it's not that much less efficient (if at all).
+    // Send the pings.
+    // With only a maximum of 3 packets, I'm pretty doing it this way is easier to read than doing it with a for loop.
+    // It's also probably not that much less efficient (if at all).
     send(pings[0]);
     if(multipacketIndex > 1) send(pings[1]);
     if(multipacketIndex > 2) send(pings[2]);
@@ -285,7 +287,6 @@ void openPrivateWritingPipe(uint8_t destId) {
 
 void parsePacket(uint8_t *packet, uint8_t receivePipe) {
 
-
     // If it's a Ping of Life (snapshot):
     if(receivePipe == BROADCAST_PIPE_INDEX) {
         #ifdef FILLIST
@@ -296,6 +297,7 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
         if(packet[1] & UPDATE_TYPE_UPDATE_bm) parseUpdate(packet);
         else parsePing(packet);
         
+        return;
     }
 
     PORTF.OUTTGL = PIN1_bm;
@@ -309,35 +311,6 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
     else {
         // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
-    }
-}
-
-void parseUpdate(uint8_t *packet) {
-    uint8_t adders = (packet[1] & UPDATE_COUNT_ADD_bm) >> UPDATE_COUNT_ADD_bp;
-    uint8_t removers = packet[1] & UPDATE_COUNT_REMOVE_bm;   
-    uint8_t decay = packet[UPDATE_TYPE] & UPDATE_TYPE_DECAY_bm;
-
-    // If it's actually useful in any way, shape or form:
-    if(findFriend(packet[0])->active) { 
-        for(uint8_t i = 0; i < adders; i++) {
-            // Well this is going to be run like 28 times every time a nerd decides to send an update,
-            // because literally EVERYONE is repeating them, woo :D.
-            updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);
-        }
-        removeVias(packet[0], packet + adders + UPDATE_FIRST_ID, removers);
-    }
-
-    // We have literally NO idea who sent this if the first byte is not a direct friend.
-    // Because of this, we can basically not get ANY information from updates in that case.
-    // Oh well time to still relay it for some reason I guess.
-    if(packet[1] & UPDATE_TYPE_DECAY_bm) {
-
-        // Subtract one from the decay value.
-        packet[1] = UPDATE_TYPE_UPDATE_bm | (decay - 1);
-
-        // Make it someone else's problem.
-        nrfOpenWritingPipe(BROADCAST_PIPE);
-        send(packet);
     }
 }
 
@@ -373,6 +346,39 @@ void parsePing(uint8_t *packet) {
         if(packet[i] != myId)
             updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
 
+}
+
+
+void parseUpdate(uint8_t *packet) {
+    uint8_t adders = (packet[1] & UPDATE_COUNT_ADD_bm) >> UPDATE_COUNT_ADD_bp;
+    uint8_t removers = packet[1] & UPDATE_COUNT_REMOVE_bm;   
+    uint8_t decay = packet[UPDATE_TYPE] & UPDATE_TYPE_DECAY_bm;
+
+
+    // If it's actually useful in any way, shape or form:
+    if(findFriend(packet[0])->active) { 
+        for(uint8_t i = 0; i < adders; i++) {
+            // Well this is going to be run like 28 times every time a nerd decides to send an update,
+            // because literally EVERYONE is repeating them, woo :D.
+
+            // We can find the hops by subtracting the max decay by the current decay.
+            updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);
+        }
+        removeVias(packet[0], packet + adders + UPDATE_FIRST_ID, removers);
+    }
+
+    // We have literally NO idea who sent this if the first byte is not a direct friend.
+    // Because of this, we can basically not get ANY information from updates in that case.
+    // Oh well time to still relay it for some reason I guess.
+    if(packet[1] & UPDATE_TYPE_DECAY_bm) {
+
+        // Subtract one from the decay value.
+        packet[1] = UPDATE_TYPE_UPDATE_bm | (decay - 1);
+
+        // Make it someone else's problem.
+        nrfOpenWritingPipe(BROADCAST_PIPE);
+        send(packet);
+    }
 }
 
 
