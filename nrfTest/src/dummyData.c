@@ -16,17 +16,32 @@ void dummyDataLoop(void) {
 
 }
 
-//read data from potmeter placed on PA2/PA3
+// Configure ADCA:
+//      - Reference to internal VCC/1.6 
+//      - In 12 bit mode
+//      - Prescaler to div 16
+//      - Input PA2 to channel 0
+//      - Input PA3 to channel 1
+//      - Input mode to single ended
+//      - Configure multiplexer
 void ADCInit(void) {
-    PORTA.DIRCLR     = PIN2_bm|PIN3_bm;
-    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN2_gc | ADC_CH_MUXNEG_GND_MODE3_gc;
-    ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_DIFF_gc;  
+
+    // congigure ADCA
     ADCA.REFCTRL     = ADC_REFSEL_INTVCC_gc;
     ADCA.CTRLB       = ADC_RESOLUTION_12BIT_gc | ADC_CONMODE_bm;            
     ADCA.PRESCALER   = ADC_PRESCALER_DIV16_gc;
     ADCA.CTRLA       = ADC_ENABLE_bm;
+    
+    // Configure input channels
+    PORTA.DIRCLR     = PIN2_bm | PIN3_bm;
+    ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
+    ADCA.CH1.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
+
+    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN2_gc | ADC_CH_MUXNEG_GND_MODE3_gc;
+    ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN3_gc | ADC_CH_MUXNEG_GND_MODE3_gc;    
 }
 
+//read data from potmeter placed on PA2/PA3
 // return a signed
 int16_t ADCRead(void) {                                   
     int16_t res;
