@@ -10,8 +10,9 @@
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
+#include "encrypt.h"
 
-#define COMMANDS 6
+#define COMMANDS 9
 #define INPUT_BUFFER_LENGTH 38
 
 #define NO_COLOR        "\e[0m"
@@ -26,12 +27,18 @@ static void send(char *arguments);
 static void list(char *arguments);
 static void dest(char *arguments);
 static void myid(char *arguments);
+static void keys(char *arguments);
+static void key1(char *arguments);
+static void key2(char *arguments);
 
 // Callback functions.
 static void interpretInput(char *input);
 static void messageReceive(uint8_t *payload);
 
 static uint8_t destinationId = 0xff;
+
+static char key1Data[32] = {0};
+static char key2Data[32] = {0};
 
 void nrfChatInit(void) {
     // Send welcome message
@@ -63,8 +70,10 @@ void nrfChatLoop(void) {
 
 // Callback from iso.c.
 // Sends the received buffer over to terminal.c
+// Gets message encrypted, decrypts the message first
 void messageReceive(uint8_t *payload) {
-    terminalPrintStrex(payload, strlen((char *)payload), "Received:");
+    uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    terminalPrintStrex(decrypted, PAYLOAD_SIZE, "Received:");
 }
 
 // Callback from terminal.c.
@@ -82,12 +91,12 @@ void interpretInput(char *input) {
 
     // Make a corresponding array of 4 letter function names.
     static const char commands[COMMANDS][4] = {
-        "send", "help", "chan", "list", "dest", "myid"
+        "send", "help", "chan", "list", "dest", "myid", "keys", "key1", "key2"
     };
 
     // Make an array of functions.
     static const void (*functions[COMMANDS])(char*) = {
-        send, help, chan, list, dest, myid
+        send, help, chan, list, dest, myid, keys, key1, key2
     };
 
     
@@ -105,9 +114,15 @@ void interpretInput(char *input) {
     printf("I don't know that command :(\n");
 }
 
+// Function to send a message which is encrypted
 void send(char *arguments) {
-    if(isoSendPacket(destinationId, (uint8_t*)arguments, strlen(arguments))) 
-        printf("Failed to send message\n");    
+    // Set the rest of the inputbuffer to zero so that we don't accidentally send previous messages with the message.
+    uint8_t argLength = strlen(arguments);
+    memset(arguments + argLength, 0, PAYLOAD_SIZE - argLength);
+
+    uint8_t *data = keysEncrypt((uint8_t*)arguments, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    if(isoSendPacket(destinationId, (uint8_t*) data, PAYLOAD_SIZE)) 
+        printf("Failed to send message\n");     
 }
 
 void help(char *arguments) {
@@ -117,7 +132,10 @@ void help(char *arguments) {
     printf("*    " COMMAND_COLOR "/chan" NO_COLOR " <channel>\n\tChange the channel frequency.\n\n");
     printf("*    " COMMAND_COLOR "/list" NO_COLOR "\n\tPrint a list of friends :)\n\n");
     printf("*    " COMMAND_COLOR "/dest" NO_COLOR " <id>\n\tChange the id of the destination node.\n\n");
-    printf("*    " COMMAND_COLOR "/myid" NO_COLOR "\n\tPrints your ID.");
+    printf("*    " COMMAND_COLOR "/myid" NO_COLOR "\n\tPrints your ID.\n\n");
+    printf("*    " COMMAND_COLOR "/keys" NO_COLOR "\n\tPrints the keys.\n\n");
+    printf("*    " COMMAND_COLOR "/key1" NO_COLOR "\n\t<Password> Defines Key 1.\n\n");
+    printf("*    " COMMAND_COLOR "/key2" NO_COLOR "\n\t<Password> Defines Key 2.\n\n");
     printf("The program always prints what it is receiving on all open reading pipes.\n\n");
 }
 
@@ -151,5 +169,42 @@ void dest(char *arguments) {
 }
 
 void myid(char *arguments) {
-    printf("Your ID is " ID_COLOR "0x%02x" NO_COLOR "\n\n", isoGetId());
+    printf("Your ID is 0x%02x\n", isoGetId());
+}
+
+// Function to show the keys in Hex
+void keys(char *arguments){
+    printf("Your keys are:\n");
+    printf(ID_COLOR "Key 1:\n" NO_COLOR);
+    for (int i = 0; i < strlen(key1Data); i++){
+        printf("%02x ", key1Data[i]);
+
+        if(i % 8 == 7) {
+            printf("\n");
+        }
+    }
+
+    printf("\n");
+    printf(ID_COLOR "Key 2:\n" NO_COLOR);
+    for (int i = 0; i < strlen(key2Data); i++){
+        printf("%02x ", key2Data[i]);
+
+        if(i % 8 == 7) {
+            printf("\n");
+        }
+    }
+
+    printf("\n");
+}
+
+// Function to change Key 1
+void key1(char *arguments) {
+    strcpy(key1Data, arguments);
+    printf("New key1: %s\n\n", key1Data);
+}
+
+// Function to change Key 2
+void key2(char *arguments) {
+    strcpy(key2Data, arguments);
+    printf("New key2: %s\n\n", key2Data);
 }
