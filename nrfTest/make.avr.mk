@@ -48,7 +48,7 @@ OBJLIST     := $(patsubst %.c, %.o, $(CLIST)) $(patsubst %.c, %.o, $(EXTLIST))
 OBJLIST2    := $(foreach file, $(OBJLIST), $(OBJFOLDER)$(file))
 
 # Define all tools with standard settings
-TOOLC     = $(AVRFOLDER)avr-gcc $(CFLAGS) -Os -mmcu=$(MICROCONTROLLER)
+TOOLC     = $(AVRFOLDER)avr-gcc $(CFLAGS) -O3 -mmcu=$(MICROCONTROLLER)
 TOOLCOPY  = $(AVRFOLDER)avr-objcopy
 TOOLSIZE  = $(AVRFOLDER)avr-size --format=avr --mcu=$(MICROCONTROLLER)
 TOOLDUMP  = $(AVRFOLDER)avr-objdump
