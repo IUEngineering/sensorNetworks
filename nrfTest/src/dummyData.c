@@ -3,7 +3,13 @@
 #include "iso.h"
 #include "serialF0.h"
 
+#define BASESTATION_ID  0x40
 
+#define PAYLOAD_LENGTH  31
+#define TEMP_MESSAGE    0x01
+#define SOUND_MESSAGE   0x02
+
+static void ADCInit(void);
 static uint16_t ADCReadCH0(void);
 static uint16_t ADCReadCH1(void);
 
@@ -22,7 +28,37 @@ void dummyDataInit(void) {
 
 // The continues loop of the dummyData program 
 void dummyDataLoop(void) {
+    // The PER of period cannot be set high enough for 10sec so we need to count to ten.
+    uint8_t timer = 0;
 
+    while (1) {
+        if (TCE0.INTFLAGS & TC0_OVFIF_bm) {
+            timer++;
+            TCE0.INTFLAGS = TC0_OVFIF_bm;
+        }
+
+        if (timer == 10) {
+            timer = 0; 
+
+            uint8_t payload[PAYLOAD_LENGTH];
+            uint16_t temp, sound;
+
+            temp  = ADCReadCH0();
+            sound = ADCReadCH1();
+            
+            // Make temp payload
+            payload[0] = TEMP_MESSAGE;
+            payload[1] = temp >> 8;
+            payload[2] = (uint8_t) temp;
+            isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+
+            // Make sound payload
+            payload[0] = SOUND_MESSAGE;
+            payload[1] = sound >> 8;
+            payload[2] = (uint8_t) sound;
+            isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+        }
+    }
 }
 
 // Configure ADCA:
