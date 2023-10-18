@@ -25,8 +25,7 @@ int UpdateTouchWindow(WINDOW *pWin) {
     
     // Show mouse status
     mvwprintw(pWin, 1, 4, "%s", (_oRPiTouch_Touched.bButton ? "Touch :D" : "-----        "));
-    mvwprintw(pWin, 2, 4, "(%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
-
+    mvwprintw(pWin, 2, 4, " (%4d, %4d) -> (%4d, %4d)", _oRPiTouch_Touched.nX, _oRPiTouch_Touched.nY, _oRPiTouch_Touched.nCol, _oRPiTouch_Touched.nRow);
     wattroff(pWin, COLOR_PAIR(9));
     //wie is deze man
     // Update window
@@ -36,9 +35,7 @@ int UpdateTouchWindow(WINDOW *pWin) {
 
 
 int main(int nArgc, char* aArgv[]) {
-    initMcuComm();
     refresh();
-
 
 
     int nRet;
@@ -83,7 +80,6 @@ int main(int nArgc, char* aArgv[]) {
 
     // Do UI
     bool bExit = false;
-    int nKey;
 
     while (!bExit) {
         //drawTouchCords(50, 22);
@@ -94,9 +90,9 @@ int main(int nArgc, char* aArgv[]) {
         checkTouchedButtons(_oRPiTouch_Touched);
 
         // Update touch
-        if (RPiTouch_UpdateTouch()) {
-            UpdateTouchWindow(pMenuWindow);
-        };
+        // if (RPiTouch_UpdateTouch()) {
+        //     //UpdateTouchWindow(pMenuWindow);
+        // };
 
         // Check for restart and shutdown
         if (_oRPiTouch_Settings.bRestartDetected) {
