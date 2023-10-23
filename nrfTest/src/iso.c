@@ -225,8 +225,6 @@ void pingOfLife(void) {
     // Ping build:
     //* Index:  0    1    2    3    4    5    6    7    8    8    9    8
     //* Type:   myID Typ  ID0  Hop0 ID1  Hop1 ID2  Hop2 ID3  Hop3 ID4  Hop4
-    
-    // TODO: Handle max hops.
 
     // Get the list of friends.
     friend_t friends[MAX_FRIENDS + 1]; // One larger for id=0 terminator. 
@@ -343,7 +341,8 @@ void parsePing(uint8_t *packet) {
 
     for(uint8_t i = 2; i < packetLength; i += 2)
         // Make sure to not add yourself as friend (prevents becoming schizophrenic).
-        if(packet[i] != myId)
+        // Also enforce the maximum amount of hops of [nodeAmount] + 2.
+        if(packet[i] != myId  &&  packet[i + 1] < getFriendAmount() + 2)
             updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
 
 }
