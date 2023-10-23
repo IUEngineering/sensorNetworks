@@ -12,7 +12,6 @@
 
 #define WAIT_FOR_RPY        'c'
 
-#define DEBUG
 
 #ifdef DEBUG
     #define DEBUG_PRINTF(fmt, args...) printf(fmt, args)
@@ -23,7 +22,7 @@
 #endif // DEBUG
 
 // Callback for when received data is meant for this node
-static void messageReceive(uint8_t *payload, uint8_t length);
+static void messageReceive(uint8_t *payload);
 
 // Send the friendslist to the RPI
 static void sendFriendsList(void);
@@ -35,51 +34,51 @@ void baseStationInit(void) {
     isoInit(messageReceive);
 
     DEBUG_PRINTF("Waiting till %c is pressed\n", WAIT_FOR_RPY);
-
-    // wait until the RPI is ready for data from the Xmega
-    while (!(uartF0_getc() == WAIT_FOR_RPY));
 }
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
+    uint8_t count = 0;
+    uint8_t doSend = 1;
 
-    uint16_t debug = 0;
-    
     while (1) {
-        debug++;
-        if(!(debug%200))
-            printf("%d\n", debug);
+        char inChar = uartF0_getc();
+        if(inChar == 'e') {
+            PORTF.OUTCLR = PIN0_bm;
+            doSend = 0;
+        }
+        else if(inChar == 'c') {
+            PORTF.OUTSET = PIN0_bm;
+            doSend = 1;
+        }
+
         isoUpdate();
-        sendFriendsList();
+        count++;
+        if(!count && doSend) {
+            sendFriendsList();
+        }
     }
 }
 
-static void messageReceive(uint8_t *payload, uint8_t length) {
-    putchar(RECEIVED_PAYLOAD);
-    putchar(length);
-    for (uint8_t i = 0; i < length; i++)
-        putchar(payload[i]);
+static void messageReceive(uint8_t *payload) {
+    uartF0_putc(RECEIVED_PAYLOAD);
+    for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
+        uartF0_putc(payload[i]);
 }
 
 static void sendFriendsList(void) {
-    uint16_t friendAmount = getFriendAmount();
-    friend_t friends[friendAmount];
+    uint8_t friendAmount = getFriendAmount();
+    friend_t *friends = getFriendsList();
 
-    if (friends == NULL) {
-        DEBUG_PRINT("Yo I need memory\n");
-        return;
-    }
-
-    getFriends(friends);
-
-    putchar(FRIENDS_LIST);
-    putchar(friendAmount);
-
-    for (uint16_t i = 0; i < friendAmount; i++) {
-        putchar(friends[i].id);
-        putchar(friends[i].hops);
-        putchar(friends[i].via);
-        putchar(friends[i].trust);
-        putchar(friends[i].active);
+    uartF0_putc(FRIENDS_LIST);
+    uartF0_putc(friendAmount);
+    
+    for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
+        if(friends[i].id == 0) continue;
+        uartF0_putc(friends[i].id);
+        uartF0_putc(friends[i].hops);
+        uartF0_putc(friends[i].via);
+        uartF0_putc(friends[i].trust);
+        uartF0_putc(friends[i].active);
     }
 }

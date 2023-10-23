@@ -12,22 +12,20 @@
 // Only has to be 38 for "/send (31 character message)\n"
 #define INPUT_BUFFER_SIZE 38
 
+// Define some colors to make things look nicer.
+#define HEX_COLOR "\e[34m"      // Blue for hex values.
+#define ESCAPE_COLOR "\e[32m"   // Green for escape characters.
+#define NO_COLOR "\e[0m"
+
 
 void (*commandCallback)(char *inputBuffer);
 char inputBuffer[INPUT_BUFFER_SIZE];
 uint8_t inputBufferIndex = 0;
 
 
-
-// Returns 2 characters (+ a terminating \0):
-// If c is printable, then c followed by a space.
-// Else if c is of these: \n \b \r \e, it returns that.
-// Else: 2 spaces.
-//
-// It returns a pointer to a static string, which changes when it is run.
-// Very unsafe, but it makes using it much easier than writing to some buffer pointer.
-// Also it is static so who cares.
 static char* getPrintable(char c);
+static void removeInput(void);
+static void rePrintInput(void);
 
 void terminalSetCallback(void (*callback)(char *inputBuffer)) {
     commandCallback = callback;
@@ -37,6 +35,9 @@ void terminalInterpretChar(char inChar) {
 
     // Handle backspaces.
     if(inChar == '\b' && inputBufferIndex) {
+        // Go back 1, make the char empty, and go back again.
+        // If we only print \b the cursor would simply move
+        // to the left without removing any characters.
         printf("\b \b");
         inputBufferIndex--;
         return;
@@ -44,17 +45,17 @@ void terminalInterpretChar(char inChar) {
 
     // Handle an enter press.
     if(inChar == '\r') {
-        // Rerun the last command if no input is given.
         if(inputBufferIndex != 0) inputBuffer[inputBufferIndex] = '\0';
         printf("\n");
         inputBufferIndex = 0;
 
+        // Run the callback function.
         commandCallback(inputBuffer);
         return;
     }
 
     // Store and echo the character if it's printable and there aren't too many characters already.
-    if(inputBufferIndex < INPUT_BUFFER_SIZE && isprint(inChar) && (inputBufferIndex < MAX_PACKET_SIZE || inputBuffer[0] == '/')) {
+    if(inputBufferIndex < INPUT_BUFFER_SIZE && isprint(inChar) && (inputBufferIndex < PAYLOAD_SIZE || inputBuffer[0] == '/')) {
         inputBuffer[inputBufferIndex++] = inChar;
         uartF0_putc(inChar);
     }
@@ -63,66 +64,61 @@ void terminalInterpretChar(char inChar) {
 
 // This function assumes the string is printable with a printf %s.
 void terminalPrint(char *str) {
-    // Erase the current line and go to the start of it.
-    if(inputBufferIndex != 0) printf("\e[1K\r");
-
+    removeInput();
     printf("%s\n", str);
-
-    // Reprint the current inputbuffer so the user can continue typing.
-    // If inputBufferIndex == 0 there is nothing to be printed.
-    if(inputBufferIndex != 0) {
-        // Make sure to stop printing at the current cursor position.
-        inputBuffer[inputBufferIndex] = '\0';
-        printf("%s", inputBuffer);
-    }
+    rePrintInput();
 }
 
 
 void terminalPrintHex(uint8_t *buf, uint8_t length, const char *title) {
-    // I hate copypasting code, but it seems like this is the only way here.
-    // I could of course make a function with a callback,
-    // but that seems needlessly complicated for what's happening here.
-
-    // Erase the current line and go to the start of it.
-    if(inputBufferIndex != 0) printf("\e[1K\r");
+    removeInput();
 
     if(title != NULL) printf("%s\n", title);
 
-    printf("\e[34m");
+    printf(HEX_COLOR);
     for(uint8_t i = 0; i < length; i++) {
         printf("%02x ", buf[i]);
     }
-    printf("\e[0m\n");
 
+    // Print double newline because it looks better.
+    printf(NO_COLOR "\n\n");
 
-    // Reprint the current inputbuffer so the user can continue typing.
-    // If inputBufferIndex == 0 there is nothing to be printed.
-    if(inputBufferIndex != 0) {
-        // Make sure to stop printing at the current cursor position.
-        inputBuffer[inputBufferIndex] = '\0';
-        printf("%s", inputBuffer);
-    }
+    rePrintInput();
 }
 // As a string followed by a line of hex values.
 void terminalPrintStrex(uint8_t *buf, uint8_t length, const char *title) {
-
-    // Erase the current line and go to the start of it.
-    if(inputBufferIndex != 0) printf("\e[1K\r");
+    removeInput();
 
     if(title != NULL) printf("%s\n", title);
 
-    printf("\e[34m");
+    // Print the buffer as hex values.
+    printf(HEX_COLOR);
     for(uint8_t i = 0; i < length; i++) {
         printf("%02x ", buf[i]);
     }
-    printf("\e[0m\n");
 
+    // Print the buffer as characters (if possible).
+    printf(NO_COLOR "\n");
     for(uint8_t i = 0; i < length; i++) {
         printf("%s ", getPrintable(buf[i]));
     }
 
-    printf("\n");
+    // Print double newline because it looks better.
+    printf("\n\n");
 
+    rePrintInput();
+}
+
+// Removes the input as preparation for printing something else.
+void removeInput(void) {
+    // \e[1K = Erase the current line.
+    // \r = Go to the start of the current line.
+    if(inputBufferIndex != 0) printf("\e[1K\r");
+}
+
+// Reprints the input.
+// To be used after something else was printed to the terminal.
+void rePrintInput(void) {
     // Reprint the current inputbuffer so the user can continue typing.
     // If inputBufferIndex == 0 there is nothing to be printed.
     if(inputBufferIndex != 0) {
@@ -132,19 +128,30 @@ void terminalPrintStrex(uint8_t *buf, uint8_t length, const char *title) {
     }
 }
 
-char* getPrintable(char c) {
+
+// Returns a maximum of 11 characters (including \0 and colors):
+// If c is printable, then c followed by a space.
+// Else if c is of these: \n \b \r \e \t, it returns that in ESCAPE_COLOR.
+// Else: 2 spaces.
+//
+// It returns a pointer to a static string, which changes when it is run.
+// Slightly unsafe, but it makes using it much easier than writing to some buffer pointer.
+// Just make sure to only use it once in the same printf.
+// This could of course be done using a struct with a fixed array,
+// but honestly the function is static and it works fine the way we are using it in this file, so I can't be bothered.
+char *getPrintable(char c) {
 
     switch(c) {
         case '\n':
-            return "\e[32m\\n\e[0m";
+            return ESCAPE_COLOR "\\n" NO_COLOR;
         case '\r':
-            return "\e[32m\\r\e[0m";
+            return ESCAPE_COLOR "\\r" NO_COLOR;
         case '\b':
-            return "\e[32m\\b\e[0m";
+            return ESCAPE_COLOR "\\b" NO_COLOR;
         case '\e':
-            return "\e[32m\\e\e[0m";
+            return ESCAPE_COLOR "\\e" NO_COLOR;
         case '\t':
-            return "\e[32m\\t\e[0m";
+            return ESCAPE_COLOR "\\t" NO_COLOR;
         default:
             if(isprint(c)) {
                 // Make buffer of 3 chars (2 chars + \0)
