@@ -9,8 +9,15 @@
 
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
+#define RELAYED_PAYLOAD     0x03
+#define RECEIVED_BROADCAST  0x04
 
-#define WAIT_FOR_RPY        'c'
+
+#define START_SENDING       'c'
+#define STOP_SENDING        'e'
+#define SEND_SOMETHING      0x01
+// Replace this with something that toggles on the blue LED of a node.
+#define SOMETHING           "yeah something quack" 
 
 
 #ifdef DEBUG
@@ -21,19 +28,30 @@
     #define DEBUG_PRINT(fmt, args...) {}
 #endif // DEBUG
 
-// Callback for when received data is meant for this node
-static void messageReceive(uint8_t *payload);
-
 // Send the friendslist to the RPI
 static void sendFriendsList(void);
+
+// Callback for when received data is meant for this node.
+static void sendReceivedPayload(uint8_t *payload);
+
+// Callback for when received data is meant for another node.
+static void sendRelayedPacket(uint8_t *packet);
+
+// Callback for pings as well as updates.
+static void sendBroadcastPacket(uint8_t *packet);
 
 // Initialization of the baseStation program 
 void baseStationInit(void) {
     DEBUG_PRINT("I am a base-station\n");
 
-    isoInit(messageReceive);
+    isoInit(sendReceivedPayload);
+    isoSetRelayCallback(sendRelayedPacket);
+    isoSetBroadcastCallback(sendBroadcastPacket);
 
     DEBUG_PRINTF("Waiting till %c is pressed\n", WAIT_FOR_RPY);
+
+    // Turn on green LED. Turned off when sending is enabled. 
+    PORTF.OUTSET = PIN0_bm;
 }
 
 // The continues loop of the baseStation program 
@@ -43,13 +61,26 @@ void baseStationLoop(void) {
 
     while (1) {
         char inChar = uartF0_getc();
-        if(inChar == 'e') {
-            PORTF.OUTCLR = PIN0_bm;
-            doSend = 0;
-        }
-        else if(inChar == 'c') {
-            PORTF.OUTSET = PIN0_bm;
-            doSend = 1;
+
+        switch(inChar) {
+            case STOP_SENDING:
+                PORTF.OUTCLR = PIN0_bm;
+                doSend = 0;
+                break;
+            
+            case START_SENDING:
+                PORTF.OUTCLR = PIN0_bm;
+                doSend = 1;
+                break;
+
+            case SEND_SOMETHING:
+                // Wait for the next byte, which is the destination ID.
+                uint16_t receivedByte = uartF0_getc();
+                while(receivedByte == UART_NO_DATA) receivedByte = uartF0_getc();
+
+                // Send something.
+                isoSendPacket(receivedByte, SOMETHING, sizeof(SOMETHING));
+                break;
         }
 
         isoUpdate();
@@ -60,7 +91,7 @@ void baseStationLoop(void) {
     }
 }
 
-static void messageReceive(uint8_t *payload) {
+static void sendReceivedPayload(uint8_t *payload) {
     uartF0_putc(RECEIVED_PAYLOAD);
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
         uartF0_putc(payload[i]);
@@ -81,4 +112,16 @@ static void sendFriendsList(void) {
         uartF0_putc(friends[i].trust);
         uartF0_putc(friends[i].active);
     }
+}
+
+static void sendRelayedPacket(uint8_t *packet) {
+    uartF0_putc(RELAYED_PAYLOAD);
+    for (uint8_t i = 0; i < PACKET_SIZE; i++)
+        uartF0_putc(packet[i]);
+}
+
+static void sendBroadcastPacket(uint8_t *packet) {
+    uartF0_putc(RECEIVED_BROADCAST);
+    for (uint8_t i = 0; i < PACKET_SIZE; i++)
+        uartF0_putc(packet[i]);
 }
