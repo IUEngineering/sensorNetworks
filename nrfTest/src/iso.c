@@ -40,7 +40,8 @@
 #define UPDATE_COUNT_REMOVE_bm  0x0f
 #define UPDATE_MAX_DECAY        5
 
-#define MAX_MULTIPACKET_TIME_INTERVAL 256
+// The currentTime timer counts every 100ms, and pings are sent every second, so if a message is received within 500ms it's probably a multipacket.
+#define MAX_MULTIPACKET_TIME_INTERVAL 8
 #define MAX_MULTIPACKETS 3
 
 #define MESSAGE_DESTINATION_ID 0
@@ -48,17 +49,21 @@
 #define HOPS_LIMIT 16
 
 
-// Counter every 250 ms formula:
-// TC_CCA = ((t * F_CPU) / (2* N)) - 1 
-#define TC_CCA  15624
+// Counter every second formula:
+// PING_TC_PER = ((t * F_CPU) /  N) - 1
+#define PING_TC_DIV TC_CLKSEL_DIV1024_gc
+#define PING_TC_PER 31249
 
+// 10Hz // 100ms
+#define CURRENTTIME_TC_DIV TC_CLKSEL_DIV256_gc
+#define CURRENTTIME_TC_PER 31249
 
 // #define FILLIST 3
 
 
 
 // Define list of neighbors (neighbors are friends :)
-static uint16_t currentTime = 0;
+uint8_t currentTime = 0;
 static uint8_t myId = 0;
 
 static void (*receiveCallback)(uint8_t *payload);
@@ -121,14 +126,14 @@ void isoInit(void (*callback)(uint8_t *data)) {
 
     initFriendList();
 
-    // Initialize the timer/counter for sending POL's (snapshots) and removing friends.
-    TCD0.CTRLA  = TC_CLKSEL_DIV1024_gc;
-    TCD0.CTRLB  = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD0.CCA    = TC_CCA;
+    // Initialize the timer/counter for sending POL's (snapshots) and keeping track of multipackets.
+    TCD0.CTRLB  = TC_WGMODE_NORMAL_gc;
+    TCD0.CTRLA  = PING_TC_DIV;
+    TCD0.PER    = PING_TC_PER;
 
-    TCD1.CTRLA  = TC_CLKSEL_DIV256_gc;
-    TCD1.CTRLB  = TC1_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD1.CCA    = 16; // Random value I don't really care tbh. It has to be low enough to not fill a uint16_t within like 5 seconds.
+    TCD1.CTRLB  = TC_WGMODE_NORMAL_gc;
+    TCD1.CTRLA  = CURRENTTIME_TC_DIV;
+    TCD1.PER    = CURRENTTIME_TC_PER;
 
     receiveCallback = callback;
 
@@ -211,7 +216,9 @@ void send(uint8_t *data) {
     nrfStartListening();
 }
 
+
 void pingOfLife(void) {
+
     // Ping build:
     //* Index:  0    1    2    3    4    5    6    7    8    8    9    8
     //* Type:   myID Typ  ID0  Hop0 ID1  Hop1 ID2  Hop2 ID3  Hop3 ID4  Hop4
@@ -296,9 +303,8 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
         receiveCallback(packet + 1);
     }
 
-    // If it's a message for someone else.
+    // If it's a message for someone else, relay the packet.
     else {
-        // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
 
         // Send the relayed packet to the PI if we're the basestation.
@@ -352,7 +358,7 @@ void parseUpdate(uint8_t *packet) {
     if(findFriend(packet[0])->active) { 
         for(uint8_t i = 0; i < adders; i++) {
             // Well this is going to be run like 28 times every time a nerd decides to send an update,
-            // because literally EVERYONE is repeating them, woo :D.
+            // because literally EVERYONE is relaying them, woo :D.
 
             // We can find the hops by subtracting the max decay by the current decay.
             updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);

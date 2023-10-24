@@ -31,6 +31,8 @@ int main(void) {
     // This bit is used to select the mode of the network node
     PORTE.DIRCLR = PIN0_bm;
     PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
+    // Wait a little bit for the pull up to take hold.
+    _delay_loop_1(10); 
 
 
     if ((PORTE.IN & PIN0_bm)) {    
