@@ -2,39 +2,75 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <string.h>
 
-#include "interface.h"
 #include "mcuComm.h"
 #include "serial.h"
 
 #define INPUT_BUFFER_START_SIZE 64
 
-#define FRIENDLIST 0x01
-#define PAYLOAD 0x02
+#define ID_BYTE 0x00
+#define ID_SIZE 2
+
+#define FRIENDSLIST_BYTE 0x01
+
+#define MY_PAYLOAD_BYTE 0x02
+#define PAYLOAD_SIZE    31
+
+#define RELAYED_BYTE    0x03
+#define BROADCAST_BYTE  0x04
+#define PACKET_SIZE     32
 
 #define BYTES_PER_FRIEND 5
 #define FRIENDLIST_HEADER_SIZE 2
-#define PAYLOAD_SIZE 31
 #define MAX_FRIENDS 254
 
 #define MAX_INPUT_BUFFER_SIZE   MAX_FRIENDS * BYTES_PER_FRIEND + FRIENDLIST_HEADER_SIZE
 
-uint16_t inputBufferSize = INPUT_BUFFER_START_SIZE;
-uint8_t *inputBuffer;
-uint16_t inputBufferIndex = 0;
 
-void parseFriendsList(uint8_t *buffer);
-void parsePayload(uint8_t *buffer);
+void parseFriendsList(uint8_t *data);
+void parsePayload(uint8_t *payload);
+void parseBroadcast(uint8_t *packet);
+void parseRelay(uint8_t *packet);
+
 char* getPrintable(char c);
 
-void initInputHandler(void) {
-    inputBuffer = (uint8_t *)malloc(inputBufferSize);
 
-    printf("\e[H\e[2J");
+int8_t initInputHandler(void) {
+
+    // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
+    DIR *devDir = opendir("/dev");
+    struct dirent *entry;
+    if(devDir == NULL) return -1;
+
+    while((entry = readdir(devDir)) != NULL) {
+        if(strncmp(entry->d_name, "ttyACM", 6)) continue;
+        
+        // Concatenate the name of the file to /dev/ to make /dev/ttyACMx
+        char streamPath[14] = "/dev/";
+        strcat(streamPath, entry->d_name);
+
+        // Test if it can be opened.
+        if(initUartStream(streamPath, B115200) != 0) break;
+    }
+    // If we couldn't find any openable streams, stop the program.
+    if(entry == NULL) return -1;
+
+    uint8_t inByte = 0;
+    uint32_t retryCount = 0;
+    do {
+        sleep(0.1);
+        fflush(stdout);
+        serialPutChar('c');
+    }
+    while(serialGetChar(&inByte));
+
+    handleNewByte(inByte);
+    return 0;
 }
 
 void handleNewByte(uint8_t newByte) {
-
     // A few notes on this function:
     // If this function is not run faster than the bytes of the XMega are coming in, it breaks.
     // This can be fixed by running the function in a while loop until the byte buffer is empty,
@@ -42,70 +78,86 @@ void handleNewByte(uint8_t newByte) {
     //
     // The function also breaks if even 1 byte of information is added/missing from the incoming data.
     // This could be fixed by detecting faulty data and trying to find a valid data packet,
-    // but honestly I couln't be bothered.
+    // but honestly I can't be bothered.
+
+    static uint8_t *inputBuffer = NULL; // <- Replace with nullptr in C23 (hype).
+    static uint16_t inputBufferSize = 0;
+    static uint16_t inputBufferIndex = 0;
+    static uint8_t myId = 0;
+
+    // Resize the buffer if it's too small.
+    if(inputBufferIndex >= inputBufferSize) {
+        // I LOVE that realloc acts as malloc if the input pointer is a nullpointer.
+        inputBuffer = realloc(inputBuffer, inputBufferSize + INPUT_BUFFER_START_SIZE);
+        inputBufferSize += INPUT_BUFFER_START_SIZE;
+    }
 
     // Put the new byte into the buffer.
     inputBuffer[inputBufferIndex] = newByte;
     inputBufferIndex++;
 
-    // Check if it's a complete friendslist.
-    // Check if the first byte is the friendlist ID.          Check if the buffer has been filled to the length of the sent friend list.
-    if(inputBuffer[0] == FRIENDLIST  &&  inputBufferIndex >= (FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND)) {
-        parseFriendsList(inputBuffer);
-        fflush(stdout);
-        inputBufferIndex = 0;
-        return;
-    }
 
-    // Check if it's a complete message payload.
-    if(inputBuffer[0] == PAYLOAD  &&  inputBufferIndex >= PAYLOAD_SIZE + 1) {
-        parsePayload(inputBuffer);
-        fflush(stdout);
-        inputBufferIndex = 0;
-        return;
-    }
+    switch(inputBuffer[0]) {
 
-    // Resize the buffer if it's too small.
-    if(inputBufferIndex >= inputBufferSize) {
-        // if(inputBufferSize + INPUT_BUFFER_START_SIZE > MAX_INPUT_BUFFER_SIZE) {
-        //     serialPutChar('e');
-        //     // sleep(0.1);
-        //     serialPutChar('c');
-        // }
-        inputBuffer = realloc(inputBuffer, inputBufferSize + INPUT_BUFFER_START_SIZE);
-        inputBufferSize += INPUT_BUFFER_START_SIZE;
+        case ID_BYTE:
+            if(inputBufferIndex < ID_SIZE) return;
+            myId = inputBuffer[1];
+
+            break;
+
+        case FRIENDSLIST_BYTE:
+            // Check if the length byte hasn't been sent. We check this because inputBuffer [1] is still unset.
+            // │                       Check if the length of the buffer is less than the predicted length (header of the buffer + (friend amount * friend size)).
+            // ↓                       ↓
+            if(inputBufferIndex < 2 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND)
+                return; //! Notice that this isn't break, it's return.
+                // I only want the code below this switch to run if we just parsed something.
+
+            parseFriendsList(inputBuffer);
+            break;
+
+        case MY_PAYLOAD_BYTE:
+            // + 1 because of the header.
+            if(inputBufferIndex < PAYLOAD_SIZE + 1) return;
+
+            parsePayload(inputBuffer + 1);
+            break;
+
+        case BROADCAST_BYTE:
+            if(inputBufferIndex < PACKET_SIZE + 1) return;
+
+            parseBroadcast(inputBuffer + 1);
+            break;
+
+        case RELAYED_BYTE:
+            if(inputBufferIndex < PACKET_SIZE + 1) return;
+            
+            parseRelay(inputBuffer + 1);
+            break;
+
+        default: return; 
+       
     }
+    //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
+    fflush(stdout);
+    inputBufferIndex = 0;
 }
 
-void parseFriendsList(uint8_t *buffer) {
-    printf("\e[0;0HFriendlist [%d %d]:\n", buffer[0], buffer[1]);
-    for(uint16_t i = 0; i < buffer[1]; i++) {
-        printf("[");
-        for(uint8_t j = 0; j < 5; j++) printf("%02x ", buffer[2 + i * 5 + j]);
-        printf("]\n");
-    }
+void parseFriendsList(uint8_t *data) {
+  
 }
 
-void parsePayload(uint8_t *buffer) {
-    WINDOW *win = getDataWindow();
+void parsePayload(uint8_t *packet) {
+   
+}
 
+void parseBroadcast(uint8_t *packet) {
     
-    wprintw(win, "\e[10;0HPayload:\n");
-    wprintw(win, "\e[34m");
-    for(uint8_t i = 0; i < PAYLOAD_SIZE; i++) {
-        wprintw(win, "%02x ", buffer[i]);
-    }
-    wprintw(win, "\e[0m\n");
-
-    for(uint8_t i = 0; i < PAYLOAD_SIZE; i++) {
-        wprintw(win, "%s ", getPrintable(buffer[i]));
-    }
-    wprintw(win, "\n");
-
-    wrefresh(win);
-
 }
 
+void parseRelay(uint8_t *packet) {
+   
+}
 
 char* getPrintable(char c) {
 
