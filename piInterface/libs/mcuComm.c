@@ -23,34 +23,28 @@
 #define BROADCAST_BYTE  0x04
 #define PACKET_SIZE     32
 
-#define BYTES_PER_FRIEND 5
-#define FRIENDLIST_HEADER_SIZE 2
-#define MAX_FRIENDS 254
-
-#define ID_PAIR 16
-#define TABLE_HEADER_PAIR 17
-#define HEX_VAL_EVEN_PAIR 18
-#define HEX_VAL_ODD_PAIR  19
+#define HEX_VAL_EVEN_PAIR 16
+#define HEX_VAL_ODD_PAIR  17
 
 // For sending to the XMega:
 #define TRANSMIT_SOMETHING_BYTE 0x01
 
 
-
+// Both defined in friendWindow.c (evil file configuration)
+void initFriendWindow(WINDOW *window);
 void parseFriendsList(uint8_t *data);
 void printPacketToWindow(uint8_t *packet, WINDOW *window, const char title[3]);
 
 char* getPrintable(char c);
 
 
-WINDOW *friendsWindow;
 WINDOW *diagWindow;
 
 // Assumes:
 //- ncurses has been initialised.
 //- `start_color()` has been run.
-//- `fWindow` is an initialized window of at least 34 wide and 4 high.
-//- `dWindow` is an initialized window of exactly 68 wide and at least 2 high.
+//- `fWindow` is an initialized window of 37 wide and at least 4 high.
+//- `dWindow` is an initialized window of 68 wide and at least 2 high.
 int8_t initInputHandler(WINDOW *fWindow, WINDOW *dWindow) {
 
     // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
@@ -72,31 +66,20 @@ int8_t initInputHandler(WINDOW *fWindow, WINDOW *dWindow) {
     if(entry == NULL) return -1;
 
     uint8_t inByte = 0;
-    uint32_t retryCount = 0;
     do {
-        mvwprintw(friendsWindow, 0, 0, "Connection retry %d\r", retryCount++);
-        wrefresh(friendsWindow);
         serialPutChar('c');
     }
     while(serialGetChar(&inByte));
 
 
-    init_pair(ID_PAIR, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(TABLE_HEADER_PAIR, COLOR_GREEN, COLOR_BLACK);
     init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
     init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
 
-    friendsWindow = fWindow;
     diagWindow = dWindow;
     scrollok(diagWindow, 1);
-    if(getmaxx(diagWindow) != 68) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 wide!");
+    if(getmaxx(diagWindow) != 68) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 cols wide!");
 
-    mvwprintw(friendsWindow, 0, 0, "My   0 friends:\n");
-    wattrset(friendsWindow, COLOR_PAIR(TABLE_HEADER_PAIR));
-    wprintw(friendsWindow, "ID\tTrust\tActive\tVia\tHops\n");
-    wattrset(friendsWindow, 0);
-
-    wrefresh(friendsWindow);
+    initFriendWindow(fWindow);
 
 
     handleNewByte(inByte);
@@ -128,8 +111,6 @@ void handleNewByte(uint8_t newByte) {
     // Put the new byte into the buffer.
     inputBuffer[inputBufferIndex] = newByte;
     inputBufferIndex++;
-
-    fprintf(stderr, "%02x ", newByte);
 
     switch(inputBuffer[0]) {
 
@@ -174,38 +155,6 @@ void handleNewByte(uint8_t newByte) {
     }
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
     inputBufferIndex = 0;
-    fprintf(stderr, "\n");
-}
-
-void parseFriendsList(uint8_t *data) {
-
-    // Print the amount of friends in the "My %3d friends:" header.
-    mvwprintw(friendsWindow, 0, 3, "%3d", data[0]);
-    wmove(friendsWindow, 2, 0);
-
-    uint8_t friend = 0;
-    for(; friend < data[0] && friend < getmaxy(friendsWindow) + 1; friend++) {
-
-        // + 1 because of the first byte, which is the amount of friends.
-        const uint16_t index = friend * BYTES_PER_FRIEND + 1;
-
-        wattrset(friendsWindow, COLOR_PAIR(ID_PAIR));
-        wprintw(friendsWindow, "%02x\t", data[index]);      // ID
-        wattrset(friendsWindow, 0);
-
-        wprintw(friendsWindow, "%d\t", data[index + 3]);    // Trust
-        wprintw(friendsWindow, "%d\t", data[index + 4]);    // Active
-
-        wattrset(friendsWindow, COLOR_PAIR(ID_PAIR));
-        wprintw(friendsWindow, "%02x\t", data[index + 2]);  // Via
-        wattrset(friendsWindow, 0);
-
-        wprintw(friendsWindow, "%d\n", data[index + 1]);    // Hops
-    }
-
-    // Clear the rest of the window.
-    wclrtobot(friendsWindow);
-    wrefresh(friendsWindow);
 }
 
 // Print the packet as a string of hex chars to the given window.
