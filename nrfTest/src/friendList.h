@@ -5,10 +5,12 @@
 
 #define FORGET_FRIEND_TIME 8 // Deprecated
 
-#define ACTIVATE_TRUST      7
-#define DEACTIVATE_TRUST    7
-#define MAX_TRUST           10
-#define TRUST_ADDER         2   
+// These are both non-inclusive (> instead of >=)
+#define ACTIVATE_TRUST      5
+#define DEACTIVATE_TRUST    5
+
+#define MAX_TRUST           7
+#define TRUST_ADDER         2 
 #define TRUST_SUBTRACTOR    1
 
 // 256 ID's - 2 standard ID's (0x00 and 0xff) - 1 (your own ID) = 253

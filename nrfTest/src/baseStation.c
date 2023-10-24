@@ -19,6 +19,7 @@
 #define TRANSMIT_SOMETHING  0x01
 // Replace this with something that toggles on the blue LED of a node.
 #define SOMETHING           (uint8_t*) "yeah something quack" 
+#define SOMETHING_SIZE      21
 
 
 #ifdef DEBUG
@@ -62,7 +63,6 @@ void baseStationInit(void) {
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
-    uint8_t count = 0;
 
     while (1) {
         char inChar = uartF0_getc();
@@ -87,7 +87,7 @@ void baseStationLoop(void) {
                 while(receivedByte == UART_NO_DATA) receivedByte = uartF0_getc();
 
                 // Send something.
-                isoSendPacket(receivedByte, SOMETHING, sizeof(SOMETHING));
+                isoSendPacket(receivedByte, SOMETHING, SOMETHING_SIZE);
                 break;
             }
         }
