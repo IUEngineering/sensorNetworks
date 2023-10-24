@@ -7,6 +7,7 @@
 #include "iso.h"
 #include "friendList.h"
 
+#define SEND_ID             0x00
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
 #define RELAYED_PAYLOAD     0x03
@@ -15,9 +16,9 @@
 
 #define START_SENDING       'c'
 #define STOP_SENDING        'e'
-#define SEND_SOMETHING      0x01
+#define TRANSMIT_SOMETHING  0x01
 // Replace this with something that toggles on the blue LED of a node.
-#define SOMETHING           "yeah something quack" 
+#define SOMETHING           (uint8_t*) "yeah something quack" 
 
 
 #ifdef DEBUG
@@ -40,6 +41,11 @@ static void sendRelayedPacket(uint8_t *packet);
 // Callback for pings as well as updates.
 static void sendBroadcastPacket(uint8_t *packet);
 
+// Enabled by receiving a START_SENDING byte from the PI.
+// We will not send anything over the uart if this is 0.
+static uint8_t sending = 0;
+
+
 // Initialization of the baseStation program 
 void baseStationInit(void) {
     DEBUG_PRINT("I am a base-station\n");
@@ -57,23 +63,25 @@ void baseStationInit(void) {
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
     uint8_t count = 0;
-    uint8_t doSend = 1;
 
     while (1) {
         char inChar = uartF0_getc();
 
         switch(inChar) {
             case STOP_SENDING:
-                PORTF.OUTCLR = PIN0_bm;
-                doSend = 0;
+                PORTF.OUTSET = PIN0_bm;
+                sending = 0;
                 break;
             
             case START_SENDING:
                 PORTF.OUTCLR = PIN0_bm;
-                doSend = 1;
+                sending = 1;
+                uartF0_putc(SEND_ID);
+                uartF0_putc(isoGetId());
+
                 break;
 
-            case SEND_SOMETHING:
+            case TRANSMIT_SOMETHING: {
                 // Wait for the next byte, which is the destination ID.
                 uint16_t receivedByte = uartF0_getc();
                 while(receivedByte == UART_NO_DATA) receivedByte = uartF0_getc();
@@ -81,13 +89,10 @@ void baseStationLoop(void) {
                 // Send something.
                 isoSendPacket(receivedByte, SOMETHING, sizeof(SOMETHING));
                 break;
+            }
         }
 
         isoUpdate();
-        count++;
-        if(!count && doSend) {
-            sendFriendsList();
-        }
     }
 }
 
@@ -115,13 +120,23 @@ static void sendFriendsList(void) {
 }
 
 static void sendRelayedPacket(uint8_t *packet) {
+    if(!sending) return;
+
     uartF0_putc(RELAYED_PAYLOAD);
     for (uint8_t i = 0; i < PACKET_SIZE; i++)
         uartF0_putc(packet[i]);
 }
 
+// I hate copy pasting code but this is such a small bit of code.
+// I don't know how to do it elegantly without defining a third function.
 static void sendBroadcastPacket(uint8_t *packet) {
+    if(!sending) return;
+
     uartF0_putc(RECEIVED_BROADCAST);
     for (uint8_t i = 0; i < PACKET_SIZE; i++)
         uartF0_putc(packet[i]);
+
+    // When we receive a broadcast, something must've changed about the friend list.
+    // This function is always run AFTER updating the friends list, so we get the newest data right to our screen!
+    sendFriendsList();
 }

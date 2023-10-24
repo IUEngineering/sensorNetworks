@@ -5,12 +5,6 @@
 // #include "serialF0.h"
 #include "terminal.h"
 
-#define ACTIVATE_TRUST      7
-#define DEACTIVATE_TRUST    7
-#define MAX_TRUST           10
-#define TRUST_ADDER         2   
-#define TRUST_SUBTRACTOR    1
-
 
 
 uint8_t friendAmount = 0;
@@ -48,13 +42,17 @@ friend_t *updateFriend(uint8_t id, uint8_t hops, uint8_t via) {
         if(oldFriend->trust > MAX_TRUST) oldFriend->trust = MAX_TRUST;
 
         // Activate the friend when we trust it enough.
-        if(oldFriend->trust > ACTIVATE_TRUST) oldFriend->active = 1;
+        if(!oldFriend->active && oldFriend->trust > ACTIVATE_TRUST) {
+            oldFriend->active = 1;
+            oldFriend->hops = 0;
+            oldFriend->via = 0;
+        }
 
         DEBUG_PRINTF("\tIt's direct. Increased trust: %2d\tActive: %1d\e[0m", oldFriend->trust, oldFriend->active);
     }
 
-    // Replace old friend if it has more hops.
-    else if(hops < oldFriend->hops || oldFriend->hops == 0) {
+    // Replace old friend if it has more hops, is not active, and was not deactivated before sending a new ping.
+    else if(!oldFriend->active  &&  !oldFriend->deactivated  &&  (hops < oldFriend->hops || oldFriend->hops == 0)) {
         oldFriend->via = via;
         oldFriend->hops = hops;
         DEBUG_PRINT("\tNot direct. Replacing hops and via.\e[0m\n");
@@ -95,14 +93,16 @@ void printFriends() {
         return;
     }
 
+    extern uint8_t currentTime;
+
     // Gotta have the dynamic plural.
-    printf("My %d friend%s :)\n", friendAmount, friendAmount > 1 ? "s" : "");
+    printf("My %d friend%s [%d] :)\n", friendAmount, friendAmount > 1 ? "s" : "", currentTime);
     printf("\t\e[0;31mID\tTrust\tActive\tHops\tVia\tTime\e[0m\n");
 
     // Pretty for loop (｡◕‿‿◕｡)
     for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
         if(friends[i].id != 0) {
-            printf("%3d\t\e[0;35m0x%02x\e[0m\t%2d\t%1d\t%02d\t0x%02x\t0x%02x\n", i, friends[i].id, friends[i].trust, friends[i].active, friends[i].hops, friends[i].via, friends[i].lastPingTime);
+            printf("%3d\t\e[0;35m0x%02x\e[0m\t%2d\t%1d\t%02d\t0x%02x\t%3d\n", i, friends[i].id, friends[i].trust, friends[i].active, friends[i].hops, friends[i].via, friends[i].lastPingTime);
         }
     }
     printf("\n");
@@ -115,7 +115,8 @@ void friendTimeTick() {
     DEBUG_MSG_START();
     DEBUG_MSG_APPEND("\e[0;35mReducing trust of friends:\t\n");
 
-    for(uint8_t i = 0, friend = 0; friend < friendAmount; i++, friend++) {
+    // Another pretty for loop (｡◕‿‿◕｡)
+    for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
         if(friends[i].id != 0 && friends[i].trust > 0) {
             // Reduce trust.
             friends[i].trust -= TRUST_SUBTRACTOR;
@@ -125,6 +126,7 @@ void friendTimeTick() {
             // Deactivate friend.
             if(friends[i].active && friends[i].trust < DEACTIVATE_TRUST) {
                 friends[i].active = 0;
+                friends[i].deactivated = 1;
                 DEBUG_MSG_APPEND("/DE");
                 // Remove all via references to this friend.
                 removeViaReferences(friends[i].id);
@@ -162,6 +164,7 @@ void removeVias(uint8_t from, uint8_t *vias, uint8_t viaAmount) {
     // It's pretty useless to run this function if no vias are specified. 
     if(viaAmount == 0) return;
 
+    // Such a pretty for loop (｡◕‿‿◕｡)
     for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
         if(friends[i].id == 0) continue;
 
@@ -190,6 +193,9 @@ void getFriends(friend_t *buf) {
             if(friends[i].active || friends[i].via) 
                 *buf++ = friends[i];
                 
+            // This is so that the friend can be added as an indirect friend again. See ISO Paragraph "Via in snapshot laten vallen".
+            friends[i].deactivated = 0;
+
             friend++;
         }
     }

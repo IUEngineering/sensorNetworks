@@ -45,8 +45,6 @@
 
 #define MESSAGE_DESTINATION_ID 0
 
-#define PACKET_SIZE 32
-
 #define HOPS_LIMIT 16
 
 
@@ -62,8 +60,12 @@
 // Define list of neighbors (neighbors are friends :)
 static uint16_t currentTime = 0;
 static uint8_t myId = 0;
-static void pingOfLife(void);
+
 static void (*receiveCallback)(uint8_t *payload);
+void (*broadcastCallback)(uint8_t *package) = NULL;
+void (*relayCallback)(uint8_t *package) = NULL;
+
+static void pingOfLife(void);
 static void send(uint8_t *data);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
@@ -118,19 +120,6 @@ void isoInit(void (*callback)(uint8_t *data)) {
     nrfStartListening();
 
     initFriendList();
-#ifdef FILLIST
-    for(uint8_t i = 1; i <= 20; i++) {
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-    }
-    for(uint8_t i = 0; i < 20; i++) {
-        updateFriend(i + 15, i % 3 + 1, i / 2);
-    }
-
-#endif
 
     // Initialize the timer/counter for sending POL's (snapshots) and removing friends.
     TCD0.CTRLA  = TC_CLKSEL_DIV1024_gc;
@@ -215,6 +204,7 @@ void send(uint8_t *data) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
+    // TODO: Check if this is necessary
 
     // The data is always 32 bytes because for some reason it was decided to not use dynamic payload.
     nrfWrite(data, PACKET_SIZE);
@@ -287,17 +277,18 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
 
     // If it's a Ping of Life (snapshot):
     if(receivePipe == BROADCAST_PIPE_INDEX) {
-        #ifdef FILLIST
-        return;
-        #endif
-
+    
         // Check which parser to use:
         if(packet[1] & UPDATE_TYPE_UPDATE_bm) parseUpdate(packet);
         else parsePing(packet);
+
+        // Send the data to the PI if we're the basestation.
+        if(broadcastCallback) broadcastCallback(packet);
         
         return;
     }
 
+    // Toggle the red LED to show that we've received something private.
     PORTF.OUTTGL = PIN1_bm;
 
     // Is for me???
@@ -309,6 +300,9 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
     else {
         // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
+
+        // Send the relayed packet to the PI if we're the basestation.
+        if(relayCallback) relayCallback(packet);
     }
 }
 
@@ -383,4 +377,11 @@ void parseUpdate(uint8_t *packet) {
 
 uint8_t isoGetId(void) {
     return myId;
+}
+
+void isoSetRelayCallback(void (*callback)(uint8_t *package)) {
+    relayCallback = callback;
+}
+void isoSetBroadcastCallback(void (*callback)(uint8_t *package)) {
+    broadcastCallback = callback;
 }
