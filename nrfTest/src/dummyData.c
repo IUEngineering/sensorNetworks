@@ -22,6 +22,12 @@ static void ADCInit(void);
 static uint16_t ADCReadCH0(void);
 static uint16_t ADCReadCH1(void);
 
+static void sendAirMoisture(void);
+static void sendAirQuality(void);
+static void sendLight(void);
+static void sendTemp(void);
+static void sendSound(void);
+
 static void receivePayload(uint8_t *data);
 
 // Initialise the dummyData program
@@ -130,6 +136,27 @@ uint16_t ADCReadCH1(void) {
 
     return res;
 }
+
+static void sendAirMoisture(void) {
+    return;
+}
+
+static void sendAirQuality(void) {
+    return;
+}
+
+static void sendLight(void) {
+    return;
+}
+
+static void sendTemp(void) {
+    return;
+}
+
+static void sendSound(void) {
+    return;
+}
+
 
 // Callback for iso when data is received for this node
 void receivePayload(uint8_t *data) {
