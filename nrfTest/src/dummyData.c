@@ -6,8 +6,12 @@
 #define BASESTATION_ID  0x40
 
 #define PAYLOAD_LENGTH  31
-#define TEMP_MESSAGE    0x01
-#define SOUND_MESSAGE   0x02
+
+#define AIR_MOIST_MESSAGE   0x01
+#define AIR_QUALITY_MESSAGE 0x02
+#define LIGHT_MESSAGE       0x03
+#define TEMP_MESSAGE        0x04
+#define SOUND_MESSAGE       0x05
 
 static void ADCInit(void);
 static uint16_t ADCReadCH0(void);
