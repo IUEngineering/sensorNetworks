@@ -19,7 +19,7 @@
 #define TIME_30_MIN 1800
 
 static void ADCInit(void);
-static uint16_t ADCReadCH0(void);
+static uint16_t ADCReadCH0(uint8_t inputPin);
 
 static void sendAirMoisture(void);
 static void sendAirQuality(void);
@@ -58,8 +58,7 @@ void dummyDataLoop(void) {
             uint8_t payload[PAYLOAD_LENGTH];
             uint16_t temp, sound;
 
-            temp  = ADCReadCH0();
-            sound = ADCReadCH1();
+            temp  = ADCReadCH0(ADC_CH_MUXPOS_PIN2_gc);
             
             // Make temp payload
             payload[0] = TEMP_MESSAGE;
@@ -89,10 +88,7 @@ void dummyDataLoop(void) {
 //      - Reference to internal VCC/1.6 
 //      - In 12 bit mode
 //      - Prescaler to div 16
-//      - Input PA2 to channel 0
-//      - Input PA3 to channel 1
 //      - Input mode to single ended
-//      - Configure multiplexer
 void ADCInit(void) {
 
     // congigure ADCA
@@ -104,14 +100,14 @@ void ADCInit(void) {
     // Configure input channels
     PORTA.DIRCLR     = PIN2_bm | PIN3_bm;
     ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
-    ADCA.CH1.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
-
-    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN2_gc | ADC_CH_MUXNEG_GND_MODE3_gc;
 }
 
 // Start a conversion on CH0, wait until the conversion finishes and return the result
-uint16_t ADCReadCH0(void) {                                   
+// The inputPin argument selects the input signal for the ADC
+uint16_t ADCReadCH0(uint8_t inputPin) {                                   
     uint16_t res;
+
+    ADCA.CH0.CTRL = inputPin | ADC_CH_MUXNEG_GND_MODE3_gc;
 
     ADCA.CH0.CTRL |= ADC_CH_START_bm;
     while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
