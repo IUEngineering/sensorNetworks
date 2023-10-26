@@ -70,7 +70,7 @@ void dummyDataLoop(void) {
         }
 
         if (timer % TIME_5_SEC == 0);
-        
+
         if (timer % TIME_10_MIN == 0);
 
         if (timer % TIME_30_MIN == 0) {
@@ -135,14 +135,3 @@ uint16_t ADCReadCH1(void) {
 void receivePayload(uint8_t *data) {
     return;
 }
-
-// // Send potmeter data from button PA0 to hardcoded XMEGA-ID
-// if(PORTA.IN & PIN0_bm) {
-//     int16_t result = read_adc();
-//     send( (uint8_t *) &result, sizeof(uint16_t) );  // little endian: low byte is sent first
-// }
-
-// // Send data as broadcast
-// if(PORTA.IN & PIN5_bm) {
-
-// }
