@@ -20,7 +20,6 @@
 
 static void ADCInit(void);
 static uint16_t ADCReadCH0(void);
-static uint16_t ADCReadCH1(void);
 
 static void sendAirMoisture(void);
 static void sendAirQuality(void);
@@ -108,24 +107,10 @@ void ADCInit(void) {
     ADCA.CH1.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
 
     ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN2_gc | ADC_CH_MUXNEG_GND_MODE3_gc;
-    ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN3_gc | ADC_CH_MUXNEG_GND_MODE3_gc;    
 }
 
 // Start a conversion on CH0, wait until the conversion finishes and return the result
 uint16_t ADCReadCH0(void) {                                   
-    uint16_t res;
-
-    ADCA.CH0.CTRL |= ADC_CH_START_bm;
-    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
-
-    res = ADCA.CH0.RES;
-    ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
-
-    return res;
-}
-
-// Start a conversion on CH1, wait until the conversion finishes and return the result
-uint16_t ADCReadCH1(void) {                                   
     uint16_t res;
 
     ADCA.CH0.CTRL |= ADC_CH_START_bm;
