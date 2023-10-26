@@ -119,6 +119,16 @@ uint16_t ADCReadCH0(uint8_t inputPin) {
 }
 
 static void sendAirMoisture(void) {
+    uint8_t payload[PAYLOAD_LENGTH];
+
+    uint16_t airMoisture = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
+
+    // Fill payload
+    payload[0] = AIR_MOIST_MESSAGE;
+    payload[1] = airMoisture >> 8;
+    payload[2] = isoGetId();
+    payload[3] = (uint8_t) airMoisture;
+    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
 
