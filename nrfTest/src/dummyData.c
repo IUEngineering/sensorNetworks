@@ -13,6 +13,11 @@
 #define TEMP_MESSAGE        0x04
 #define SOUND_MESSAGE       0x05
 
+#define TIME_5_SEC  5
+#define TIME_10_SEC 10
+#define TIME_10_MIN 600
+#define TIME_30_MIN 1800
+
 static void ADCInit(void);
 static uint16_t ADCReadCH0(void);
 static uint16_t ADCReadCH1(void);
@@ -33,7 +38,7 @@ void dummyDataInit(void) {
 // The continues loop of the dummyData program 
 void dummyDataLoop(void) {
     // The PER of period cannot be set high enough for 10sec so we need to count to ten.
-    uint8_t timer = 0;
+    uint16_t timer = 0;
 
     while (1) {
 
@@ -43,8 +48,7 @@ void dummyDataLoop(void) {
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
-        if (timer == 10) {
-            timer = 0; 
+        if (timer % TIME_10_SEC == 0) {
 
             uint8_t payload[PAYLOAD_LENGTH];
             uint16_t temp, sound;
@@ -63,6 +67,15 @@ void dummyDataLoop(void) {
             payload[1] = sound >> 8;
             payload[2] = (uint8_t) sound;
             isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+        }
+
+        if (timer % TIME_5_SEC == 0);
+        
+        if (timer % TIME_10_MIN == 0);
+
+        if (timer % TIME_30_MIN == 0) {
+
+            timer = 0;
         }
     }
 }
