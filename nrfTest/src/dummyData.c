@@ -120,12 +120,12 @@ static void sendAirMoisture(void) {
 static void sendAirQuality(void) {
      uint8_t payload[PAYLOAD_LENGTH];
 
-    uint16_t airQuality = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
+    uint16_t airQuality = ADCReadCH0(ADC_CH_MUXPOS_PIN1_gc);
 
     // Fill payload
     payload[0] = AIR_MOIST_MESSAGE;
     payload[1] = isoGetId();
-    
+
     if (airQuality > AIR_QUALITY_MED)
         payload[2] = 'G';
     else if (airQuality > AIR_QUALITY_BAD)
@@ -138,6 +138,15 @@ static void sendAirQuality(void) {
 }
 
 static void sendLight(void) {
+    uint8_t payload[PAYLOAD_LENGTH];
+
+    uint16_t light = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
+
+    // Fill payload
+    payload[0] = LIGHT_MESSAGE;
+    payload[1] = isoGetId();
+    *(uint16_t*)(payload + 2) = light;
+    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
 
