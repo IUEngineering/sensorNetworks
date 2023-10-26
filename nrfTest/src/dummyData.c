@@ -18,6 +18,9 @@
 #define TIME_10_MIN 600
 #define TIME_30_MIN 1800
 
+#define AIR_QUALITY_BAD     4096 * 1/3
+#define AIR_QUALITY_MED     4096 * 2/3
+
 static void ADCInit(void);
 static uint16_t ADCReadCH0(uint8_t inputPin);
 
@@ -53,27 +56,9 @@ void dummyDataLoop(void) {
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
-        if (timer % TIME_10_SEC == 0) {
-
-            uint8_t payload[PAYLOAD_LENGTH];
-            uint16_t temp, sound;
-
-            temp  = ADCReadCH0(ADC_CH_MUXPOS_PIN2_gc);
-            
-            // Make temp payload
-            payload[0] = TEMP_MESSAGE;
-            payload[1] = temp >> 8;
-            payload[2] = (uint8_t) temp;
-            isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
-
-            // Make sound payload
-            payload[0] = SOUND_MESSAGE;
-            payload[1] = sound >> 8;
-            payload[2] = (uint8_t) sound;
-            isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
-        }
-
         if (timer % TIME_5_SEC == 0);
+
+        if (timer % TIME_10_SEC == 0);
 
         if (timer % TIME_10_MIN == 0);
 
@@ -125,14 +110,30 @@ static void sendAirMoisture(void) {
 
     // Fill payload
     payload[0] = AIR_MOIST_MESSAGE;
-    payload[1] = airMoisture >> 8;
-    payload[2] = isoGetId();
-    payload[3] = (uint8_t) airMoisture;
+    payload[1] = isoGetId();
+    payload[2] = (uint8_t) airMoisture;
+    payload[3] = airMoisture >> 8;
     isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
 
 static void sendAirQuality(void) {
+     uint8_t payload[PAYLOAD_LENGTH];
+
+    uint16_t airQuality = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
+
+    // Fill payload
+    payload[0] = AIR_MOIST_MESSAGE;
+    payload[1] = isoGetId();
+    
+    if (airQuality > AIR_QUALITY_MED)
+        payload[2] = 'G';
+    else if (airQuality > AIR_QUALITY_BAD)
+        payload[2] = 'O';
+    else
+        payload[2] = 'R';
+        
+    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
 
