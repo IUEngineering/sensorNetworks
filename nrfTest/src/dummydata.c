@@ -3,6 +3,9 @@
 #include "nrf24spiXM2.h"
 #include "serialF0.h"
 
+
+#define MINUTES * 60
+
 //read data from potmeter placed on PA2/PA3
 void ADCInit(void) {
     PORTA.DIRCLR     = PIN2_bm|PIN3_bm;
