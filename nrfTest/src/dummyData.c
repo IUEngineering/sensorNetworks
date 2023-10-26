@@ -36,10 +36,12 @@ void dummyDataLoop(void) {
     uint8_t timer = 0;
 
     while (1) {
-        if (TCE0.INTFLAGS & TC0_OVFIF_bm) {
-            timer++;
-            TCE0.INTFLAGS = TC0_OVFIF_bm;
-        }
+
+        while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
+            isoUpdate();
+
+        TCE0.INTFLAGS = TC0_OVFIF_bm;
+        timer++;
 
         if (timer == 10) {
             timer = 0; 
