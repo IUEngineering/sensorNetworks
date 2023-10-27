@@ -10,11 +10,9 @@
 // Author : Edwin Boer
 // Version: 20200824
 
-#include <ncurses.h>
-#include <rpitouch.h>
 #include <unistd.h>
+#include <stdint.h>
 
-#include "libs/interface.h"
 #include "libs/rs232.h"
 
 
@@ -26,11 +24,11 @@ int main(int nArgc, char* aArgv[]) {
     int nRet;
 
     // Start to search for the correct event-stream
-    nRet = RPiTouch_InitTouch();
-    if (nRet < 0) {
-        printf("RaspberryPi 7\" Touch display is not found!\nError %d\n\n", nRet);
-        return -1;
-    }
+    // nRet = RPiTouch_InitTouch();
+    // if (nRet < 0) {
+    //     printf("RaspberryPi 7\" Touch display is not found!\nError %d\n\n", nRet);
+    //     return -1;
+    // }
 
     // Init ncurses
     // initscr();
@@ -67,18 +65,18 @@ int main(int nArgc, char* aArgv[]) {
         if(RS232_PollComport(ttyIndex, &inByte, 1)) fprintf(stderr, "%02x ", inByte);
     }
 
-    while(1) {
-        runInterface();
-    }
+    // while(1) {
+    //     runInterface();
+    // }
 
-    // Close the device
-    nRet = RPiTouch_CloseTouch();
-    if (nRet < 0) {
-        printw("Close error %d!\n", nRet);
-    }
+    // // Close the device
+    // nRet = RPiTouch_CloseTouch();
+    // if (nRet < 0) {
+    //     printw("Close error %d!\n", nRet);
+    // }
 
-    // Close ncurses
-    endwin();
+    // // Close ncurses
+    // endwin();
 
     return 0;
 }
