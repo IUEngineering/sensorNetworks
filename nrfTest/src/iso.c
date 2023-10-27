@@ -118,9 +118,7 @@ void isoInit(void (*callback)(uint8_t *data)) {
     nrfPowerUp();
 
     // TODO: Check if these delays are necessary.
-    _delay_ms(5);
     nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, BROADCAST_PIPE);
-    _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
 
