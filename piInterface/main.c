@@ -12,9 +12,10 @@
 
 #include <ncurses.h>
 #include <rpitouch.h>
+#include <unistd.h>
 
 #include "libs/interface.h"
-
+#include "libs/rs232.h"
 
 
 
@@ -24,11 +25,6 @@ int main(int nArgc, char* aArgv[]) {
 
     int nRet;
 
-    // mvwprintw(pMenuWindow, 1, 4, "%s", ("-----"));
-
-    // wborder(pMenuWindow, '|', '|', '-', '-', '+', '+', '+', '+');
-
-
     // Start to search for the correct event-stream
     nRet = RPiTouch_InitTouch();
     if (nRet < 0) {
@@ -37,13 +33,39 @@ int main(int nArgc, char* aArgv[]) {
     }
 
     // Init ncurses
-    initscr();
-    clear();
-    noecho();
-    cbreak();
+    // initscr();
+    // clear();
+    // noecho();
+    // cbreak();
 
-    initInterface();
-    refresh();
+    // initInterface();
+    // refresh();
+
+
+    int ttyIndex;
+
+    if(!RS232_OpenComport(24, 115200, "8N1", 0)) ttyIndex = 24;
+    else if (!RS232_OpenComport(25, 115200, "8N1", 0)) ttyIndex = 25;
+    else return -1;
+
+    fprintf(stderr, "connected to ttyACM%d\n", ttyIndex - 24);
+    
+    
+    uint8_t inByte = 0xff;
+    uint32_t retries = 0;
+    while(RS232_PollComport(ttyIndex, &inByte, 1) <= 0) {
+        RS232_SendByte(ttyIndex, 'c');
+        usleep(100000);
+        retries++;
+        fprintf(stderr, "retry %d\n", retries);
+    }
+
+
+
+    while(1) {
+        uint8_t inByte;
+        if(RS232_PollComport(ttyIndex, &inByte, 1)) fprintf(stderr, "%02x ", inByte);
+    }
 
     while(1) {
         runInterface();

@@ -7,7 +7,7 @@
 
 #include "mcuComm.h"
 #include "friendWindow.h"
-#include "serial.h"
+#include "rs232.h"
 
 #define INPUT_BUFFER_START_SIZE 16
 
@@ -27,14 +27,18 @@
 #define HEX_VAL_EVEN_PAIR 16
 #define HEX_VAL_ODD_PAIR  17
 
+#define INITIAL_INPUT_BUFFER_SIZE BYTES_PER_FRIEND * 8 + FRIENDLIST_HEADER_SIZE
+
 // For sending to the XMega:
 #define TRANSMIT_SOMETHING_BYTE 0x01
 
 
 uint8_t myId = 0;
+static int ttyIndex;
 
 static char* getPrintable(char c) __attribute__((unused));
 static void printPacketToWindow(uint8_t *packet, WINDOW *window);
+static void handleNewByte(uint8_t newByte);
 
 
 WINDOW *diagWindow;
@@ -47,24 +51,11 @@ WINDOW *diagWindow;
 int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
 
     // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
-    DIR *devDir = opendir("/dev");
-    struct dirent *entry;
-    if(devDir == NULL) return -1;
+    if(!RS232_OpenComport(24, 115200, "8N1", 0)) ttyIndex = 24;
+    else if (!RS232_OpenComport(25, 115200, "8N1", 0)) ttyIndex = 25;
+    else return -1;
 
-    while((entry = readdir(devDir)) != NULL) {
-        if(strncmp(entry->d_name, "ttyACM", 6)) continue;
-        
-        // Concatenate the name of the file to /dev/ to make /dev/ttyACMx
-        char streamPath[14] = "/dev/";
-        strcat(streamPath, entry->d_name);
-
-        // Test if it can be opened.
-        if(initUartStream(streamPath, B115200) != 0) break;
-    }
-    // If we couldn't find any openable streams, stop the program.
-    if(entry == NULL) return -1;
-
-
+    fprintf(stderr, "connected to ttyACM%d\n", ttyIndex - 24);
 
     init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
     init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
@@ -77,16 +68,53 @@ int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
 
     uint8_t inByte = 0xff;
     uint32_t retries = 0;
-    while(inByte == 0xff) {
-        serialPutChar('c');
-        serialGetChar(&inByte);
-        sleep(0.5);
+    while(RS232_PollComport(ttyIndex, &inByte, 1) <= 0) {
+        RS232_SendByte(ttyIndex, 'c');
+        usleep(100000);
         retries++;
         fprintf(stderr, "retry %d\n", retries);
     }
 
     handleNewByte(inByte);
     return 0;
+}
+
+void endInputHandler(void) {
+    RS232_SendByte(ttyIndex, 'e');
+    RS232_CloseComport(ttyIndex);
+}
+
+void handleXMegaInput(void) {
+
+    uint8_t inByte = 0;
+    if(RS232_PollComport(ttyIndex, &inByte, 1) <= 0) return;
+
+    uint16_t inputBufferSize = INITIAL_INPUT_BUFFER_SIZE;
+    uint8_t *inputBuffer = (uint8_t *) malloc(inputBufferSize);
+    uint16_t inputBufferIndex = 0;
+
+    // Fill a buffer up with all the juicy bytes coming into the system.
+    do {
+        inputBuffer[inputBufferIndex] = inByte;
+        inputBufferIndex++;
+
+        if(inputBufferIndex == inputBufferSize) {
+            inputBufferSize += INITIAL_INPUT_BUFFER_SIZE;
+            inputBuffer = (uint8_t *) realloc(inputBuffer, inputBufferSize);
+        }
+    } 
+    while(RS232_PollComport(ttyIndex, &inByte, 1) > 0);
+
+    const uint16_t byteAmount = inputBufferIndex;
+    inputBufferIndex = 0;
+
+    // Only then will we interpret all these bytes.
+    while(inputBufferIndex < byteAmount) {
+        handleNewByte(inputBuffer[inputBufferIndex]);
+        inputBufferIndex++;
+    }
+
+    free(inputBuffer);
 }
 
 void handleNewByte(uint8_t newByte) {
@@ -188,8 +216,8 @@ void printPacketToWindow(uint8_t *packet, WINDOW *window) {
 }
 
 void transmitSomething(uint8_t destId) {
-    serialPutChar(TRANSMIT_SOMETHING_BYTE);
-    serialPutChar(destId);
+    RS232_SendByte(ttyIndex, TRANSMIT_SOMETHING_BYTE);
+    RS232_SendByte(ttyIndex, destId);
     wprintw(diagWindow, "Sent something to %02x\n", destId);
 }
 

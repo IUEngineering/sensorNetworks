@@ -5,7 +5,6 @@
 
 #include "interface.h"
 #include "mcuComm.h"
-#include "serial.h"
 
 // 100x30 columns max
 
@@ -83,12 +82,8 @@ void initInterface(void) {
 
 void endInterface(int idk) {
     endwin();
-    serialPutChar('e');
+    endInputHandler();
 
-    uint8_t inByte;
-    while(serialGetChar(&inByte) == 0);
-
-    exitUartStream();
     fprintf(stderr, "\nProgram ended by SIGINT\n");
     printf("cya :)\n");
     exit(EXIT_FAILURE);
@@ -109,8 +104,7 @@ void runInterface(void) {
     
     wasScreenTouched = _oRPiTouch_Touched.bButton; 
 
-    uint8_t inByte;
-    if(serialGetChar(&inByte) == 0) handleNewByte(inByte);
+    handleXMegaInput();
 }
 
 void resetButtonPressed(uint32_t row, uint32_t column) {

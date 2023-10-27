@@ -14,8 +14,9 @@
 extern uint8_t myId;
 
 int8_t initInputHandler(WINDOW *friendsWin, WINDOW *diagnosticsWindow);
+void endInputHandler(void);
 
-void handleNewByte(uint8_t newByte);
+void handleXMegaInput(void);
 void transmitSomething(uint8_t destId);
 void friendListClick(uint32_t row, uint32_t col);
 
