@@ -1,0 +1,1 @@
+exec /home/piuser/sensorNetworks/piInterface/basisstation 2>logging.log
