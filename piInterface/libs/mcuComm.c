@@ -6,9 +6,10 @@
 #include <string.h>
 
 #include "mcuComm.h"
+#include "friendWindow.h"
 #include "serial.h"
 
-#define INPUT_BUFFER_START_SIZE 64
+#define INPUT_BUFFER_START_SIZE 16
 
 // For receiving from the XMega:
 #define ID_BYTE 0x00
@@ -30,12 +31,9 @@
 #define TRANSMIT_SOMETHING_BYTE 0x01
 
 
-// Both defined in friendWindow.c (evil file configuration)
-void initFriendWindow(WINDOW *window);
-void parseFriendsList(uint8_t *data);
-void printPacketToWindow(uint8_t *packet, WINDOW *window, const char title[3]);
+uint8_t myId = 0;
 
-char* getPrintable(char c);
+static char* getPrintable(char c) __attribute__((unused));
 
 
 WINDOW *diagWindow;
@@ -43,9 +41,9 @@ WINDOW *diagWindow;
 // Assumes:
 //- ncurses has been initialised.
 //- `start_color()` has been run.
-//- `fWindow` is an initialized window of 37 wide and at least 4 high.
-//- `dWindow` is an initialized window of 68 wide and at least 2 high.
-int8_t initInputHandler(WINDOW *fWindow, WINDOW *dWindow) {
+//- `friendsWin` is an initialized window of 37 wide and at least 4 high.
+//- `diagnosticsWindow` is an initialized window of 68 wide and at least 2 high.
+int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
 
     // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
     DIR *devDir = opendir("/dev");
@@ -65,22 +63,19 @@ int8_t initInputHandler(WINDOW *fWindow, WINDOW *dWindow) {
     // If we couldn't find any openable streams, stop the program.
     if(entry == NULL) return -1;
 
-    uint8_t inByte = 0;
-    do {
-        serialPutChar('c');
-    }
-    while(serialGetChar(&inByte));
-
 
     init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
     init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
 
-    diagWindow = dWindow;
+    diagWindow = diagnosticWindow;
     scrollok(diagWindow, 1);
     if(getmaxx(diagWindow) != 68) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 cols wide!");
 
-    initFriendWindow(fWindow);
+    initFriendWindow(friendWindow);
 
+    uint8_t inByte = 0;
+    do serialPutChar('c');
+    while(serialGetChar(&inByte));
 
     handleNewByte(inByte);
     return 0;
@@ -99,7 +94,6 @@ void handleNewByte(uint8_t newByte) {
     static uint8_t *inputBuffer = NULL; // <- Replace with nullptr in C23 (hype).
     static uint16_t inputBufferSize = 0;
     static uint16_t inputBufferIndex = 0;
-    static uint8_t myId = 0;
 
     // Resize the buffer if it's too small.
     if(inputBufferIndex >= inputBufferSize) {
@@ -117,6 +111,8 @@ void handleNewByte(uint8_t newByte) {
         case ID_BYTE:
             if(inputBufferIndex < ID_SIZE) return;
             myId = inputBuffer[1];
+            fprintf(stderr, "Id set to %x.\n", inputBuffer[1]);
+            rePrintId();
 
             break;
 
@@ -149,8 +145,6 @@ void handleNewByte(uint8_t newByte) {
             
             printPacketToWindow(inputBuffer + 1, diagWindow, "RL");
             break;
-
-        default: return; 
        
     }
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).

@@ -11,6 +11,8 @@
 #define FRIENDLIST_HEADER_SIZE 2
 #define MAX_FRIENDS 254
 
+extern uint8_t myId;
+
 int8_t initInputHandler(WINDOW *friendsWin, WINDOW *diagnosticsWindow);
 
 void handleNewByte(uint8_t newByte);
