@@ -17,7 +17,9 @@ int8_t initInputHandler(WINDOW *friendsWin, WINDOW *diagnosticsWindow);
 
 void handleNewByte(uint8_t newByte);
 void transmitSomething(uint8_t destId);
-void friendListClick(uint16_t row, uint16_t col);
+void friendListClick(uint32_t row, uint32_t col);
+
+void printNewHeader(WINDOW *win);
 
 
 #endif // _INPUTHANDLER_H_

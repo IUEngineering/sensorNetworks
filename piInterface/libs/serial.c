@@ -44,6 +44,11 @@ uint8_t initUartStream(char *name, uint32_t baudrate) {
     return 1;
 }
 
+
+void exitUartStream(void) {
+    close(streamIndex);
+}
+
 uint8_t serialGetChar(uint8_t *byte) {
     ssize_t size;
 

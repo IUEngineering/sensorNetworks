@@ -34,6 +34,7 @@
 uint8_t myId = 0;
 
 static char* getPrintable(char c) __attribute__((unused));
+static void printPacketToWindow(uint8_t *packet, WINDOW *window);
 
 
 WINDOW *diagWindow;
@@ -41,8 +42,8 @@ WINDOW *diagWindow;
 // Assumes:
 //- ncurses has been initialised.
 //- `start_color()` has been run.
-//- `friendsWin` is an initialized window of 37 wide and at least 4 high.
-//- `diagnosticsWindow` is an initialized window of 68 wide and at least 2 high.
+//- `friendsWin` is an initialized window of 28 wide and at least 4 high.
+//- `diagnosticsWindow` is an initialized window of 64 wide and at least 2 high.
 int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
 
     // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
@@ -64,18 +65,25 @@ int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
     if(entry == NULL) return -1;
 
 
+
     init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
     init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
 
     diagWindow = diagnosticWindow;
     scrollok(diagWindow, 1);
-    if(getmaxx(diagWindow) != 68) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 cols wide!");
+    if(getmaxx(diagWindow) != 64) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 cols wide!");
 
     initFriendWindow(friendWindow);
 
-    uint8_t inByte = 0;
-    do serialPutChar('c');
-    while(serialGetChar(&inByte));
+    uint8_t inByte = 0xff;
+    uint32_t retries = 0;
+    while(inByte == 0xff) {
+        serialPutChar('c');
+        serialGetChar(&inByte);
+        sleep(0.5);
+        retries++;
+        fprintf(stderr, "retry %d\n", retries);
+    }
 
     handleNewByte(inByte);
     return 0;
@@ -104,6 +112,8 @@ void handleNewByte(uint8_t newByte) {
 
     // Put the new byte into the buffer.
     inputBuffer[inputBufferIndex] = newByte;
+    if(inputBufferIndex == 0) fprintf(stderr, "\n");
+    fprintf(stderr, "[%3d %02x]", inputBufferIndex, newByte);
     inputBufferIndex++;
 
     switch(inputBuffer[0]) {
@@ -117,7 +127,7 @@ void handleNewByte(uint8_t newByte) {
             break;
 
         case FRIENDSLIST_BYTE:
-            // Check if the length byte hasn't been sent. We check this because inputBuffer [1] is still unset.
+            // Check if the length byte hasn't been seprintpackettont. We check this because inputBuffer [1] is still unset.
             // │                       Check if the length of the buffer is less than the predicted length (header of the buffer + (friend amount * friend size)).
             // ↓                       ↓
             if(inputBufferIndex < 2 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND)
@@ -131,20 +141,23 @@ void handleNewByte(uint8_t newByte) {
             // + 1 because of the header.
             if(inputBufferIndex < PAYLOAD_SIZE + 1) return;
 
-            printPacketToWindow(inputBuffer + 1, diagWindow, "PL");
+            printPacketToWindow(inputBuffer + 1, diagWindow);
             break;
 
         case BROADCAST_BYTE:
             if(inputBufferIndex < PACKET_SIZE + 1) return;
 
-            printPacketToWindow(inputBuffer + 1, diagWindow, "BC");
+            printPacketToWindow(inputBuffer + 1, diagWindow);
             break;
 
         case RELAYED_BYTE:
             if(inputBufferIndex < PACKET_SIZE + 1) return;
             
-            printPacketToWindow(inputBuffer + 1, diagWindow, "RL");
+            printPacketToWindow(inputBuffer + 1, diagWindow);
             break;
+
+        default:
+            fprintf(stderr, "big problem :(\n");
        
     }
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
@@ -153,8 +166,8 @@ void handleNewByte(uint8_t newByte) {
 
 // Print the packet as a string of hex chars to the given window.
 // Will put the title, if not NULL, at the start of the line.
-void printPacketToWindow(uint8_t *packet, WINDOW *window, const char title[3]) {
-    if(title != NULL) wprintw(window, "%2s: ", title);
+void printPacketToWindow(uint8_t *packet, WINDOW *window) {
+
     for(uint8_t i = 0; i < PACKET_SIZE; i += 2) {
         wattrset(window, COLOR_PAIR(HEX_VAL_EVEN_PAIR));
         wprintw(window, "%02x", packet[i]);
@@ -166,7 +179,6 @@ void printPacketToWindow(uint8_t *packet, WINDOW *window, const char title[3]) {
 
     // Remove the color :(
     wattrset(window, 0);
-    if(title != NULL) wprintw(window, "    ");
 
     for(uint8_t i = 0; i < PACKET_SIZE; i++) {
         wprintw(window, "%c ", isprint(packet[i]) ? packet[i] : ' ');

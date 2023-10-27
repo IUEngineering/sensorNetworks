@@ -20,5 +20,6 @@ uint8_t initUartStream(char *name, uint32_t baudrate);
 uint8_t serialPutChar(uint8_t byte);
 uint8_t serialGetChar(uint8_t *byte);
 uint8_t sendBuffer(uint8_t *buffer, uint8_t length);
+void exitUartStream(void);
 
 #endif // _SERIAL_H_

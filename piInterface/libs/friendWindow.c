@@ -8,8 +8,8 @@
 #define ACCEPT_PAIR 20
 #define REFUSE_PAIR 21
 
-#define ACCEPT_COLUMN 20
-#define REFUSE_COLUMN 28
+#define ACCEPT_COLUMN 12
+#define REFUSE_COLUMN 18
 
 // The column of the friend number, so that it can be overwritten.
 #define FRIEND_AMOUNT_COLUMN 12
@@ -26,7 +26,6 @@ uint8_t *friendIds;
 // Keep track of the clicked friend for the popup.
 uint8_t popupSendId = 0;
 
-static void printNewHeader(void);
 
 // Has to be an initialized ncurses window with 36 columns.
 void initFriendWindow(WINDOW *window) {
@@ -39,13 +38,18 @@ void initFriendWindow(WINDOW *window) {
     init_pair(ACCEPT_PAIR, COLOR_BLACK, COLOR_GREEN);
     init_pair(REFUSE_PAIR, COLOR_BLACK, COLOR_RED);
 
-    printNewHeader();
+    printNewHeader(friendWindow);
+
+    fprintf(stderr, "The win is now this hahahah %d %d\n", getbegy(friendWindow), getbegx(friendWindow));
+
 }
 
 
 void parseFriendsList(uint8_t *data) {
 
     friendAmount = data[0];
+    fprintf(stderr, "printing %d friends %d %d\n", friendAmount, getbegy(friendWindow), getbegx(friendWindow));
+
     // Print the amount of friends in the "My %3d friends:" header.
     if(!popupSendId) mvwprintw(friendWindow, 0, FRIEND_AMOUNT_COLUMN, "%3d", friendAmount);
     wmove(friendWindow, 2, 0);
@@ -59,17 +63,18 @@ void parseFriendsList(uint8_t *data) {
         friendIds[friend] = data[index];
 
         wattrset(friendWindow, COLOR_PAIR(ID_PAIR));
-        wprintw(friendWindow, "%02x\t", data[index]);      // ID
+        wprintw(friendWindow, "%02x   ", data[index]);      // ID
         wattrset(friendWindow, 0);
 
-        wprintw(friendWindow, "%d\t", data[index + 3]);    // Trust
-        wprintw(friendWindow, "%d\t", data[index + 4]);    // Active
+        wprintw(friendWindow, "%-2d   ", data[index + 3]);    // Trust
+        wprintw(friendWindow, "%-2d   ", data[index + 4]);    // Active
 
         wattrset(friendWindow, COLOR_PAIR(ID_PAIR));
-        wprintw(friendWindow, "%02x\t", data[index + 2]);  // Via
+        wprintw(friendWindow, "%02x   ", data[index + 2]);  // Via
         wattrset(friendWindow, 0);
 
-        wprintw(friendWindow, "%d\n", data[index + 1]);    // Hops
+        wprintw(friendWindow, "%-3d", data[index + 1]);    // Hops
+        wprintw(friendWindow, "\n");
     }
 
     // Clear the rest of the window.
@@ -78,23 +83,26 @@ void parseFriendsList(uint8_t *data) {
 }
 
 // Assumes the row and col are relative to friendWindow.
-void friendListClick(uint16_t row, uint16_t col) {
+void friendListClick(uint32_t row, uint32_t col) {
+
     // Check if click is out of bounds.
     if(col < 0 || col > getmaxx(friendWindow) || row > FRIENDLIST_HEADER_SIZE + friendAmount) return;
+    fprintf(stderr, "friend list click!!");
+    return;
 
     if(row >= FRIENDLIST_HEADER_SIZE) {
         popupSendId = friendIds[row - FRIENDLIST_HEADER_SIZE];
-        printNewHeader();
+        printNewHeader(friendWindow);
     }
     else if(popupSendId) {
         if(col >= REFUSE_COLUMN) {
             popupSendId = 0;
-            printNewHeader();
+            printNewHeader(friendWindow);
         }
         else if(col >= ACCEPT_COLUMN) {
             transmitSomething(popupSendId);
             popupSendId = 0;
-            printNewHeader();
+            printNewHeader(friendWindow);
         }
     }
 
@@ -106,34 +114,35 @@ void rePrintId(void) {
     wattrset(friendWindow, 0);
 }
 
-void printNewHeader(void) {
+void printNewHeader(WINDOW* win) {
+
     if(popupSendId == 0) {
-        mvwprintw(friendWindow, 0, 0, "I am   . My %3d friends are:\n", friendAmount);
+        mvwprintw(win, 0, 0, "I am   . My %3d friends are:\n", friendAmount);
 
         rePrintId();
 
-        wattrset(friendWindow, COLOR_PAIR(TABLE_HEADER_PAIR));
-        mvwprintw(friendWindow, 1, 0, "ID\tTrust\tActive\tVia\tHops\n");
-        wattrset(friendWindow, 0);
+        wattrset(win, COLOR_PAIR(TABLE_HEADER_PAIR));
+        mvwprintw(win, 1, 0, "ID   Trst Actv Via  Hops");
+        wattrset(win, 0);
     }
     else {
         // Print the question.
-        mvwprintw(friendWindow, 0, 0, "Do you want to send|\na message to ");
-        wattrset(friendWindow, COLOR_PAIR(ID_PAIR));
-        wprintw(friendWindow, "%02x", popupSendId);
-        wattrset(friendWindow, 0);
-        wprintw(friendWindow, "?   |");
+        mvwprintw(win, 0, 0, "Send to ");
+        wattrset(win, COLOR_PAIR(ID_PAIR));
+        wprintw(win, "%02x", popupSendId);
+        wattrset(win, 0);
+        wprintw(win, "?|\n           |");
 
         // Print accept button.
-        wattrset(friendWindow, COLOR_PAIR(ACCEPT_PAIR) | A_ITALIC);
-        mvwprintw(friendWindow, 0, ACCEPT_COLUMN, "  Yes   ");
-        mvwprintw(friendWindow, 1, ACCEPT_COLUMN, "        ");
+        wattrset(win, COLOR_PAIR(ACCEPT_PAIR) | A_ITALIC);
+        mvwprintw(win, 0, ACCEPT_COLUMN, " Yes  ");
+        mvwprintw(win, 1, ACCEPT_COLUMN, "      ");
         // Print the refuse button.
-        wattrset(friendWindow, COLOR_PAIR(REFUSE_PAIR) | A_ITALIC);
-        mvwprintw(friendWindow, 0, REFUSE_COLUMN, "  No    ");
-        mvwprintw(friendWindow, 1, REFUSE_COLUMN, "        ");
+        wattrset(win, COLOR_PAIR(REFUSE_PAIR) | A_ITALIC);
+        mvwprintw(win, 0, REFUSE_COLUMN, " No   ");
+        mvwprintw(win, 1, REFUSE_COLUMN, "      ");
         
-        wattrset(friendWindow, 0);
+        wattrset(win, 0);
     }
     
 
