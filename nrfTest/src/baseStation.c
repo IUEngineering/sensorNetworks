@@ -45,6 +45,10 @@ static void sendRelayedPacket(uint8_t *packet);
 // Callback for pings as well as updates.
 static void sendBroadcastPacket(uint8_t *packet);
 
+static void sendByteWithParity(uint8_t sendByte);
+static void sendParity(void);
+static uint8_t parity = 0;
+
 // Enabled by receiving a START_SENDING byte from the PI.
 // We will not send anything over the uart if this is 0.
 static uint8_t sending = 0;
@@ -80,8 +84,8 @@ void baseStationLoop(void) {
                 if(sending) break;
                 PORTF.OUTCLR = PIN0_bm;
                 sending = 1;
-                uartF0_putc(SEND_ID);
-                uartF0_putc(isoGetId());
+                sendByteWithParity(SEND_ID);
+                sendByteWithParity(isoGetId());
 
                 break;
 
@@ -105,32 +109,38 @@ static void sendFriendsList(void) {
     uint8_t friendAmount = getFriendAmount();
     friend_t *friends = getFriendsList();
 
-    uartF0_putc(FRIENDS_LIST);
-    uartF0_putc(friendAmount);
+    sendByteWithParity(FRIENDS_LIST);
+    sendByteWithParity(friendAmount);
     
     for(uint8_t i = 0, friend = 0; friend < friendAmount; i++) {
         if(friends[i].id == 0) continue;
         friend++;
-        uartF0_putc(friends[i].id);
-        uartF0_putc(friends[i].hops);
-        uartF0_putc(friends[i].via);
-        uartF0_putc(friends[i].trust);
-        uartF0_putc(friends[i].active);
+        sendByteWithParity(friends[i].id);
+        sendByteWithParity(friends[i].hops);
+        sendByteWithParity(friends[i].via);
+        sendByteWithParity(friends[i].trust);
+        sendByteWithParity(friends[i].active);
     }
+
+    sendParity();
 }
 
 static void sendReceivedPayload(uint8_t *payload) {
-    uartF0_putc(RECEIVED_PAYLOAD);
+    sendByteWithParity(RECEIVED_PAYLOAD);
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
-        uartF0_putc(payload[i]);
+        sendByteWithParity(payload[i]);
+    
+    sendParity();
 }
 
 static void sendRelayedPacket(uint8_t *packet) {
     if(!sending) return;
 
-    uartF0_putc(RELAYED_PAYLOAD);
+    sendByteWithParity(RELAYED_PAYLOAD);
     for (uint8_t i = 0; i < PACKET_SIZE; i++)
-        uartF0_putc(packet[i]);
+        sendByteWithParity(packet[i]);
+
+    sendParity();
 }
 
 // I hate copy pasting code but this is such a small bit of code.
@@ -138,14 +148,26 @@ static void sendRelayedPacket(uint8_t *packet) {
 static void sendBroadcastPacket(uint8_t *packet) {
     if(!sending) return;
 
-    uartF0_putc(RECEIVED_BROADCAST);
+    sendByteWithParity(RECEIVED_BROADCAST);
+    sendByteWithParity(RECEIVED_BROADCAST);
 
     for (uint8_t i = 0; i < PACKET_SIZE; i++) {
-        uartF0_putc(packet[i]);
-        _delay_ms(10);
+        sendByteWithParity(packet[i]);
     }
+
+    sendParity();
 
     // When we receive a broadcast, something must've changed about the friend list.
     // This function is always run AFTER updating the friends list, so we get the newest data right to our screen!
     sendFriendsList();
+}
+
+void sendByteWithParity(uint8_t sendByte) {
+    uartF0_putc(sendByte);
+    parity ^= sendByte;
+}
+
+void sendParity(void) {
+    uartF0_putc(parity);
+    parity = 0;
 }
