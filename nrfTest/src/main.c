@@ -36,7 +36,7 @@ int main(void) {
     while(1) {
         if ((PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) {
             if (DEBUG)
-                printf("I am a sensor node\n");
+                printf("I am a debug node\n");
                 
             clear_screen();
             nrfChatInit();
