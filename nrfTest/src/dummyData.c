@@ -176,7 +176,8 @@ static void sendLight(void) {
     // Fill payload
     payload[0] = LIGHT_MESSAGE;
     payload[1] = isoGetId();
-    *(uint16_t*)(payload + 2) = light;
+    payload[2] = (uint8_t) light >> 8;  // Place MSB into the payload
+    payload[3] = (uint8_t) light;       // Place LSB into the payload
     isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
