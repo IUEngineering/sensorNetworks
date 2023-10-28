@@ -1,3 +1,16 @@
+// Explenation of the hardware connections needed for this program:
+//  - Sensor inputs are:
+//      - PA0 -> Air moisture 
+//      - PA1 -> Air quality
+//      - PA2 -> Light
+//      - PA3 -> Temperature
+//      - PA4 -> Sound
+//
+//  - Offset calibration input:
+//      - PA5 -> GND
+//
+//  - All analog inputs must be between 0V and VCC/1.6 (VCC = 3V3) 
+
 #include <avr/io.h>
 
 #include <util/delay.h>
