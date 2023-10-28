@@ -145,9 +145,9 @@ void handleNewByte(uint8_t newByte) {
             break;
 
         case BROADCAST_BYTE:
-            if(inputBufferIndex < PACKET_SIZE + 1) return;
+            if(inputBufferIndex < PACKET_SIZE + 2) return;
 
-            printPacketToWindow(inputBuffer + 1, diagWindow);
+            printPacketToWindow(inputBuffer + 2, diagWindow);
             break;
 
         case RELAYED_BYTE:
