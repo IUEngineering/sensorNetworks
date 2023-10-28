@@ -39,7 +39,7 @@ int main(int nArgc, char* aArgv[]) {
 
 
     // The most obscene form of short-circuiting you will ever see
-    initUartStream("ttyACM0", B115200) || initUartStream("ttyACM1", B115200);
+    initUartStream("/dev/ttyACM0", B115200) || initUartStream("/dev/ttyACM1", B115200);
 
 
     uint8_t inByte = 0xff;
@@ -54,7 +54,7 @@ int main(int nArgc, char* aArgv[]) {
     uint8_t prevByte = 0;
     while(1) {
         uint8_t inByte;
-        if(serialGetChar(&inByte)) fprintf(stderr, "%02x ", inByte);
+        if(serialGetChar(&inByte) == 0) fprintf(stderr, "%02x ", inByte);
         if(inByte == 0x12 && prevByte == 0x12) {
             printf("Bruh moment detected\n");
             printThingHehe();

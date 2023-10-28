@@ -1,1 +1,1 @@
-gcc main.c libs/serial.c -o main -Wall
+gcc main.c libs/serial.c -o basisstation -Wall
