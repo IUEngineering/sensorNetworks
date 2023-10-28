@@ -15,6 +15,7 @@
 #include "clock.h"
 #include "nrfChat.h"
 #include "baseStation.h"
+#include "dummyData.h"
 
 
 
@@ -29,9 +30,9 @@ int main(void) {
 
     // This bit is used to select the mode of the network node
     PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
-    PORTE.DIRCLR = PIN0_bm;
+    PORTE.DIRCLR = PIN0_bm | PIN1_bm;
 
-    if ((PORTE.IN & PIN0_bm)) {
+    if ((PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) {
         if (DEBUG)
             printf("I am a sensor node\n");
             
@@ -40,12 +41,22 @@ int main(void) {
         nrfChatLoop();
 
     }
-    else {
+    else if (!(PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) {
         if (DEBUG)
-            printf("I am a base-station");
+            printf("I am a base-station\n");
         
         baseStationInit();
         baseStationLoop();
+    } 
+    else if (!(PORTE.IN & PIN0_bm) && (PORTE.IN & PIN1_bm)) {
+        if (DEBUG)
+            printf("I am a sensor node\n");
+        
+        dummyDataInit();
+        dummyDataLoop();
+    } 
+    else {
+
     }
 }
 
