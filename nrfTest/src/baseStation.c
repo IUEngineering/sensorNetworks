@@ -154,6 +154,8 @@ static void sendBroadcastPacket(uint8_t *packet) {
     if(!sending) return;
 
     uartF0_putc(RECEIVED_BROADCAST);
+    uartF0_putc(RECEIVED_BROADCAST);
+    // uartF0_putc(RECEIVED_BROADCAST);
 
     for (uint8_t i = 0; i < PACKET_SIZE; i++) {
         uartF0_putc(packet[i]);
@@ -161,5 +163,5 @@ static void sendBroadcastPacket(uint8_t *packet) {
 
     // When we receive a broadcast, something must've changed about the friend list.
     // This function is always run AFTER updating the friends list, so we get the newest data right to our screen!
-    sendFriendsList();
+    // sendFriendsList();
 }
