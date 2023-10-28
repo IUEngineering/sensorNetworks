@@ -14,7 +14,7 @@
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
 #define RELAYED_PAYLOAD     0x03
-#define RECEIVED_BROADCAST  0xea
+#define RECEIVED_BROADCAST  0x04
 
 
 #define START_SENDING       'c'
@@ -56,7 +56,7 @@ void baseStationInit(void) {
 
     isoInit(sendReceivedPayload);
     isoSetRelayCallback(sendRelayedPacket);
-    isoSetBroadcastCallback(sendBroadcastPacket);
+    // isoSetBroadcastCallback(sendBroadcastPacket);
 
     DEBUG_PRINTF("Waiting till %c is pressed\n", WAIT_FOR_RPY);
 
@@ -66,6 +66,14 @@ void baseStationInit(void) {
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
+    static const uint8_t ploes[32] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xee, 0x07};
+    static uint8_t prevDebugButton = 0;
+    const uint8_t debugButton = PORTA.IN & PIN1_bm;
+
+    if(debugButton  &&  !prevDebugButton) {
+        sendBroadcastPacket(ploes);
+    }
+    prevDebugButton = debugButton;
 
     while (1) {
         char inChar = uartF0_getc();
@@ -80,10 +88,10 @@ void baseStationLoop(void) {
                 if(sending) break;
                 PORTF.OUTCLR = PIN0_bm;
                 sending = 1;
-                uartF0_putc(SEND_ID);
-                uartF0_putc(isoGetId());
-
+         
                 break;
+       uartF0_putc(SEND_ID);
+                uartF0_putc(isoGetId());
 
             case TRANSMIT_SOMETHING: {
                 // Wait for the next byte, which is the destination ID.
@@ -96,8 +104,9 @@ void baseStationLoop(void) {
             }
         }
 
-        if(isoUpdate()) sendFriendsList();
-        // isoUpdate();
+        if(isoUpdate()) {
+            sendFriendsList();
+        }
     }
 }
 
@@ -142,7 +151,6 @@ static void sendBroadcastPacket(uint8_t *packet) {
 
     for (uint8_t i = 0; i < PACKET_SIZE; i++) {
         uartF0_putc(packet[i]);
-        _delay_ms(10);
     }
 
     // When we receive a broadcast, something must've changed about the friend list.
