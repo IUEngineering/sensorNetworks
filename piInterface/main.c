@@ -13,9 +13,9 @@
 #include <unistd.h>
 #include <stdint.h>
 
-#include "libs/rs232.h"
+#include "libs/serial.h"
 
-
+void printThingHehe(void);
 
 int main(int nArgc, char* aArgv[]) {
     int nRet;
@@ -37,29 +37,29 @@ int main(int nArgc, char* aArgv[]) {
     // refresh();
 
 
-    int ttyIndex;
-
-    if(!RS232_OpenComport(24, 115200, "8N1", 0)) ttyIndex = 24;
-    else if (!RS232_OpenComport(25, 115200, "8N1", 0)) ttyIndex = 25;
-    else return -1;
+    // The most obscene form of short-circuiting you will ever see
+    initUartStream("ttyACM0", B115200) || initUartStream("ttyACM1", B115200);
 
     fprintf(stderr, "connected to ttyACM%d\n", ttyIndex - 24);
     
     
     uint8_t inByte = 0xff;
     uint32_t retries = 0;
-    while(RS232_PollComport(ttyIndex, &inByte, 1) <= 0) {
-        RS232_SendByte(ttyIndex, 'c');
+    while(serialGetChar(&inByte)) {
+        serialPutChar('c');
         usleep(100000);
         retries++;
         fprintf(stderr, "retry %d\n", retries);
     }
 
-
-
+    uint8_t prevByte = 0;
     while(1) {
         uint8_t inByte;
-        if(RS232_PollComport(ttyIndex, &inByte, 1)) fprintf(stderr, "%02x ", inByte);
+        if(serialGetChar(&inByte)) fprintf(stderr, "%02x ", inByte);
+        if(inByte == 0x12 && prevByte == 0x12) {
+            printf("Bruh moment detected\n");
+            printThingHehe();
+        }
     }
 
     // while(1) {
@@ -76,4 +76,87 @@ int main(int nArgc, char* aArgv[]) {
     // endwin();
 
     return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void printThingHehe(void) {
+    printf("   ⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣤⣤⣤⣶⣦⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀ \n");
+    printf("⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣤⡀⠀⠀⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⠀⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠈⢻⣿⣿⡄⠀⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⣸⣿⡏⠀⠀⠀⣠⣶⣾⣿⣿⣿⠿⠿⠿⢿⣿⣿⣿⣄⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⣿⣿⠁⠀⠀⢰⣿⣿⣯⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣷⡄⠀\n");
+    printf("⠀⣀⣤⣴⣶⣶⣿⡟⠀⠀⠀⢸⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣷⠀\n");
+    printf("⢰⣿⡟⠋⠉⣹⣿⡇⠀⠀⠀⠘⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣶⣶⣶⣿⣿⣿⠀\n");
+    printf("⢸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀\n");
+    printf("⣸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠉⠻⠿⣿⣿⣿⣿⡿⠿⠿⠛⢻⣿⡇⠀⠀\n");
+    printf("⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣧⠀⠀\n");
+    printf("⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀\n");
+    printf("⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀\n");
+    printf("⢿⣿⡆⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀\n");
+    printf("⠸⣿⣧⡀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠃⠀⠀\n");
+    printf("⠀⠛⢿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⣰⣿⣿⣷⣶⣶⣶⣶⠶⠀⢠⣿⣿⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⣽⣿⡏⠁⠀⠀⢸⣿⡇⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⢹⣿⡆⠀⠀⠀⣸⣿⠇⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⢿⣿⣦⣄⣀⣠⣴⣿⣿⠁⠀⠈⠻⣿⣿⣿⣿⡿⠏⠀⠀⠀⠀\n");
+    printf("⠀⠀⠀⠀⠀⠀⠈⠛⠻⠿⠿⠿⠿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n");
 }
