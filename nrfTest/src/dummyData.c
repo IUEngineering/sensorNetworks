@@ -165,7 +165,6 @@ static void sendTemp(void) {
     payload[2] = temp8;
     isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
-    return;
 }
 
 static void sendSound(void) {
