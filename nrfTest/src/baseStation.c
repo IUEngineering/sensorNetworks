@@ -176,7 +176,7 @@ static void sendBroadcastPacket(uint8_t *packet) {
 
 void sendByteWithParity(uint8_t sendByte) {
     uartF0_putc(sendByte);
-    parity ^= sendByte;
+    parity += sendByte + 1;
 }
 
 void sendParity(void) {
