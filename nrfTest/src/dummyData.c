@@ -151,6 +151,20 @@ static void sendLight(void) {
 }
 
 static void sendTemp(void) {
+    uint8_t payload[PAYLOAD_LENGTH];
+
+    uint16_t temp16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
+
+    // Map 12bit value to 8bit
+    // (in - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    uint8_t temp8 = (uint8_t) (temp16 * 0x00FF / 0x0FFF); 
+
+    // Fill payload
+    payload[0] = TEMP_MESSAGE;
+    payload[1] = isoGetId();
+    payload[2] = temp8;
+    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+    return;
     return;
 }
 
