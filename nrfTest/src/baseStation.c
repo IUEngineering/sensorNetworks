@@ -14,7 +14,7 @@
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
 #define RELAYED_PAYLOAD     0x03
-#define RECEIVED_BROADCAST  0xea
+#define RECEIVED_BROADCAST  0x04
 
 
 #define START_SENDING       'c'
@@ -84,8 +84,11 @@ void baseStationLoop(void) {
                 if(sending) break;
                 PORTF.OUTCLR = PIN0_bm;
                 sending = 1;
+
+                sendByteWithParity(SEND_ID);
                 sendByteWithParity(SEND_ID);
                 sendByteWithParity(isoGetId());
+                sendParity();
 
                 break;
 
@@ -106,9 +109,12 @@ void baseStationLoop(void) {
 }
 
 static void sendFriendsList(void) {
+    if(!sending) return;
+
     uint8_t friendAmount = getFriendAmount();
     friend_t *friends = getFriendsList();
 
+    sendByteWithParity(FRIENDS_LIST);
     sendByteWithParity(FRIENDS_LIST);
     sendByteWithParity(friendAmount);
     
@@ -126,7 +132,11 @@ static void sendFriendsList(void) {
 }
 
 static void sendReceivedPayload(uint8_t *payload) {
+    if(!sending) return;
+
     sendByteWithParity(RECEIVED_PAYLOAD);
+    sendByteWithParity(RECEIVED_PAYLOAD);
+
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
         sendByteWithParity(payload[i]);
     
@@ -137,6 +147,8 @@ static void sendRelayedPacket(uint8_t *packet) {
     if(!sending) return;
 
     sendByteWithParity(RELAYED_PAYLOAD);
+    sendByteWithParity(RELAYED_PAYLOAD);
+    
     for (uint8_t i = 0; i < PACKET_SIZE; i++)
         sendByteWithParity(packet[i]);
 
