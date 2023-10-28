@@ -33,14 +33,15 @@ static void drawButton(WINDOW *win);
 static void initDebugScreen(void);
 static void initTouchCoords(WINDOW *win);
 
-screenElement_t addScreenElement(
+static screenElement_t addScreenElement(
     screen_t *screen, uint32_t startRow, uint32_t startCol, uint8_t height, uint8_t width, void (*clickCallback)(uint32_t, uint32_t), void (*initCallback)(WINDOW *win)
 );
 static void drawScreen(screen_t screen);
 static void drawTouchCoords(void);
 void endInterface(int idk);
 
-screenElement_t coordElement; 
+static screenElement_t coordElement; 
+static uint8_t debugMode = 1;
 
 void initInterface(void) {
 
@@ -54,13 +55,13 @@ void initInterface(void) {
     screenElement_t friendsElement;
     screenElement_t diagElement;
 
-    friendsElement = addScreenElement(&debugScreen, 16, 1, 10, 30, friendListClick, printNewHeader);
+    friendsElement = addScreenElement(&debugScreen, 16, 1, 10, 30, friendListClick, printFriendListWindow);
     diagElement = addScreenElement(&debugScreen, 0, 1, 15, 64, NULL, NULL);
 
     fprintf(stderr, "ik haat katten!!! %d %d\n", getbegy(friendsElement.window), getbegx(friendsElement.window));
 
-    if(initInputHandler(friendsElement.window, diagElement.window)) {
-        fprintf(stderr, "Could not find xmege\n");
+    if(initInputHandler(friendsElement.window, diagElement.window, &debugMode)) {
+        fprintf(stderr, "Could not find xmege (ﾉ´ｰ`)ﾉ\n");
 
         endwin();
         exit(-1);
