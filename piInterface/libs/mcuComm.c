@@ -30,6 +30,9 @@
 // For sending to the XMega:
 #define TRANSMIT_SOMETHING_BYTE 0x01
 
+// The amount of parity bytes each message has.
+#define PARITY 1
+
 
 uint8_t myId = 0;
 
@@ -103,6 +106,10 @@ void handleNewByte(uint8_t newByte) {
     static uint16_t inputBufferSize = 0;
     static uint16_t inputBufferIndex = 0;
 
+    // XOR the parity.
+    static uint8_t parity = 0;
+    parity ^= newByte;
+
     // Resize the buffer if it's too small.
     if(inputBufferIndex >= inputBufferSize) {
         // I LOVE that realloc acts as malloc if the input pointer is a nullpointer.
@@ -119,7 +126,12 @@ void handleNewByte(uint8_t newByte) {
     switch(inputBuffer[0]) {
 
         case ID_BYTE:
-            if(inputBufferIndex < ID_SIZE) return;
+            if(inputBufferIndex < ID_SIZE + PARITY) return;
+
+            // Do not interpret if the parity is not zero.
+            // Also if the XMega is setting the ID for the second time there's probably something wrong.
+            if(parity || myId) break;
+
             myId = inputBuffer[1];
             fprintf(stderr, "Id set to %x.\n", inputBuffer[1]);
             rePrintId();
@@ -130,28 +142,40 @@ void handleNewByte(uint8_t newByte) {
             // Check if the length byte hasn't been seprintpackettont. We check this because inputBuffer [1] is still unset.
             // │                       Check if the length of the buffer is less than the predicted length (header of the buffer + (friend amount * friend size)).
             // ↓                       ↓
-            if(inputBufferIndex < 2 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND)
+            if(inputBufferIndex < 2 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND + PARITY)
                 return; //! Notice that this isn't break, it's return.
                 // We only want the code below this switch to run if we just parsed something.
+
+            // Do not interpret if the parity is not zero.
+            if(parity) break;
 
             parseFriendsList(inputBuffer + 1);
             break;
 
         case MY_PAYLOAD_BYTE:
             // + 1 because of the header.
-            if(inputBufferIndex < PAYLOAD_SIZE + 1) return;
+            if(inputBufferIndex < PAYLOAD_SIZE + 1 + PARITY) return;
+
+            // Do not interpret if the parity is not zero.
+            if(parity) break;
 
             printPacketToWindow(inputBuffer + 1, diagWindow);
             break;
 
         case BROADCAST_BYTE:
-            if(inputBufferIndex < PACKET_SIZE + 2) return;
+            if(inputBufferIndex < PACKET_SIZE + 2 + PARITY) return;
+
+            // Do not interpret if the parity is not zero.
+            if(parity) break;
 
             printPacketToWindow(inputBuffer + 2, diagWindow);
             break;
 
         case RELAYED_BYTE:
-            if(inputBufferIndex < PACKET_SIZE + 1) return;
+            if(inputBufferIndex < PACKET_SIZE + 1 + PARITY) return;
+
+            // Do not interpret if the parity is not zero.
+            if(parity) break;
             
             printPacketToWindow(inputBuffer + 1, diagWindow);
             break;
@@ -161,6 +185,10 @@ void handleNewByte(uint8_t newByte) {
        
     }
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
+    if(parity) {
+        fprintf(stderr, "Bad parity :(\n");
+        parity = 0;
+    }
     inputBufferIndex = 0;
 }
 
