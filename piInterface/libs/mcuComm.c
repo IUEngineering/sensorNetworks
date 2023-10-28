@@ -40,14 +40,19 @@ static char* getPrintable(char c) __attribute__((unused));
 static void printPacketToWindow(uint8_t *packet, WINDOW *window);
 
 
-WINDOW *diagWindow;
+WINDOW *broadWindow;
+WINDOW *payloadWindow;
+uint8_t *debugMode;
 
 // Assumes:
 //- ncurses has been initialised.
 //- `start_color()` has been run.
 //- `friendsWin` is an initialized window of 28 wide and at least 4 high.
-//- `diagnosticsWindow` is an initialized window of 64 wide and at least 2 high.
-int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
+//- `broadcastWindow` is an initialized window of 64 wide and at least 2 high.
+//- `packetWindow` is an initialized window of 64 wide and at least 2 high.
+//  I'd put it below `broadcastWindow`.
+//- `debugMode` is a pointer to the variable that stores if the program is currently in debug mode.
+int8_t initInputHandler(WINDOW *friendWin, WINDOW *broadcastWin, WINDOW *payloadWin, uint8_t *dMode) {
 
     // Find the XMega by scanning the /dev/ directory for ttyACM(any number)
     DIR *devDir = opendir("/dev");
@@ -68,15 +73,20 @@ int8_t initInputHandler(WINDOW *friendWindow, WINDOW *diagnosticWindow) {
     if(entry == NULL) return -1;
 
 
-
+    // Init the colors :)
     init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
     init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
 
-    diagWindow = diagnosticWindow;
-    scrollok(diagWindow, 1);
-    if(getmaxx(diagWindow) != 64) wprintw(diagWindow, "WARNING: diagnostics window should be exactly 68 cols wide!");
+    // Set the windows.
+    debugMode = dMode;
+    payloadWindow = payloadWin;
+    broadWindow = broadcastWin;
+    scrollok(broadWindow, 1);
+    scrollok(payloadWindow, 1);
+    if(getmaxx(broadWindow) != 64) wprintw(broadWindow, "WARNING: diagnostics window should be exactly 64 cols wide!");
+    if(getmaxx(payloadWindow) != 64) wprintw(payloadWindow, "WARNING: payload window should be exactly 64 cols wide!");
 
-    initFriendWindow(friendWindow);
+    initFriendWindow(friendWin);
 
     uint8_t inByte = 0xff;
     uint32_t retries = 0;
@@ -146,8 +156,8 @@ void handleNewByte(uint8_t newByte) {
                 return; //! Notice that this isn't break, it's return.
                 // We only want the code below this switch to run if we just parsed something.
 
-            // Do not interpret if the parity is not zero.
-            if(parity) break;
+            // Do not interpret if the parity is not zero or if we're not in debug mode.
+            if(parity || !*debugMode) break;
 
             parseFriendsList(inputBuffer + 1);
             break;
@@ -156,28 +166,29 @@ void handleNewByte(uint8_t newByte) {
             // + 1 because of the header.
             if(inputBufferIndex < PAYLOAD_SIZE + 1 + PARITY) return;
 
-            // Do not interpret if the parity is not zero.
-            if(parity) break;
+            // Do not interpret if the parity is not zero or if we're not in debug mode.
+            if(parity || !*debugMode) break;
 
-            printPacketToWindow(inputBuffer + 1, diagWindow);
+            // TODO: DummyData here if it's not debug mode.
+            printPacketToWindow(inputBuffer + 1, payloadWindow);
             break;
 
         case BROADCAST_BYTE:
             if(inputBufferIndex < PACKET_SIZE + 1 + PARITY) return;
 
-            // Do not interpret if the parity is not zero.
-            if(parity) break;
+            // Do not interpret if the parity is not zero or if we're not in debug mode.
+            if(parity || !*debugMode) break;
 
-            printPacketToWindow(inputBuffer + 1, diagWindow);
+            printPacketToWindow(inputBuffer + 1, broadWindow);
             break;
 
         case RELAYED_BYTE:
             if(inputBufferIndex < PACKET_SIZE + 1 + PARITY) return;
 
-            // Do not interpret if the parity is not zero.
+            // Do not interpret if the parity is not zero or if we're not in debug mode.
             if(parity) break;
             
-            printPacketToWindow(inputBuffer + 1, diagWindow);
+            printPacketToWindow(inputBuffer + 1, broadWindow);
             break;
 
         default:
@@ -187,15 +198,14 @@ void handleNewByte(uint8_t newByte) {
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
     if(parity) {
         fprintf(stderr, "Bad parity :(\n");
-        parity = 0;
     }
+    parity = 0;
     inputBufferIndex = 0;
 }
 
 // Print the packet as a string of hex chars to the given window.
 // Will put the title, if not NULL, at the start of the line.
 void printPacketToWindow(uint8_t *packet, WINDOW *window) {
-
     for(uint8_t i = 0; i < PACKET_SIZE; i += 2) {
         wattrset(window, COLOR_PAIR(HEX_VAL_EVEN_PAIR));
         wprintw(window, "%02x", packet[i]);
@@ -218,7 +228,7 @@ void printPacketToWindow(uint8_t *packet, WINDOW *window) {
 void transmitSomething(uint8_t destId) {
     serialPutChar(TRANSMIT_SOMETHING_BYTE);
     serialPutChar(destId);
-    wprintw(diagWindow, "Sent something to %02x\n", destId);
+    wprintw(broadWindow, "Sent something to %02x\n", destId);
 }
 
 

@@ -38,7 +38,7 @@ void initFriendWindow(WINDOW *window) {
     init_pair(ACCEPT_PAIR, COLOR_BLACK, COLOR_GREEN);
     init_pair(REFUSE_PAIR, COLOR_BLACK, COLOR_RED);
 
-    printNewHeader(friendWindow);
+    printFriendListWindow(friendWindow);
 
     fprintf(stderr, "The win is now this hahahah %d %d\n", getbegy(friendWindow), getbegx(friendWindow));
 
@@ -92,17 +92,17 @@ void friendListClick(uint32_t row, uint32_t col) {
 
     if(row >= FRIENDLIST_HEADER_SIZE) {
         popupSendId = friendIds[row - FRIENDLIST_HEADER_SIZE];
-        printNewHeader(friendWindow);
+        printFriendListWindow(friendWindow);
     }
     else if(popupSendId) {
         if(col >= REFUSE_COLUMN) {
             popupSendId = 0;
-            printNewHeader(friendWindow);
+            printFriendListWindow(friendWindow);
         }
         else if(col >= ACCEPT_COLUMN) {
             transmitSomething(popupSendId);
             popupSendId = 0;
-            printNewHeader(friendWindow);
+            printFriendListWindow(friendWindow);
         }
     }
 
@@ -114,7 +114,7 @@ void rePrintId(void) {
     wattrset(friendWindow, 0);
 }
 
-void printNewHeader(WINDOW* win) {
+void printFriendListWindow(WINDOW* win) {
 
     if(popupSendId == 0) {
         mvwprintw(win, 0, 0, "I am   . My %3d friends are:\n", friendAmount);
