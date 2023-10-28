@@ -18,9 +18,6 @@
 
 
 int main(int nArgc, char* aArgv[]) {
-    refresh();
-
-
     int nRet;
 
     // Start to search for the correct event-stream
