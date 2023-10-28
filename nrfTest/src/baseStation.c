@@ -53,6 +53,8 @@ static uint8_t sending = 0;
 // Initialization of the baseStation program 
 void baseStationInit(void) {
     PORTA.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm; 
+    PORTC.DIRSET = PIN0_bm;
+
     DEBUG_PRINT("I am a base-station\n");
 
     isoInit(sendReceivedPayload);
@@ -67,16 +69,18 @@ void baseStationInit(void) {
 
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
-    static uint8_t ploes[32] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xee, 0x07};
-    static uint8_t prevDebugButton = 0;
-    const uint8_t debugButton = PORTA.IN & PIN1_bm;
-
-    if(debugButton  &&  !prevDebugButton) {
-        sendBroadcastPacket(ploes);
-    }
-    prevDebugButton = debugButton;
-
     while (1) {
+
+        static uint8_t ploes[32] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xee, 0x07};
+        static uint8_t prevDebugButton = 0;
+        const uint8_t debugButton = PORTA.IN & PIN1_bm;
+
+        if(debugButton  &&  !prevDebugButton) {
+            sendBroadcastPacket(ploes);
+            PORTC.OUTTGL = PIN0_bm;
+        }
+        prevDebugButton = debugButton;
+        
         char inChar = uartF0_getc();
 
         switch(inChar) {
