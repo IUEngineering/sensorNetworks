@@ -56,13 +56,13 @@ void dummyDataLoop(void) {
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
-        if (timer % TIME_5_SEC == 0);
+        if (timer % TIME_5_SEC == 0)
             sendSound();
 
-        if (timer % TIME_10_SEC == 0);
+        if (timer % TIME_10_SEC == 0)
             sendLight();
 
-        if (timer % TIME_10_MIN == 0);
+        if (timer % TIME_10_MIN == 0)
             sendAirQuality();
 
         if (timer % TIME_30_MIN == 0) {
