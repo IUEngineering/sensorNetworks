@@ -52,11 +52,13 @@ int main(int nArgc, char* aArgv[]) {
     uint8_t prevByte = 0;
     while(1) {
         uint8_t inByte;
-        if(serialGetChar(&inByte) == 0) fprintf(stderr, "%02x ", inByte);
-        if(inByte == 0x12 && prevByte == 0x12) {
-            printf("Bruh moment detected\n");
+        if(serialGetChar(&inByte) == 0) {
+            fprintf(stderr, "%02x ", inByte);
+            if(inByte == 0x12 && prevByte == 0x12) {
+                printf("Bruh moment detected\n");
+            }
+            prevByte = inByte;
         }
-        prevByte = inByte;
     }
 
     // while(1) {
