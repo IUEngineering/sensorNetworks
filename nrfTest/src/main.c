@@ -31,6 +31,7 @@ int main(void) {
 
     // This bit is used to select the mode of the network node
     PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
+    PORTE.PIN1CTRL = PORT_OPC_PULLUP_gc;
     PORTE.DIRCLR = PIN0_bm | PIN1_bm;
 
     while(1) {
