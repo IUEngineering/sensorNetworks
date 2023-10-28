@@ -59,6 +59,7 @@ int main(int nArgc, char* aArgv[]) {
             printf("Bruh moment detected\n");
             printThingHehe();
         }
+        prevByte = inByte;
     }
 
     // while(1) {
