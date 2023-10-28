@@ -23,10 +23,6 @@
 #define AIR_QUALITY_BAD     4096 * 1/3
 #define AIR_QUALITY_MED     4096 * 2/3
 
-#ifndef F_CPU
-    #define F_CPU 32000000UL
-#endif
-
 static void ADCInit(void);
 static uint16_t ADCReadCH0(uint8_t inputPin);
 
@@ -55,30 +51,26 @@ void dummyDataLoop(void) {
     uint16_t timer = 0;
 
     while (1) {
+        while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
+            isoUpdate();
 
-        printf("ADC CH%d: %#06X\n", 0, ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc));
-        _delay_ms(1000);
+        TCE0.INTFLAGS = TC0_OVFIF_bm;
+        timer++;
 
-        // while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
-        //     isoUpdate();
+        if (timer % TIME_5_SEC == 0)
+            sendSound();
 
-        // TCE0.INTFLAGS = TC0_OVFIF_bm;
-        // timer++;
+        if (timer % TIME_10_SEC == 0)
+            sendLight();
 
-        // if (timer % TIME_5_SEC == 0)
-        //     sendSound();
+        if (timer % TIME_10_MIN == 0)
+            sendAirQuality();
 
-        // if (timer % TIME_10_SEC == 0)
-        //     sendLight();
-
-        // if (timer % TIME_10_MIN == 0)
-        //     sendAirQuality();
-
-        // if (timer % TIME_30_MIN == 0) {
-        //     sendTemp();
-        //     sendAirMoisture();
-        //     timer = 0;
-        // }
+        if (timer % TIME_30_MIN == 0) {
+            sendTemp();
+            sendAirMoisture();
+            timer = 0;
+        }
     }
 }
 
@@ -90,7 +82,7 @@ void dummyDataLoop(void) {
 void ADCInit(void) {
 
     // congigure ADCA
-    ADCA.REFCTRL     = ADC_REFSEL_INTVCC2_gc;
+    ADCA.REFCTRL     = ADC_REFSEL_INTVCC_gc;
     ADCA.CTRLB       = ADC_RESOLUTION_12BIT_gc;            
     ADCA.PRESCALER   = ADC_PRESCALER_DIV16_gc;
     
