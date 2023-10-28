@@ -1,14 +1,11 @@
-#include <avr/io.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "friendList.h"
 #include "nrfChat.h"
 #include "terminal.h"
 
 #include "nrf24L01.h"
-#include "nrf24spiXM2.h"
 #include "serialF0.h"
 
 #define COMMANDS 6
