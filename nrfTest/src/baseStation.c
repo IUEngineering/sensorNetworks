@@ -52,6 +52,7 @@ static uint8_t sending = 0;
 
 // Initialization of the baseStation program 
 void baseStationInit(void) {
+    PORTA.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm; 
     DEBUG_PRINT("I am a base-station\n");
 
     isoInit(sendReceivedPayload);
