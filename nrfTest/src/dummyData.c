@@ -1,5 +1,7 @@
 #include <avr/io.h>
 
+#include <util/delay.h>
+
 #include "iso.h"
 #include "serialF0.h"
 
@@ -21,6 +23,10 @@
 #define AIR_QUALITY_BAD     4096 * 1/3
 #define AIR_QUALITY_MED     4096 * 2/3
 
+#ifndef F_CPU
+    #define F_CPU 32000000UL
+#endif
+
 static void ADCInit(void);
 static uint16_t ADCReadCH0(uint8_t inputPin);
 
@@ -40,7 +46,7 @@ void dummyDataInit(void) {
     // Configure TCE0 to set its interrupt flag every second
     TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
     TCE0.CTRLA     = TC_CLKSEL_DIV1024_gc;    // prescaling 8
-    TCE0.PER       = 31249; // PER = (t*FCPU / N)-1 = (32000000/1024)-1=31249
+    TCE0.PER       = 31249; // PER = (t*FCPU / N)-1 = (32000000/1024)-1=31249   
 }
 
 // The continues loop of the dummyData program 
@@ -50,26 +56,29 @@ void dummyDataLoop(void) {
 
     while (1) {
 
-        while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
-            isoUpdate();
+        printf("ADC CH%d: %#06X\n", 0, ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc));
+        _delay_ms(1000);
 
-        TCE0.INTFLAGS = TC0_OVFIF_bm;
-        timer++;
+        // while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
+        //     isoUpdate();
 
-        if (timer % TIME_5_SEC == 0)
-            sendSound();
+        // TCE0.INTFLAGS = TC0_OVFIF_bm;
+        // timer++;
 
-        if (timer % TIME_10_SEC == 0)
-            sendLight();
+        // if (timer % TIME_5_SEC == 0)
+        //     sendSound();
 
-        if (timer % TIME_10_MIN == 0)
-            sendAirQuality();
+        // if (timer % TIME_10_SEC == 0)
+        //     sendLight();
 
-        if (timer % TIME_30_MIN == 0) {
-            sendTemp();
-            sendAirMoisture();
-            timer = 0;
-        }
+        // if (timer % TIME_10_MIN == 0)
+        //     sendAirQuality();
+
+        // if (timer % TIME_30_MIN == 0) {
+        //     sendTemp();
+        //     sendAirMoisture();
+        //     timer = 0;
+        // }
     }
 }
 
@@ -81,22 +90,35 @@ void dummyDataLoop(void) {
 void ADCInit(void) {
 
     // congigure ADCA
-    ADCA.REFCTRL     = ADC_REFSEL_INTVCC_gc;
-    ADCA.CTRLB       = ADC_RESOLUTION_12BIT_gc | ADC_CONMODE_bm;            
+    ADCA.REFCTRL     = ADC_REFSEL_INTVCC2_gc;
+    ADCA.CTRLB       = ADC_RESOLUTION_12BIT_gc;            
     ADCA.PRESCALER   = ADC_PRESCALER_DIV16_gc;
-    ADCA.CTRLA       = ADC_ENABLE_bm;
     
     // Configure input channels
     PORTA.DIRCLR     = PIN2_bm | PIN3_bm;
     ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
+
+    // Enable the ADC
+    ADCA.CTRLA       = ADC_ENABLE_bm;
 }
 
 // Start a conversion on CH0, wait until the conversion finishes and return the result
 // The inputPin argument selects the input signal for the ADC
-uint16_t ADCReadCH0(uint8_t inputPin) {                                   
+uint16_t ADCReadCH0(uint8_t inputPin) { 
+    uint16_t offset;                                  
     uint16_t res;
 
-    ADCA.CH0.CTRL = inputPin | ADC_CH_MUXNEG_GND_MODE3_gc;
+    // Measure the offset
+    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN5_gc;
+
+    ADCA.CH0.CTRL |= ADC_CH_START_bm;
+    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
+    
+    offset = ADCA.CH0.RES;
+    ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
+
+    // Measure the signal
+    ADCA.CH0.MUXCTRL = inputPin;
 
     ADCA.CH0.CTRL |= ADC_CH_START_bm;
     while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
@@ -104,7 +126,10 @@ uint16_t ADCReadCH0(uint8_t inputPin) {
     res = ADCA.CH0.RES;
     ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
 
-    return res;
+    if (offset > res)
+        res = offset;
+
+    return res - offset;
 }
 
 static void sendAirMoisture(void) {
