@@ -57,13 +57,17 @@ void dummyDataLoop(void) {
         timer++;
 
         if (timer % TIME_5_SEC == 0);
+            sendSound();
 
         if (timer % TIME_10_SEC == 0);
+            sendLight();
 
         if (timer % TIME_10_MIN == 0);
+            sendAirQuality();
 
         if (timer % TIME_30_MIN == 0) {
-
+            sendTemp();
+            sendAirMoisture();
             timer = 0;
         }
     }
