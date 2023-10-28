@@ -70,11 +70,6 @@ void baseStationInit(void) {
 // The continues loop of the baseStation program 
 void baseStationLoop(void) {
 
-    char heleLieveKleineZachteAaibareKnorrendeKat = 0;
-    while(uartF0_getc() != 'c') uartF0_putc(0xee);
-
-    while(1) uartF0_putc(heleLieveKleineZachteAaibareKnorrendeKat++);
-
     while (1) {
 
         static uint8_t ploes[32] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xee, 0x07};
@@ -100,9 +95,9 @@ void baseStationLoop(void) {
                 PORTF.OUTCLR = PIN0_bm;
                 sending = 1;
          
-                break;
-       uartF0_putc(SEND_ID);
+                uartF0_putc(SEND_ID);
                 uartF0_putc(isoGetId());
+                break;
 
             case TRANSMIT_SOMETHING: {
                 // Wait for the next byte, which is the destination ID.
@@ -115,9 +110,9 @@ void baseStationLoop(void) {
             }
         }
 
-        if(isoUpdate()) {
-            sendFriendsList();
-        }
+        // if(isoUpdate()) {
+        //     sendFriendsList();
+        // }
     }
 }
 
