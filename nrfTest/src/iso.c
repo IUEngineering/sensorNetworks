@@ -138,10 +138,15 @@ void isoInit(void (*callback)(uint8_t *data)) {
     DEBUG_PRINT("\e[31mDebugging is enabled.\e[0m");
 }
 
-void isoUpdate(void) {
+uint8_t isoUpdate(void) {
+
+    uint8_t ret = 0;
 
     // Read the first timer counter overflow interrupt flag.
-    if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
+    if(TCD0.INTFLAGS & TC0_OVFIF_bm) {
+        timerOverflow();
+        ret = 1;
+    }
     TCD0.INTFLAGS |= TC0_OVFIF_bm; // Reset the flag.
 
     // Read the second timer counter overflow interrupt flag.
@@ -158,6 +163,8 @@ void isoUpdate(void) {
         nrfRead(packet, PACKET_SIZE);
         parsePacket(packet, receivePipe);
     }
+
+    return ret;
 }
 
 void timerOverflow(void) {
@@ -288,7 +295,10 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
         else parsePing(packet);
 
         // Send the data to the PI if we're the basestation.
-        if(broadcastCallback) broadcastCallback(packet);
+        if(broadcastCallback) {
+            static uint8_t floep[32] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xee, 0x07};
+            broadcastCallback(floep);
+        }
         
         return;
     }

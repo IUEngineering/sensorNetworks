@@ -10,7 +10,7 @@
 
 void isoInit(void (*callback)(uint8_t *payload));
 uint8_t isoSendPacket(uint8_t dest, uint8_t *payload, uint8_t len);
-void isoUpdate(void);
+uint8_t isoUpdate(void);
 uint8_t isoGetId(void);
 
 void isoSetRelayCallback(void (*callback)(uint8_t *package));

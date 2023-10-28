@@ -1,5 +1,8 @@
+#define F_CPU 32000000UL
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <util/delay.h>
 #include <avr/interrupt.h>
 #include "serialF0.h"
 
@@ -11,7 +14,7 @@
 #define FRIENDS_LIST        0x01
 #define RECEIVED_PAYLOAD    0x02
 #define RELAYED_PAYLOAD     0x03
-#define RECEIVED_BROADCAST  0x04
+#define RECEIVED_BROADCAST  0xea
 
 
 #define START_SENDING       'c'
@@ -74,6 +77,7 @@ void baseStationLoop(void) {
                 break;
             
             case START_SENDING:
+                if(sending) break;
                 PORTF.OUTCLR = PIN0_bm;
                 sending = 1;
                 uartF0_putc(SEND_ID);
@@ -92,14 +96,9 @@ void baseStationLoop(void) {
             }
         }
 
-        isoUpdate();
+        if(isoUpdate()) sendFriendsList();
+        // isoUpdate();
     }
-}
-
-static void sendReceivedPayload(uint8_t *payload) {
-    uartF0_putc(RECEIVED_PAYLOAD);
-    for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
-        uartF0_putc(payload[i]);
 }
 
 static void sendFriendsList(void) {
@@ -109,14 +108,21 @@ static void sendFriendsList(void) {
     uartF0_putc(FRIENDS_LIST);
     uartF0_putc(friendAmount);
     
-    for(uint8_t i = 0, friend = 0; friend < friendAmount; friend += !!friends[i].id, i++) {
+    for(uint8_t i = 0, friend = 0; friend < friendAmount; i++) {
         if(friends[i].id == 0) continue;
+        friend++;
         uartF0_putc(friends[i].id);
         uartF0_putc(friends[i].hops);
         uartF0_putc(friends[i].via);
         uartF0_putc(friends[i].trust);
         uartF0_putc(friends[i].active);
     }
+}
+
+static void sendReceivedPayload(uint8_t *payload) {
+    uartF0_putc(RECEIVED_PAYLOAD);
+    for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
+        uartF0_putc(payload[i]);
 }
 
 static void sendRelayedPacket(uint8_t *packet) {
@@ -133,8 +139,11 @@ static void sendBroadcastPacket(uint8_t *packet) {
     if(!sending) return;
 
     uartF0_putc(RECEIVED_BROADCAST);
-    for (uint8_t i = 0; i < PACKET_SIZE; i++)
+
+    for (uint8_t i = 0; i < PACKET_SIZE; i++) {
         uartF0_putc(packet[i]);
+        _delay_ms(10);
+    }
 
     // When we receive a broadcast, something must've changed about the friend list.
     // This function is always run AFTER updating the friends list, so we get the newest data right to our screen!
