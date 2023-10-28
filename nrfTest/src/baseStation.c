@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <avr/interrupt.h>
 #include "serialF0.h"
 
 #include "baseStation.h"
