@@ -140,7 +140,7 @@ static void sendAirQuality(void) {
 static void sendLight(void) {
     uint8_t payload[PAYLOAD_LENGTH];
 
-    uint16_t light = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
+    uint16_t light = ADCReadCH0(ADC_CH_MUXPOS_PIN2_gc);
 
     // Fill payload
     payload[0] = LIGHT_MESSAGE;
@@ -151,6 +151,16 @@ static void sendLight(void) {
 }
 
 static void sendTemp(void) {
+    uint8_t payload[PAYLOAD_LENGTH];
+
+    uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
+    uint8_t sound8 = (uint8_t) (sound16 * 0x0FFF / 0x00FF); // Map 12bit value to 8bit
+
+    // Fill payload
+    payload[0] = SOUND_MESSAGE;
+    payload[1] = isoGetId();
+    payload[2] = sound8;
+    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
     return;
 }
 
