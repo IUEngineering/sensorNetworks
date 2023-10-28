@@ -158,7 +158,10 @@ static void sendSound(void) {
     uint8_t payload[PAYLOAD_LENGTH];
 
     uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
-    uint8_t sound8 = (uint8_t) (sound16 * 0x0FFF / 0x00FF); // Map 12bit value to 8bit
+
+    // Map 12bit value to 8bit
+    // (in - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    uint8_t sound8 = (uint8_t) (sound16 * 0x00FF / 0x0FFF); 
 
     // Fill payload
     payload[0] = SOUND_MESSAGE;
