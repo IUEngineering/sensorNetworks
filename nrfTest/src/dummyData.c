@@ -151,6 +151,10 @@ static void sendLight(void) {
 }
 
 static void sendTemp(void) {
+    return;
+}
+
+static void sendSound(void) {
     uint8_t payload[PAYLOAD_LENGTH];
 
     uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
@@ -161,10 +165,6 @@ static void sendTemp(void) {
     payload[1] = isoGetId();
     payload[2] = sound8;
     isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
-    return;
-}
-
-static void sendSound(void) {
     return;
 }
 
