@@ -1,7 +1,24 @@
-//* nrftester.c
-//*
-//* Created: 18/03/2021 21:13:47
-//* Author : Jochem Leijenhorst
+// Explenation of the hardware connections needed for this program:
+//  - Available programms:
+//      - Debug 
+//      - Basestation 
+//      - Sensor
+//
+//  - Program select pins:
+//      - PE0 (Pulled up)
+//      - PE1 (Pulled up)
+//
+//  - Program start options
+//      |-----|-----|-------------|
+//      | PE0 | PE1 | Program     |
+//      |-----|-----|-------------|
+//      |  1  |  1  | INVALID     |
+//      |  1  |  0  | DEBUG       |
+//      |  0  |  1  | SENSOR      |
+//      |  0  |  0  | BASESTATION |
+//      |-----|-----|-------------|
+//
+//  - For communication the BAUDRATE is 115200
 
 #define F_CPU 32000000UL
 
