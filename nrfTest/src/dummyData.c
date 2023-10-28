@@ -157,7 +157,7 @@ static void sendTemp(void) {
 static void sendSound(void) {
     uint8_t payload[PAYLOAD_LENGTH];
 
-    uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
+    uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN4_gc);
 
     // Map 12bit value to 8bit
     // (in - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
