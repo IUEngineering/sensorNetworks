@@ -13,10 +13,7 @@
 
 #include <avr/io.h>
 
-#include <util/delay.h>
-
 #include "iso.h"
-#include "serialF0.h"
 
 #define BASESTATION_ID  0x40
 
