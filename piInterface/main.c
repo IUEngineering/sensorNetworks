@@ -12,6 +12,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "libs/serial.h"
 
@@ -40,9 +41,7 @@ int main(int nArgc, char* aArgv[]) {
     // The most obscene form of short-circuiting you will ever see
     initUartStream("ttyACM0", B115200) || initUartStream("ttyACM1", B115200);
 
-    fprintf(stderr, "connected to ttyACM%d\n", ttyIndex - 24);
-    
-    
+
     uint8_t inByte = 0xff;
     uint32_t retries = 0;
     while(serialGetChar(&inByte)) {
