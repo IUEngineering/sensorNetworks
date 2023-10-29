@@ -84,11 +84,20 @@ void initInterface(void) {
 
     // Print separation lines 
     attrset(COLOR_PAIR(LINE_PAIR));
+
+    // Vertical line between broadcasts and friend list.
     for(uint8_t i = 0; i < SCREEN_HEIGHT; i++) {
         static const char broadcastText[] = "Broadcasts";
         if(i < sizeof(broadcastText)) mvaddch(i, BROADCAST_COL + BROADCAST_WIDTH, broadcastText[i]);
         else mvaddch(i, BROADCAST_COL + BROADCAST_WIDTH, ' ');
     }
+
+    // Horizontal line between broadcasts and relays.
+    mvprintw(BROADCAST_HEIGHT, 0, "Relays & payloads:");
+    for(uint8_t i = sizeof("Relays & payloads:"); i < BROADCAST_COL + BROADCAST_WIDTH; i++) {
+        addch(' ');
+    }
+
     attset(0);
 
     fprintf(stderr, "adding new thingy %d %p\n", debugScreen.elementCount, debugScreen.elements);
