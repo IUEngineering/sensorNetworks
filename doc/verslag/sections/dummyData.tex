@@ -4,16 +4,82 @@ Het dummy data programma maakt het mogelijk om het dynamische draadloze sensor n
 \subsection{Nep data}
 De nep data wordt gegenereerd door een spanning aan te bieden op een van de pinnen A0 - A4, deze spanning moet tussen 0V en 2V zijn. De nep data spanning wordt van het analoge domein naar het digitale domein omgezet door een ADC. Omdat ADC's vaak een offset hebben wordt pin A5 met GND verbonden om de offset te meten en dit van de meet resultaten af te halen. De ADC conversies worden gestart op het moment dat de nep data nodig is voor het verzenden van informatie.
 
-\subsection{Initialisatie}
+\subsection{ADC}
+De ADC is ingesteld op single ended signalen omdat er alleen maar positive signalen worden verwacht. De overige instellingen zijn te zien in \autoref{lst:adcInit}.
+\begin{lstlisting}[caption={ADC init},captionpos=b,label={lst:adcInit},style=c]
+// congigure ADCA
+ADCA.REFCTRL     = ADC_REFSEL_INTVCC_gc;
+ADCA.CTRLB       = ADC_RESOLUTION_12BIT_gc;            
+ADCA.PRESCALER   = ADC_PRESCALER_DIV16_gc;
 
-\subsection{Data generatie}
+// Configure input channels
+PORTA.DIRCLR     =  PIN0_bm |
+                    PIN1_bm |
+                    PIN2_bm | 
+                    PIN3_bm |
+                    PIN4_bm |
+                    PIN5_bm;
 
-ADC instellen 12bit single ended
+ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
 
-ADC uitlezen
+// Enable the ADC
+ADCA.CTRLA       = ADC_ENABLE_bm;
+\end{lstlisting}
+Als er nep data voor een sensor moet worden gegenereerd wordt de functie ADCReadCH0 aangeroepen. ADCReadCH0 heeft 1 argument waarmee aangegeven wordt welke pin op de positive ingang van de ADC moet worden aangesloten via de MUX. Daarnaast wordt er gemeten op PA5 die verbonden is aan GND wat de offset is van de ADC. 
+\begin{lstlisting}[caption={ADCReadCH0},captionpos=b,label={lst:ADCReadCH0},style=c]
+uint16_t ADCReadCH0(uint8_t inputPin) { 
+    uint16_t offset;                                  
+    uint16_t res;
 
-map functie voor wanneer er 8bits data moet worden verzonden
+    // Measure the offset
+    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN5_gc;
 
-timing voor het versturen van nep data
+    ADCA.CH0.CTRL |= ADC_CH_START_bm;
+    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
+    
+    offset = ADCA.CH0.RES;
+    ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
 
-\subsection{}
+    // Measure the signal
+    ADCA.CH0.MUXCTRL = inputPin;
+
+    ADCA.CH0.CTRL |= ADC_CH_START_bm;
+    while ( !(ADCA.CH0.INTFLAGS & ADC_CH_CHIF_bm) );
+
+    res = ADCA.CH0.RES;
+    ADCA.CH0.INTFLAGS |= ADC_CH_CHIF_bm;
+
+    if (offset > res)
+        res = offset;
+
+    return res - offset;
+}
+\end{lstlisting}
+
+\subsection{Timing}
+Om de tijd bij te houden wordt gebruik gemaakt van timercounter E0 (TCE0). Het is niet mogelijk om 30 minuten bij te houden op de TCE0 waardoor er is gekozen om elke seconden een variable op te hogen en te kijken welke dat er moet worden verzonden zoals te zien is in \autoref{lst:dummyDataLoop}.
+\begin{lstlisting}[caption={dummyData loop},captionpos=b,label={lst:dummyDataLoop},style=c]
+while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
+    isoUpdate();
+
+TCE0.INTFLAGS = TC0_OVFIF_bm;
+timer++;
+
+if ((timer % TIME_5_SEC == 0) && (PORTB.IN & PIN4_bm))
+    sendSound();
+
+if ((timer % TIME_10_SEC == 0)  && (PORTB.IN & PIN2_bm))
+    sendLight();
+
+if ((timer % TIME_10_MIN == 0)  && (PORTB.IN & PIN1_bm))
+    sendAirQuality();
+
+if (timer % TIME_30_MIN == 0) {
+    if (PORTB.IN & PIN3_bm)
+        sendTemp();
+    
+    if (PORTB.IN & PIN0_bm)
+        sendAirMoisture();
+    timer = 0;
+}
+\end{lstlisting}
