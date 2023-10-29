@@ -93,10 +93,10 @@ een variatie op de XOR algortime gekozen. Deze heeft na zoeken geen officiele na
 Het werkt alsvolgt:
 
 Wanneer er een bericht binnen komt of wordt verstuurd wordt deze meteen in de keysEncrypt functie gezet. In onderstaande lstlisting \ref{lst:keyEncrypt} 
-staat  de keysEncrypt functie beschreven. Op regel 2 is te zien welke soort data er nodig is. de functie moet weten wat message, key1 en
-key2 is en wat de lengte van deze 3 zijn. Hierna is er een for loop die evenlang meegaat als dat de lengte van message is. In deze 
-for-loop staat dat voor elke even plekje in de array key 1 gebruikt wordt en voor elk oneven plekje wordt key 2 gebruikt. Welke plek 
-van de key array gebruikt wordt wordt bepaald door de lengte van de key en de plek van de message. Zo gebruikt bijvoorbeeld plek 0 
+staat  de keysEncrypt functie beschreven. Op regel twee is te zien welke soort data er nodig is. De functie moet weten wat message, key1 en
+key2 is en wat de lengte van deze drie zijn. Hierna is er een for-loop die evenlang meegaat als dat de lengte van message is. In deze 
+for-loop staat dat voor elk even plekje in de array key 1 gebruikt wordt en voor elk oneven plekje wordt key 2 gebruikt. Welke plek 
+van de key array gebruikt wordt, wordt bepaald door de lengte van de key en de plek van de message. Zo gebruikt bijvoorbeeld plek 0 
 sowieso plek 0 van key 1. Als key 1 maar 3 plekken bevat dan gebruikt plek 6 ook plek 0 van key 1. 
 
 \begin{lstlisting}[caption={keyEncrypt Functie},captionpos=b,label={lst:keyEncrypt},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
@@ -116,6 +116,6 @@ sowieso plek 0 van key 1. Als key 1 maar 3 plekken bevat dan gebruikt plek 6 ook
     }
 \end{lstlisting}
 
-De keys zijn variable en niet hardcoded in de code. Hoe dit werkt wordt in hoofstuk \ref{sec:debugProgram} besproken. 
+De keys zijn variable en niet hardcoded in de software. Hoe dit werkt wordt in hoofstuk \ref{sec:debugProgram} besproken. 
 Er is gekozen voor niet hardcoded keys omdat dit ervoor zorgt dat elke keer wanneer het systeem opstart er een nieuwe key bedacht 
 kan worden. Hierdoor is de kans op kraken verkleind. De keys kunnen zelfs aangepast worden terwijl het programma nog aanstaat.         
