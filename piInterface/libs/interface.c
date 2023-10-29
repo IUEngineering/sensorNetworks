@@ -15,9 +15,17 @@
 #define TEST_PAIR 9
 #define ACTIVE_PAIR 2
 
+#define SCREEN_WIDTH 100
+#define SCREEN_HEIGHT 30
+
+#define BROADCAST_WIDTH 64
+#define BROADCAST_COL 1
+
 #define MAIN_SCREEN_ELEMENTS 32
 #define MENU_SCREEN_ELEMENTS 32 
 #define DEBUG_SCREEN_ELEMENTS 32 
+
+
 
 
 static uint8_t isButtonTouched(screenElement_t button, RPiTouch_Touch_t touchPoint);
@@ -65,13 +73,23 @@ void initInterface(void) {
         endwin();
         exit(-1);
     }
+
     init_pair(BANNER_PAIR, COLOR_WHITE, COLOR_MAGENTA);
     init_pair(TEST_PAIR, COLOR_GREEN, 0);
+    init_pair(LINE_PAIR, 0, COLOR_WHITE);
   
     coordElement = addScreenElement(&debugScreen, 4, 92, 3, 8, NULL, initTouchCoords);
     addScreenElement(&debugScreen, 0, 92, 4, 8, resetButtonPressed, drawButton);
     addScreenElement(&debugScreen, 26, 92, 4, 8, shutdownButtonPressed, drawButton);
 
+    // Print separation lines 
+    attrset(COLOR_PAIR(LINE_PAIR));
+    for(uint8_t i = 0; i < SCREEN_HEIGHT; i++) {
+        static const char broadcastText[] = "Broadcasts";
+        if(i < sizeof(broadcastText)) mvaddch(i, BROADCAST_COL + BROADCAST_WIDTH, broadcastText[i]);
+        else mvaddch(i, BROADCAST_COL + BROADCAST_WIDTH, ' ');
+    }
+    attset(0);
 
     fprintf(stderr, "adding new thingy %d %p\n", debugScreen.elementCount, debugScreen.elements);
 
@@ -131,8 +149,6 @@ void initTouchCoords(WINDOW *win) {
     mvwprintw(win, 0, 1, "Coords");
     wrefresh(win);
 }
-
-
 
 void initDebugScreen(void) {
     refresh();

@@ -24,10 +24,6 @@ int main(int nArgc, char* aArgv[]) {
 
     int nRet;
 
-    // mvwprintw(pMenuWindow, 1, 4, "%s", ("-----"));
-
-    // wborder(pMenuWindow, '|', '|', '-', '-', '+', '+', '+', '+');
-
 
     // Start to search for the correct event-stream
     nRet = RPiTouch_InitTouch();
