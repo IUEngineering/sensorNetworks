@@ -6,6 +6,9 @@
 //      - PA3 -> Temperature
 //      - PA4 -> Sound
 //
+//  - Offset calibration input:
+//      - PA5 -> GND
+//
 //  - Enable inputs (enable = 1, disable = 0)
 //      - PB0 (pullup) -> Air moisture
 //      - PB1 (pullup) -> Air quality
@@ -13,8 +16,8 @@
 //      - PB3 (pullup) -> Temperature
 //      - PB4 (pullup) -> Sound
 //
-//  - Offset calibration input:
-//      - PA5 -> GND
+//  - Force send all enabled dummy data (PB5 = 0)
+//      - PB5 (pullup)
 //
 //  - All analog inputs must be between 0V and VCC/1.6 (VCC = 3V3) 
 
@@ -60,7 +63,8 @@ void dummyDataInit(void) {
                     PIN1_bm |
                     PIN2_bm |
                     PIN3_bm |
-                    PIN4_bm;
+                    PIN4_bm |
+                    PIN5_bm;
 
     // Configure TCE0 to set its interrupt flag every second
     TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
@@ -79,6 +83,23 @@ void dummyDataLoop(void) {
 
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
+
+        if (PORTB.IN & PIN5_bm) {
+            if (PORTB.IN & PIN4_bm)
+            sendSound();
+
+            if (PORTB.IN & PIN2_bm)
+                sendLight();
+
+            if (PORTB.IN & PIN1_bm)
+                sendAirQuality();
+            
+            if (PORTB.IN & PIN3_bm)
+                sendTemp();
+            
+            if (PORTB.IN & PIN0_bm)
+                sendAirMoisture();
+        }
 
         if ((timer % TIME_5_SEC == 0) && (PORTB.IN & PIN4_bm))
             sendSound();
