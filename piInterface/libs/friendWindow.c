@@ -86,12 +86,11 @@ void parseFriendsList(uint8_t *data) {
 void friendListClick(uint32_t row, uint32_t col) {
 
     // Check if click is out of bounds.
-    if(col < 0 || col > getmaxx(friendWindow) || row > FRIENDLIST_HEADER_SIZE + friendAmount) return;
+    if(col < 0 || col > getmaxx(friendWindow) || row > FRIENDLIST_WIN_HEADER_SIZE + friendAmount) return;
     fprintf(stderr, "friend list click!!");
-    return;
 
-    if(row >= FRIENDLIST_HEADER_SIZE) {
-        popupSendId = friendIds[row - FRIENDLIST_HEADER_SIZE];
+    if(row >= FRIENDLIST_WIN_HEADER_SIZE) {
+        popupSendId = friendIds[row - FRIENDLIST_WIN_HEADER_SIZE];
         printFriendListWindow(friendWindow);
     }
     else if(popupSendId) {
@@ -112,6 +111,7 @@ void rePrintId(void) {
     wattrset(friendWindow, COLOR_PAIR(ID_PAIR));
     mvwprintw(friendWindow, 0, MY_ID_COLUMN, "%02x", myId);
     wattrset(friendWindow, 0);
+    wrefresh(friendWindow);
 }
 
 void printFriendListWindow(WINDOW* win) {

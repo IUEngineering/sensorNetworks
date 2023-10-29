@@ -24,13 +24,16 @@ static uint8_t isButtonTouched(screenElement_t button, RPiTouch_Touch_t touchPoi
 static void checkTouchedButtons(screen_t screen, RPiTouch_Touch_t touchPoint);
 
 static screen_t debugScreen = {0};
+static screen_t metaScreen = {0};
 
 static void resetButtonPressed(uint32_t row, uint32_t col);
 static void shutdownButtonPressed(uint32_t row, uint32_t col) __attribute__((unused));
+void switchScreenButtonPressed(uint32_t row, uint32_t col);
 
 static void drawButton(WINDOW *win);
 
 static void initDebugScreen(void);
+static void initMetaScreen(void);
 static void initTouchCoords(WINDOW *win);
 
 static screenElement_t addScreenElement(
@@ -53,15 +56,18 @@ void initInterface(void) {
 
 
     screenElement_t friendsElement;
-    screenElement_t diagElement;
-
-    friendsElement = addScreenElement(&debugScreen, 16, 1, 10, 30, friendListClick, printFriendListWindow);
-    diagElement = addScreenElement(&debugScreen, 0, 1, 15, 64, NULL, NULL);
+    screenElement_t broadcastElement;
+    screenElement_t payloadElement;
+    broadcastElement = addScreenElement(&debugScreen, 0, 1, 15, 64, NULL, NULL);
+    payloadElement = addScreenElement(&debugScreen, 16, 1, 15, 64, NULL, NULL);
+    friendsElement = addScreenElement(&debugScreen, 7, 68, 10, 30, friendListClick, printFriendListWindow);
 
     fprintf(stderr, "ik haat katten!!! %d %d\n", getbegy(friendsElement.window), getbegx(friendsElement.window));
 
-    if(initInputHandler(friendsElement.window, diagElement.window, &debugMode)) {
-        fprintf(stderr, "Could not find xmege (ﾉ´ｰ`)ﾉ\n");
+
+    if(initInputHandler(friendsElement.window, broadcastElement.window, payloadElement.window, &debugMode)) {
+        fprintf(stderr, "Could not find xMage (ﾉ´ｰ`)ﾉ\n");
+
 
         endwin();
         exit(-1);
@@ -72,6 +78,9 @@ void initInterface(void) {
     coordElement = addScreenElement(&debugScreen, 4, 92, 3, 8, NULL, initTouchCoords);
     addScreenElement(&debugScreen, 0, 92, 4, 8, resetButtonPressed, drawButton);
     addScreenElement(&debugScreen, 26, 92, 4, 8, shutdownButtonPressed, drawButton);
+    
+
+    addScreenElement(&debugScreen, 0, 84, 4, 8, switchScreenButtonPressed, drawButton);
 
 
     fprintf(stderr, "adding new thingy %d %p\n", debugScreen.elementCount, debugScreen.elements);
@@ -100,13 +109,13 @@ void runInterface(void) {
     static uint8_t wasScreenTouched = 0;
 
     if (RPiTouch_UpdateTouch()) {
-        drawTouchCoords();
+        
         if(_oRPiTouch_Touched.bButton == 1 && wasScreenTouched == 0) {
             checkTouchedButtons(debugScreen, _oRPiTouch_Touched);
         }
     }
 
-    drawTouchCoords();
+    if (debugMode) drawTouchCoords();
     
     wasScreenTouched = _oRPiTouch_Touched.bButton; 
 
@@ -120,6 +129,14 @@ void resetButtonPressed(uint32_t row, uint32_t column) {
 
 void shutdownButtonPressed(uint32_t row, uint32_t col) {
     system(SHUTDOWN_SCRIPT);
+}
+
+void switchScreenButtonPressed(uint32_t row, uint32_t col) {
+    if(debugMode){
+        clear();
+        refresh();
+        debugMode = 0;
+    }
 }
 
 void drawTouchCoords(void) {
@@ -146,7 +163,6 @@ void drawScreen(screen_t screen) {
         if(screen.elements[i].initCallback) {
             screen.elements[i].initCallback(screen.elements[i].window);
         }
-        else fprintf(stderr, "no callback\n");
 
         wrefresh(screen.elements[i].window);
     }
@@ -178,7 +194,11 @@ uint8_t isButtonTouched(screenElement_t button, RPiTouch_Touch_t touchPoint) {
 void checkTouchedButtons(screen_t screen, RPiTouch_Touch_t touchPoint) {
     for(uint8_t i = 0; i < screen.elementCount; i++) {
         if(screen.elements[i].clickCallback && isButtonTouched(screen.elements[i], touchPoint)) {
-            screen.elements[i].clickCallback(touchPoint.nRow, touchPoint.nCol);
+            fprintf(stderr, "Window %d is touched :D\n", i);
+            screen.elements[i].clickCallback(
+                touchPoint.nRow - getbegy(screen.elements[i].window), 
+                touchPoint.nCol - getbegx(screen.elements[i].window)
+            );
         }
     }
 }

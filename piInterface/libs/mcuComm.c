@@ -13,7 +13,7 @@
 
 // For receiving from the XMega:
 #define ID_BYTE 0x00
-#define ID_SIZE 2
+#define ID_SIZE 3
 
 #define FRIENDSLIST_BYTE 0x01
 
@@ -24,6 +24,8 @@
 #define BROADCAST_BYTE  0x04
 #define PACKET_SIZE     32
 
+#define FRIENDLIST_HEADER_SIZE 3
+
 #define HEX_VAL_EVEN_PAIR 16
 #define HEX_VAL_ODD_PAIR  17
 
@@ -33,11 +35,15 @@
 // The amount of parity bytes each message has.
 #define PARITY 1
 
+#define FIX_AMMOUNT 2
+
 
 uint8_t myId = 0;
 
+uint8_t checkParity(uint8_t parityByte, uint8_t parity);
+
 static char* getPrintable(char c) __attribute__((unused));
-static void printPacketToWindow(uint8_t *packet, WINDOW *window);
+static void printPacketToWindow(uint8_t *packet, WINDOW *window, uint8_t printASCII, uint8_t length);
 
 
 WINDOW *broadWindow;
@@ -74,8 +80,9 @@ int8_t initInputHandler(WINDOW *friendWin, WINDOW *broadcastWin, WINDOW *payload
 
 
     // Init the colors :)
-    init_pair(HEX_VAL_EVEN_PAIR, COLOR_BLUE, COLOR_BLACK);  
-    init_pair(HEX_VAL_ODD_PAIR, COLOR_GREEN, COLOR_BLACK); 
+    init_pair(HEX_VAL_EVEN_PAIR, COLOR_WHITE, COLOR_BLACK);  
+    init_pair(HEX_VAL_ODD_PAIR, COLOR_RED, COLOR_BLACK); 
+
 
     // Set the windows.
     debugMode = dMode;
@@ -118,7 +125,7 @@ void handleNewByte(uint8_t newByte) {
 
     // XOR the parity.
     static uint8_t parity = 0;
-    parity ^= newByte;
+    parity += newByte + 1;
 
     // Resize the buffer if it's too small.
     if(inputBufferIndex >= inputBufferSize) {
@@ -140,10 +147,10 @@ void handleNewByte(uint8_t newByte) {
 
             // Do not interpret if the parity is not zero.
             // Also if the XMega is setting the ID for the second time there's probably something wrong.
-            if(parity || myId) break;
+            if(checkParity(newByte, parity) || myId) break;
 
-            myId = inputBuffer[1];
-            fprintf(stderr, "Id set to %x.\n", inputBuffer[1]);
+            myId = inputBuffer[2];
+            fprintf(stderr, "Id set to %x.\n", inputBuffer[2]);
             rePrintId();
 
             break;
@@ -152,43 +159,43 @@ void handleNewByte(uint8_t newByte) {
             // Check if the length byte hasn't been seprintpackettont. We check this because inputBuffer [1] is still unset.
             // │                       Check if the length of the buffer is less than the predicted length (header of the buffer + (friend amount * friend size)).
             // ↓                       ↓
-            if(inputBufferIndex < 2 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[1] * BYTES_PER_FRIEND + PARITY)
+            if(inputBufferIndex < 3 || inputBufferIndex < FRIENDLIST_HEADER_SIZE + inputBuffer[2] * BYTES_PER_FRIEND + PARITY)
                 return; //! Notice that this isn't break, it's return.
                 // We only want the code below this switch to run if we just parsed something.
 
             // Do not interpret if the parity is not zero or if we're not in debug mode.
-            if(parity || !*debugMode) break;
+            if(checkParity(newByte, parity) || !*debugMode) break;
 
-            parseFriendsList(inputBuffer + 1);
+            parseFriendsList(inputBuffer + 2);
             break;
 
         case MY_PAYLOAD_BYTE:
             // + 1 because of the header.
-            if(inputBufferIndex < PAYLOAD_SIZE + 1 + PARITY) return;
+            if(inputBufferIndex < PAYLOAD_SIZE + 2 + PARITY) return;
 
             // Do not interpret if the parity is not zero or if we're not in debug mode.
-            if(parity || !*debugMode) break;
+            if(checkParity(newByte, parity) || !*debugMode) break;
 
             // TODO: DummyData here if it's not debug mode.
-            printPacketToWindow(inputBuffer + 1, payloadWindow);
+            printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PAYLOAD_SIZE);
             break;
 
         case BROADCAST_BYTE:
             if(inputBufferIndex < PACKET_SIZE + 2 + PARITY) return;
 
             // Do not interpret if the parity is not zero or if we're not in debug mode.
-            if(parity || !*debugMode) break;
+            if(checkParity(newByte, parity) || !*debugMode) break;
 
-            printPacketToWindow(inputBuffer + 2, broadWindow);
+            printPacketToWindow(inputBuffer + 2, broadWindow, 0, PACKET_SIZE);
             break;
 
         case RELAYED_BYTE:
-            if(inputBufferIndex < PACKET_SIZE + 1 + PARITY) return;
+            if(inputBufferIndex < PACKET_SIZE + 2 + PARITY) return;
 
             // Do not interpret if the parity is not zero or if we're not in debug mode.
-            if(parity) break;
+            if(checkParity(newByte, parity)) break;
             
-            printPacketToWindow(inputBuffer + 1, broadWindow);
+            printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PACKET_SIZE);
             break;
 
         default:
@@ -196,7 +203,7 @@ void handleNewByte(uint8_t newByte) {
        
     }
     //* This code only gets run if we just parsed a full message (return vs break in the switch/case).
-    if(parity) {
+    if(checkParity(newByte, parity)) {
         fprintf(stderr, "Bad parity :(\n");
     }
     parity = 0;
@@ -205,21 +212,24 @@ void handleNewByte(uint8_t newByte) {
 
 // Print the packet as a string of hex chars to the given window.
 // Will put the title, if not NULL, at the start of the line.
-void printPacketToWindow(uint8_t *packet, WINDOW *window) {
-    for(uint8_t i = 0; i < PACKET_SIZE; i += 2) {
-        wattrset(window, COLOR_PAIR(HEX_VAL_EVEN_PAIR));
+void printPacketToWindow(uint8_t *packet, WINDOW *window, uint8_t printASCII, uint8_t length) {
+    if(length == PAYLOAD_SIZE){
+        wattron(window, A_BOLD);
+    }
+    for(uint8_t i = 0; i < length; i++) {
+        wattron(window, COLOR_PAIR(HEX_VAL_EVEN_PAIR + (i & 1)));
         wprintw(window, "%02x", packet[i]);
-        wattrset(window, COLOR_PAIR(HEX_VAL_ODD_PAIR));
-        wprintw(window, "%02x", packet[i + 1]);
     }
 
     // Newlines are automatically added by the ncurses scroll functionality.
-
+    if(length * 2 < getmaxx(window)) wprintw(window, "\n");
     // Remove the color :(
     wattrset(window, 0);
-
-    for(uint8_t i = 0; i < PACKET_SIZE; i++) {
-        wprintw(window, "%c ", isprint(packet[i]) ? packet[i] : ' ');
+    if(printASCII){
+        for(uint8_t i = 0; i < length; i++) {
+            wprintw(window, "%c ", isprint(packet[i]) ? packet[i] : ' ');
+        }
+        if(length * 2 < getmaxx(window)) wprintw(window, "\n");
     }
     
     wrefresh(window);
@@ -231,6 +241,10 @@ void transmitSomething(uint8_t destId) {
     wprintw(broadWindow, "Sent something to %02x\n", destId);
 }
 
+uint8_t checkParity(uint8_t parityByte, uint8_t parity) {
+//    fprintf(stderr, "Check parrity | Par: %x | ParB: %x | Calc: %x |\n", parity, parityByte, (uint8_t) (parity - parityByte - (uint8_t) 1));
+    return (uint8_t) (parity - parityByte - (uint8_t) 1) != parityByte;
+}
 
 char *getPrintable(char c) {
 

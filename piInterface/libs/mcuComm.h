@@ -5,11 +5,11 @@
 #include <ncurses.h>
 
 
+
 #define BYTES_PER_FRIEND 5
 
-// This holds for both the rows in the window and the bytes in the transmission lmao.
-#define FRIENDLIST_HEADER_SIZE 2
 #define MAX_FRIENDS 254
+#define FRIENDLIST_WIN_HEADER_SIZE 2
 
 extern uint8_t myId;
 
