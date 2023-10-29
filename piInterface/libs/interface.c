@@ -39,6 +39,7 @@ static void resetButtonPressed(uint32_t row, uint32_t col);
 static void shutdownButtonPressed(uint32_t row, uint32_t col) __attribute__((unused));
 void switchScreenButtonPressed(uint32_t row, uint32_t col);
 void drawSwitchButton(WINDOW *window);
+void drawShutdownButton(WINDOW* win);
 
 static void drawButton(WINDOW *win);
 
@@ -70,9 +71,9 @@ void initInterface(void) {
 
 
     screenElement_t payloadElement = addScreenElement(&debugScreen, 16, 1, 15, 64, NULL, NULL);
-    screenElement_t friendsElement = addScreenElement(&debugScreen, 5, 67, 10, 30, friendListClick, printFriendListWindow);
+    screenElement_t friendsElement = addScreenElement(&debugScreen, 5, 67, 19, 30, friendListClick, printFriendListWindow);
     coordElement = addScreenElement(&debugScreen, 0, 84, 4, 8, NULL, initTouchCoords);
-    addScreenElement(&debugScreen, 0, 67, 4, 8, shutdownButtonPressed, drawButton);
+    addScreenElement(&debugScreen, 0, 67, 4, 8, shutdownButtonPressed, drawShutdownButton);
 
     addScreenElement(&debugScreen, 0, BROADCAST_WIDTH + BROADCAST_COL, 0, 1, NULL, printLine);
     addScreenElement(&debugScreen, BROADCAST_HEIGHT, 0, 1, BROADCAST_WIDTH + BROADCAST_COL, NULL, printHorizontalLine);
@@ -236,6 +237,13 @@ void checkTouchedButtons(screen_t screen, RPiTouch_Touch_t touchPoint) {
 
 void drawButton(WINDOW *win) {
     box(win, 0, 0);
+    wrefresh(win);
+}
+
+void drawShutdownButton(WINDOW *win) {
+    box(win, 0, 0);
+    mvwprintw(win, 1, 2, "SHUT");
+    mvwprintw(win, 2, 2, "DOWN");
     wrefresh(win);
 }
 
