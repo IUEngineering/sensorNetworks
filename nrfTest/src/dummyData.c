@@ -9,12 +9,12 @@
 //  - Offset calibration input:
 //      - PA5 -> GND
 //
-//  - Enable inputs (enable = 1, disable = 0)
-//      - PB0 (pulldown) -> Air moisture
-//      - PB1 (pulldown) -> Air quality
-//      - PB2 (pulldown) -> Light
-//      - PB3 (pulldown) -> Temperature
-//      - PB4 (pulldown) -> Sound
+//  - Enable inputs (enable = 0, disable = 1)
+//      - PB0 (pullup) -> Air moisture
+//      - PB1 (pullup) -> Air quality
+//      - PB2 (pullup) -> Light
+//      - PB3 (pullup) -> Temperature
+//      - PB4 (pullup) -> Sound
 //
 //  - Force send all enabled dummy data (PB5 = 0)
 //      - PB5 (pullup)
@@ -66,11 +66,11 @@ void dummyDataInit(void) {
                     PIN4_bm |
                     PIN5_bm;
     
-    PORTB.PIN0CTRL = PORT_OPC_PULLDOWN_gc;
-    PORTB.PIN1CTRL = PORT_OPC_PULLDOWN_gc;
-    PORTB.PIN2CTRL = PORT_OPC_PULLDOWN_gc;
-    PORTB.PIN3CTRL = PORT_OPC_PULLDOWN_gc;
-    PORTB.PIN4CTRL = PORT_OPC_PULLDOWN_gc;
+    PORTB.PIN0CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
+    PORTB.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
+    PORTB.PIN2CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
+    PORTB.PIN3CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
+    PORTB.PIN4CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
     PORTB.PIN5CTRL = PORT_OPC_PULLUP_gc;
 
     // Configure TCE0 to set its interrupt flag every second
@@ -85,7 +85,7 @@ void dummyDataLoop(void) {
     uint16_t timer = 0;
 
     while (1) {
-        while(! TCE0.INTFLAGS & TC0_OVFIF_bm)
+        while(! (TCE0.INTFLAGS & TC0_OVFIF_bm))
             isoUpdate();
 
         TCE0.INTFLAGS = TC0_OVFIF_bm;
@@ -93,7 +93,7 @@ void dummyDataLoop(void) {
 
         if (PORTB.IN & PIN5_bm) {
             if (PORTB.IN & PIN4_bm)
-            sendSound();
+                sendSound();
 
             if (PORTB.IN & PIN2_bm)
                 sendLight();
@@ -123,6 +123,7 @@ void dummyDataLoop(void) {
             
             if (PORTB.IN & PIN0_bm)
                 sendAirMoisture();
+
             timer = 0;
         }
     }
