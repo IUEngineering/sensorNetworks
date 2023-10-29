@@ -56,6 +56,12 @@ void dummyDataInit(void) {
     isoInit(receivePayload);
     ADCInit();
 
+    PORTB.DIRCLR =  PIN0_bm |
+                    PIN1_bm |
+                    PIN2_bm |
+                    PIN3_bm |
+                    PIN4_bm;
+
     // Configure TCE0 to set its interrupt flag every second
     TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
     TCE0.CTRLA     = TC_CLKSEL_DIV1024_gc;    // prescaling 8
@@ -74,18 +80,21 @@ void dummyDataLoop(void) {
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
-        if (timer % TIME_5_SEC == 0)
+        if ((timer % TIME_5_SEC == 0) && (PORTB.IN & PIN4_bm))
             sendSound();
 
-        if (timer % TIME_10_SEC == 0)
+        if ((timer % TIME_10_SEC == 0)  && (PORTB.IN & PIN2_bm))
             sendLight();
 
-        if (timer % TIME_10_MIN == 0)
+        if ((timer % TIME_10_MIN == 0)  && (PORTB.IN & PIN1_bm))
             sendAirQuality();
 
         if (timer % TIME_30_MIN == 0) {
-            sendTemp();
-            sendAirMoisture();
+            if (PORTB.IN & PIN3_bm)
+                sendTemp();
+            
+            if (PORTB.IN & PIN0_bm)
+                sendAirMoisture();
             timer = 0;
         }
     }
