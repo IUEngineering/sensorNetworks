@@ -6,6 +6,13 @@
 //      - PA3 -> Temperature
 //      - PA4 -> Sound
 //
+//  - Enable inputs (enable = 1, disable = 0)
+//      - PB0 (pullup) -> Air moisture
+//      - PB1 (pullup) -> Air quality
+//      - PB2 (pullup) -> Light
+//      - PB3 (pullup) -> Temperature
+//      - PB4 (pullup) -> Sound
+//
 //  - Offset calibration input:
 //      - PA5 -> GND
 //
