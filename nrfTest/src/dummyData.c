@@ -10,11 +10,11 @@
 //      - PA5 -> GND
 //
 //  - Enable inputs (enable = 1, disable = 0)
-//      - PB0 (pullup) -> Air moisture
-//      - PB1 (pullup) -> Air quality
-//      - PB2 (pullup) -> Light
-//      - PB3 (pullup) -> Temperature
-//      - PB4 (pullup) -> Sound
+//      - PB0 (pulldown) -> Air moisture
+//      - PB1 (pulldown) -> Air quality
+//      - PB2 (pulldown) -> Light
+//      - PB3 (pulldown) -> Temperature
+//      - PB4 (pulldown) -> Sound
 //
 //  - Force send all enabled dummy data (PB5 = 0)
 //      - PB5 (pullup)
@@ -66,11 +66,11 @@ void dummyDataInit(void) {
                     PIN4_bm |
                     PIN5_bm;
     
-    PORTB.PIN0CTRL = PORT_OPC_PULLUP_gc;
-    PORTB.PIN1CTRL = PORT_OPC_PULLUP_gc;
-    PORTB.PIN2CTRL = PORT_OPC_PULLUP_gc;
-    PORTB.PIN3CTRL = PORT_OPC_PULLUP_gc;
-    PORTB.PIN4CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN0CTRL = PORT_OPC_PULLDOWN_gc;
+    PORTB.PIN1CTRL = PORT_OPC_PULLDOWN_gc;
+    PORTB.PIN2CTRL = PORT_OPC_PULLDOWN_gc;
+    PORTB.PIN3CTRL = PORT_OPC_PULLDOWN_gc;
+    PORTB.PIN4CTRL = PORT_OPC_PULLDOWN_gc;
     PORTB.PIN5CTRL = PORT_OPC_PULLUP_gc;
 
     // Configure TCE0 to set its interrupt flag every second
