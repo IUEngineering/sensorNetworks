@@ -68,7 +68,7 @@ De functie in \autoref{lst:reprintInput} zet, voordat hij de gebruikersinput uit
     }
 \end{lstlisting}
 
-\subsubsection{Print byte arrays naar de terminal}
+\subsubsection{Print byte arrays naar de terminal}\label{ch:printStrex}
 Bij het debuggen is vaak voorgekomen dat er een array van bytes geprint moest worden naar de terminal. Hiervoor moet elke keer een for-loop geschreven worden, wat redelijk frustrerend is, en veel tijd inneemt. Ook moet de nrfChat functie in sommige gevallen een array van bytes naar de terminal printen (bijvoorbeeld bij het ontvangen van een bericht). Hierdoor is een functie geschreven om dit te doen. Deze functie maakt ook gebruik van het systeem besproken in \autoref{ch:inputKeeping}, waardoor het niet de gebruikersinput onderbreekt. De hex waardes worden in de het blauw geprint, zodat ze goed te onderscheiden zijn van normale tekst.
 
 De functie heeft drie argumenten: een pointer naar een array, een lengte en een titel. De pointer wijst naar de array met data die uitgeprint moet worden; de lengte bevat het aantal bytes die geprint moeten worden; de titel is een string die boven de rij met hex waardes geprint wordt om hem te identificeren.
