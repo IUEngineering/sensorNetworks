@@ -65,6 +65,13 @@ void dummyDataInit(void) {
                     PIN3_bm |
                     PIN4_bm |
                     PIN5_bm;
+    
+    PORTB.PIN0CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN1CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN2CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN3CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN4CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN5CTRL = PORT_OPC_PULLUP_gc;
 
     // Configure TCE0 to set its interrupt flag every second
     TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;  // Normal mode
