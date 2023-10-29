@@ -113,7 +113,13 @@ void ADCInit(void) {
     ADCA.PRESCALER   = ADC_PRESCALER_DIV16_gc;
     
     // Configure input channels
-    PORTA.DIRCLR     = PIN2_bm | PIN3_bm;
+    PORTA.DIRCLR     =  PIN0_bm |
+                        PIN1_bm |
+                        PIN2_bm | 
+                        PIN3_bm |
+                        PIN4_bm |
+                        PIN5_bm;
+    
     ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;
 
     // Enable the ADC
