@@ -7,9 +7,7 @@
 
 #define BANNER_PAIR    1
 #define ACTIVE_PAIR    2
-#define WATER_PAIR     2
-#define MOUNTAIN_PAIR  3
-#define PLAYER_PAIR    4
+#define LINE_PAIR      3
 
 
 typedef struct screenElement_t screenElement_t;
