@@ -39,6 +39,7 @@
 
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
+    PORTF.OUTCLR = PIN0_bm;
 
     init_clock();
     init_stream(F_CPU);
