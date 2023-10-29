@@ -3,6 +3,7 @@
 
 #include "dummyData.h"
 #include "mcuComm.h"
+#include "interface.h"
 
 #define AIR_HUMIDITY    0x01
 #define AIR_QUALITY     0x02
@@ -15,7 +16,8 @@
 #define YELLOW 1
 #define GREEN 0
 
-
+WINDOW *dummyDataWindow;
+void drawDummyData(WINDOW *window);
 
 static dummyData_t data = {0};
 
@@ -49,12 +51,28 @@ dummyData_t accumulateData(uint8_t *payload) {
     return data;
 }
 
-void initDummyData(WINDOW *debug, WINDOW *meta) {
-    
+void initDummyData(WINDOW *window) {
+    dummyDataWindow = window; 
+    wmove(window, 0, 0);
+    wattrset(window, COLOR_PAIR(LINE_PAIR));
+    for(uint8_t i = 0; i < getmaxx(window); i++) {
+        waddch(window, ' ');
+    }
+    wmove(window, 0, 0);
+    wprintw(window, " Data from nodes: "); 
+    wattrset(window, 0);
+    drawDummyData(window);
 }
 
-void drawDummyData(WINDOW *debug) {
-
+void drawDummyData(WINDOW *window) {
+    wmove(window, 1, 0);
+    wprintw(window, " Air Humiddity: %u %%\n", data.airHumiddity);
+    wprintw(window, " Air Quality:   %u mg/m²\n", data.airQuality);
+    wprintw(window, " Light:         %u Lm\n", data.light);
+    wprintw(window, " Temperature:   %u ", data.temperature);
+    waddch(window, ACS_DEGREE);
+    wprintw(window, "C\n");
+    wprintw(window, " Loudness:      %u dB\n", data.loudness);
 }
 
 
@@ -75,4 +93,11 @@ uint8_t metaConslusions(void) {
     }
 
     return conclusions;
+}
+
+void drawMetaConclusions(WINDOW *window){
+    uint8_t conclusions = metaConslusions();
+    if(conclusions & OPEN_WINDOW_bm){
+
+    }
 }

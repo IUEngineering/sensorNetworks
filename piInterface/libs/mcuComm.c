@@ -8,6 +8,7 @@
 #include "mcuComm.h"
 #include "friendWindow.h"
 #include "serial.h"
+#include "dummyData.h"
 
 #define INPUT_BUFFER_START_SIZE 16
 
@@ -177,6 +178,7 @@ void handleNewByte(uint8_t newByte) {
             if(checkParity(newByte, parity) || !*debugMode) break;
 
             // TODO: DummyData here if it's not debug mode.
+            accumulateData(inputBuffer + 3);
             printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PAYLOAD_SIZE);
             break;
 

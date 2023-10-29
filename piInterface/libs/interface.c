@@ -6,6 +6,7 @@
 #include "interface.h"
 #include "mcuComm.h"
 #include "serial.h"
+#include "dummyData.h"
 
 // 100x30 columns max
 
@@ -37,6 +38,7 @@ static screen_t metaScreen = {0};
 static void resetButtonPressed(uint32_t row, uint32_t col);
 static void shutdownButtonPressed(uint32_t row, uint32_t col) __attribute__((unused));
 void switchScreenButtonPressed(uint32_t row, uint32_t col);
+void drawSwitchButton(WINDOW *window);
 
 static void drawButton(WINDOW *win);
 
@@ -45,7 +47,7 @@ static void initMetaScreen(void);
 static void initTouchCoords(WINDOW *win);
 static void printVerticalLine(WINDOW *window);
 static void printHorizontalLine(WINDOW *window);
-
+static void printLine(WINDOW *window); 
 
 static screenElement_t addScreenElement(
     screen_t *screen, uint32_t startRow, uint32_t startCol, uint8_t height, uint8_t width, void (*clickCallback)(uint32_t, uint32_t), void (*initCallback)(WINDOW *win)
@@ -66,11 +68,15 @@ void initInterface(void) {
     curs_set(0);
 
 
-    screenElement_t payloadElement = addScreenElement(&debugScreen, 16, 1, 15, 64, NULL, NULL);
-    screenElement_t friendsElement = addScreenElement(&debugScreen, 7, 68, 10, 30, friendListClick, printFriendListWindow);
 
-    addScreenElement(&debugScreen, 0, BROADCAST_WIDTH + BROADCAST_COL, 0, 1, NULL, printVerticalLine);
+    screenElement_t payloadElement = addScreenElement(&debugScreen, 16, 1, 15, 64, NULL, NULL);
+    screenElement_t friendsElement = addScreenElement(&debugScreen, 5, 67, 10, 30, friendListClick, printFriendListWindow);
+    coordElement = addScreenElement(&debugScreen, 0, 84, 4, 8, NULL, initTouchCoords);
+    addScreenElement(&debugScreen, 0, 67, 4, 8, shutdownButtonPressed, drawButton);
+
+    addScreenElement(&debugScreen, 0, BROADCAST_WIDTH + BROADCAST_COL, 0, 1, NULL, printLine);
     addScreenElement(&debugScreen, BROADCAST_HEIGHT, 0, 1, BROADCAST_WIDTH + BROADCAST_COL, NULL, printHorizontalLine);
+    addScreenElement(&debugScreen, 4, 65, 1, 35, NULL, printLine);
 
     fprintf(stderr, "ik haat katten!!! %d %d\n", getbegy(friendsElement.window), getbegx(friendsElement.window));
 
@@ -79,18 +85,15 @@ void initInterface(void) {
     init_pair(TEST_PAIR, COLOR_GREEN, 0);
     init_pair(LINE_PAIR, 0, COLOR_WHITE);
   
-    coordElement = addScreenElement(&debugScreen, 4, 92, 3, 8, NULL, initTouchCoords);
-    addScreenElement(&debugScreen, 0, 92, 4, 8, resetButtonPressed, drawButton);
-    addScreenElement(&debugScreen, 26, 92, 4, 8, shutdownButtonPressed, drawButton);
+    //addScreenElement(&debugScreen, 0, 92, 4, 8, resetButtonPressed, drawButton);
     
-    addScreenElement(&debugScreen, 0, 84, 4, 8, switchScreenButtonPressed, drawButton);    
+    addScreenElement(&debugScreen, 0, 92, 4, 8, switchScreenButtonPressed, drawSwitchButton);    
     fprintf(stderr, "adding new thingy %d %p\n", debugScreen.elementCount, debugScreen.elements);
 
 
-    // Meta Screen
-    addScreenElement(&metaScreen, 0, 84, 4, 8, switchScreenButtonPressed, drawButton);
 
     screenElement_t broadcastElement = addScreenElement(&debugScreen, 0, 1, 15, 64, NULL, NULL);
+    addScreenElement(&debugScreen, 24, 66, 6, 34, NULL, initDummyData);
 
     if(initInputHandler(friendsElement.window, broadcastElement.window, payloadElement.window, &debugMode)) {
         fprintf(stderr, "Could not find xMage (ﾉ´ｰ`)ﾉ\n");
@@ -100,6 +103,12 @@ void initInterface(void) {
         exit(-1);
     }
 
+    // Meta Screen
+    addScreenElement(&metaScreen, 0, 92, 4, 8, switchScreenButtonPressed, drawSwitchButton);
+    addScreenElement(&metaScreen, 0, 1, 6, 34, NULL, initDummyData);
+    addScreenElement(&metaScreen, 16, 1, 40, 40, NULL, drawMetaConclusions);
+    //addScreenElement(&metaScreen, 16, 1, 20, 20, NULL, drawMetaConclusions);
+    // addScreenElement(&metaScreen, 0, 0, 20, 20, NULL, )
 
     refresh();
     initDebugScreen();
@@ -121,6 +130,7 @@ void endInterface(int idk) {
 
 void runInterface(void) {
     static uint8_t wasScreenTouched = 0;
+    
 
     if(RPiTouch_UpdateTouch() && _oRPiTouch_Touched.bButton == 1 && wasScreenTouched == 0) {
         if(debugMode) checkTouchedButtons(debugScreen, _oRPiTouch_Touched);
@@ -153,9 +163,17 @@ void switchScreenButtonPressed(uint32_t row, uint32_t col) {
     else drawScreen(metaScreen);
     
 }
+void drawSwitchButton(WINDOW *window) {
+    box(window, 0, 0);
+    mvwprintw(window, 1, 1, "Switch");
+}
+
+
 
 void drawTouchCoords(void) {
-    mvwprintw(coordElement.window, 1, 1, "%2d,%3d", _oRPiTouch_Touched.nRow , _oRPiTouch_Touched.nCol);
+    mvwprintw(coordElement.window, 1, 1, "y:%3d", _oRPiTouch_Touched.nRow);
+    mvwprintw(coordElement.window, 2 , 1, "x:%3d", _oRPiTouch_Touched.nCol);
+
     wrefresh(coordElement.window);
 }
 
@@ -235,7 +253,7 @@ static void printVerticalLine(WINDOW *window) {
 }
 
 static void printHorizontalLine(WINDOW *window) {
-     wmove(window, 0, 0);
+    wmove(window, 0, 0);
     // Print separation lines 
     wattrset(window, COLOR_PAIR(LINE_PAIR));
 
@@ -262,3 +280,13 @@ static void printHorizontalLine(WINDOW *window) {
     attrset(0);
 
 }
+
+static void printLine(WINDOW *window) {
+    wmove(window, 0, 0);
+    wattrset(window, COLOR_PAIR(LINE_PAIR));
+    // Horizontal line between broadcasts and relays.
+    for(uint8_t i = 0; i < getmaxx(window) * getmaxy(window); i++) {
+        waddch(window, ' ');
+    }
+}
+
