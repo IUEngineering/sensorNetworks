@@ -1,1 +1,19 @@
 \section{Dummy data} \label{sec:dummyData}
+Het dummy data programma maakt het mogelijk om het dynamische draadloze sensor netwerk te testen. In Hoofdstuk \ref{sec:influenceOnComfort} staat beschreven welke soorten data er vanuit een sensor node moeten kunnen worden verstuurd. Omdat het systeem met meerdere sensor nodes moet worden getest zal niet elke sensor node alle sensor data genereren indien dit gewenst is. 
+
+\subsection{Nep data}
+De nep data wordt gegenereerd door een spanning aan te bieden op een van de pinnen A0 - A4, deze spanning moet tussen 0V en 2V zijn. De nep data spanning wordt van het analoge domein naar het digitale domein omgezet door een ADC. Omdat ADC's vaak een offset hebben wordt pin A5 met GND verbonden om de offset te meten en dit van de meet resultaten af te halen. De ADC conversies worden gestart op het moment dat de nep data nodig is voor het verzenden van informatie.
+
+\subsection{Initialisatie}
+
+\subsection{Data generatie}
+
+ADC instellen 12bit single ended
+
+ADC uitlezen
+
+map functie voor wanneer er 8bits data moet worden verzonden
+
+timing voor het versturen van nep data
+
+\subsection{}
