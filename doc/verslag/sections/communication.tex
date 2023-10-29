@@ -79,3 +79,43 @@ friend_t *findFriend(uint8_t id) {
     return NULL;
 }
         \end{lstlisting}
+
+
+\subsection{Encryptie}
+Bij een netwerk is het ook handig om een encryptie methode te gebruiken om data van het eigen netwerk veilig te stellen.
+Voor dit netwerk is er gekozen om hoe dan ook voor de prive berichten een encryptie te gebruiken omdat dit ervoor zorgt 
+dat de data die van het eigen netwerk afkomt normaal zal zijn. Dit is anders als er data naar dit netwerk verstuurt wordt. De 
+data die dan ontvangen wordt is onlogisch en kan hierdoor gefilterd worden. 
+
+Tijdens de lessen is er gesproken over 3 verschillende encryptie algoritmes. DES (Data Encryption Standard), AES (Advanced Encryption Standard)
+en XOR. Er is uiteindelijk gekozen voor de XOR algoritme omdat deze in een korte tijd goed te implementeren was. Daarentegen is er wel voor
+een variatie op de XOR algortime gekozen. Deze heeft na zoeken geen officiele naam en is ook zelf bedacht.
+Het werkt alsvolgt:
+
+Wanneer er een bericht binnen komt of wordt verstuurd wordt deze meteen in de keysEncrypt functie gezet. In onderstaande lstlisting \ref{lst:keyEncrypt} 
+staat  de keysEncrypt functie beschreven. Op regel 2 is te zien welke soort data er nodig is. de functie moet weten wat message, key1 en
+key2 is en wat de lengte van deze 3 zijn. Hierna is er een for loop die evenlang meegaat als dat de lengte van message is. In deze 
+for-loop staat dat voor elke even plekje in de array key 1 gebruikt wordt en voor elk oneven plekje wordt key 2 gebruikt. Welke plek 
+van de key array gebruikt wordt wordt bepaald door de lengte van de key en de plek van de message. Zo gebruikt bijvoorbeeld plek 0 
+sowieso plek 0 van key 1. Als key 1 maar 3 plekken bevat dan gebruikt plek 6 ook plek 0 van key 1. 
+
+\begin{lstlisting}[caption={keyEncrypt Functie},captionpos=b,label={lst:keyEncrypt},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Encryption and Decryption using multiple key arrays with different lengths
+    uint8_t *keysEncrypt(uint8_t* message, uint8_t length, char* key1, 
+        uint8_t keyLength1, char * key2, uint8_t keyLength2) {
+        static uint8_t data[32];
+        for (uint8_t i = 0; i < length; i++) {
+            if (i % 2 == 0) {  
+                data[i] = (message[i] ^ key1[(i/2) % keyLength1]);
+            }
+            else {
+                data[i] = (message[i] ^ key2[(i/2) % keyLength2]);
+            }
+        }
+        return data;
+    }
+\end{lstlisting}
+
+De keys zijn variable en niet hardcoded in de code. Hoe dit werkt wordt in hoofstuk \ref{sec:debugProgram} besproken. 
+Er is gekozen voor niet hardcoded keys omdat dit ervoor zorgt dat elke keer wanneer het systeem opstart er een nieuwe key bedacht 
+kan worden. Hierdoor is de kans op kraken verkleind. De keys kunnen zelfs aangepast worden terwijl het programma nog aanstaat.         

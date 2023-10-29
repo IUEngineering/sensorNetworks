@@ -59,11 +59,11 @@ Aangezien de functienamen op de zelfde index zitten als de functie pointers, kun
 \begin{lstlisting}[caption={De look-up table van de interpreter},captionpos=b,label={lst:interpretInputFPointers},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 // Make a corresponding array of 4 letter function names.
 static const char commands[COMMANDS][4] = {
-    "send", "help", "chan", "list", "dest", "myid"
+    "send", "help", "chan", "list", "dest", "myid", "keys", "key1", "key2"
 };
 // Make an array of functions.
 static const void (*functions[COMMANDS])(char*) = {
-    send, help, chan, list, dest, myid
+    send, help, chan, list, dest, myid, keys, key1, key2
 };
 \end{lstlisting}
 
@@ -131,11 +131,18 @@ void dest(char *arguments) {
 
 
 \subsubsection{Send}
-De send functie stuurt alles wat er meegegeven wordt op via de \texttt{isoSendPacket} functie, zoals te zien in \autoref{lst:send}
+De send functie stuurt encrypted alles wat er meegegeven wordt op via de \texttt{isoSendPacket} functie, zoals te zien in \autoref{lst:send}
 \begin{lstlisting}[caption={De send functie},captionpos=b,label={lst:send},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 void send(char *command) {
-    if(isoSendPacket(destinationId, (uint8_t*)command, strlen(command))) 
-        printf("Failed to send message\n");    
+    // Set the rest of the inputbuffer to zero so that we don't accidentally 
+    send previous messages with the message.
+    uint8_t argLength = strlen(arguments);
+    memset(arguments + argLength, 0, PAYLOAD_SIZE - argLength);
+
+    uint8_t *data = keysEncrypt((uint8_t*)arguments, PAYLOAD_SIZE, key1Data, 
+    strlen(key1Data), key2Data, strlen(key2Data));
+    if(isoSendPacket(destinationId, (uint8_t*) data, PAYLOAD_SIZE)) 
+        printf("Failed to send message\n");      
 }
 \end{lstlisting}
 
@@ -146,3 +153,12 @@ Het enige wat de list functie doet is de \texttt{printFriends} functie uitvoeren
 
 \subsubsection{MyID}
 MyID print het ID van de node naar de terminal. Dit is erg nuttig wanneer de geprinte header niet meer zichtbaar is door bijvoorbeeld een groot aantal ontvangen berichten.
+
+\subsubsection{Keys}
+Keys print key1 en key2 naar de terminal. Dit is erg nuttig wanneer het niet meer duidelijk was welke keys er werden gebruikt. Deze staan in Hexadecimaal inplaats van ASCII zodat de gebruiker nog een beetje moet ontcijferen wat de key ookalweer was.
+
+\subsubsection{Key1}
+Dit commando zet aan de array key1 de ASCII waarde van wat in de terminal is ingevoerd. 
+
+\subsubsection{Key2}
+Dit commando is hetzelfde als key1, maar doet dit dan voor key2.
