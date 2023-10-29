@@ -9,9 +9,6 @@
 #include "serialF0.h"
 #include "terminal.h"
 
-// Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
-#define TEAM_ID 0x02 << 5
-
 #define BROADCAST_PIPE (uint8_t *)"kweks"
 #define BROADCAST_PIPE_INDEX 0
 

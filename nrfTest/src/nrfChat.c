@@ -37,8 +37,8 @@ static void messageReceive(uint8_t *payload);
 
 static uint8_t destinationId = 0xff;
 
-static char key1Data[32] = {0};
-static char key2Data[32] = {0};
+static char key1Data[32] = "VERON Zendamateur";
+static char key2Data[32] = "PI5VLE";
 
 void nrfChatInit(void) {
     // Send welcome message
@@ -175,26 +175,9 @@ void myid(char *arguments) {
 // Function to show the keys in Hex
 void keys(char *arguments){
     printf("Your keys are:\n");
-    printf(ID_COLOR "Key 1:\n" NO_COLOR);
-    for (int i = 0; i < strlen(key1Data); i++){
-        printf("%02x ", key1Data[i]);
 
-        if(i % 8 == 7) {
-            printf("\n");
-        }
-    }
-
-    printf("\n");
-    printf(ID_COLOR "Key 2:\n" NO_COLOR);
-    for (int i = 0; i < strlen(key2Data); i++){
-        printf("%02x ", key2Data[i]);
-
-        if(i % 8 == 7) {
-            printf("\n");
-        }
-    }
-
-    printf("\n");
+    terminalPrintStrex((uint8_t *) key1Data, strlen(key1Data), ID_COLOR "Key 1:" NO_COLOR);
+    terminalPrintStrex((uint8_t *) key2Data, strlen(key2Data), ID_COLOR "Key 2:" NO_COLOR);
 }
 
 // Function to change Key 1

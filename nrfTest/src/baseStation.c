@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "serialF0.h"
@@ -9,6 +10,7 @@
 #include "baseStation.h"
 #include "iso.h"
 #include "friendList.h"
+#include "encrypt.h"
 
 #define SEND_ID             0x00
 #define FRIENDS_LIST        0x01
@@ -52,6 +54,9 @@ static uint8_t parity = 0;
 // Enabled by receiving a START_SENDING byte from the PI.
 // We will not send anything over the uart if this is 0.
 static uint8_t sending = 0;
+
+static char key1[] = "VERON Zendamateur";
+static char key2[] = "PI5VLE";
 
 
 // Initialization of the baseStation program 
@@ -137,8 +142,10 @@ static void sendReceivedPayload(uint8_t *payload) {
     sendByteWithParity(RECEIVED_PAYLOAD);
     sendByteWithParity(RECEIVED_PAYLOAD);
 
+    uint8_t *encryptedPayload = keysEncrypt(payload, PAYLOAD_SIZE, key1, strlen(key1), key2, strlen(key2));
+
     for (uint8_t i = 0; i < PAYLOAD_SIZE; i++)
-        sendByteWithParity(payload[i]);
+        sendByteWithParity(encryptedPayload[i]);
     
     sendParity();
 }
