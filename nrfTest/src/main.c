@@ -12,10 +12,10 @@
 //      |-----|-----|-------------|
 //      | PE0 | PE1 | Program     |
 //      |-----|-----|-------------|
-//      |  1  |  1  | INVALID     |
-//      |  1  |  0  | DEBUG       |
-//      |  0  |  1  | SENSOR      |
-//      |  0  |  0  | BASESTATION |
+//      |  0  |  0  | INVALID     |
+//      |  0  |  1  | BASESTATION | 
+//      |  1  |  0  | SENSOR      |
+//      |  1  |  1  | DEBUG       |
 //      |-----|-----|-------------|
 //
 //  - For communication the BAUDRATE is 115200
@@ -47,34 +47,41 @@ int main(void) {
     sei();
 
     // This bit is used to select the mode of the network node
-    PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
-    PORTE.PIN1CTRL = PORT_OPC_PULLUP_gc;
+    PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
+    PORTE.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
     PORTE.DIRCLR = PIN0_bm | PIN1_bm;
 
     while(1) {
-        if ((PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) {
+        
+        // PE0 = 1, PE1 = 0
+        if ((PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) { 
+            if (DEBUG)
+                printf("I am a base-station\n");
+            
+            baseStationInit();
+            baseStationLoop();
+        }
+        
+        // PE0 = 0, PE1 = 0
+        else if (!(PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) { 
             if (DEBUG)
                 printf("I am a debug node\n");
                 
             clear_screen();
             nrfChatInit();
             nrfChatLoop();
-
-        }
-        else if (!(PORTE.IN & PIN0_bm) && !(PORTE.IN & PIN1_bm)) {
-            if (DEBUG)
-                printf("I am a base-station\n");
-            
-            baseStationInit();
-            baseStationLoop();
         } 
+
+        // PE0 = 0, PE1 = 1
         else if (!(PORTE.IN & PIN0_bm) && (PORTE.IN & PIN1_bm)) {
             if (DEBUG)
                 printf("I am a sensor node\n");
             
             dummyDataInit();
             dummyDataLoop();
-        } 
+        }
+
+        // PE0 = 1, PE1 = 1
         else {
             printf("I am not correctly configured please check the documentation how to slect the mode of this node.\n");
             printf("In case this problem can not be resolved please contact the system designers\n");
