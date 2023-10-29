@@ -2,10 +2,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "serialF0.h"
+#include <string.h>
 
+#include "serialF0.h"
 #include "baseStation.h"
 #include "iso.h"
+
 #include "friendList.h"
 #include "encrypt.h"
 
