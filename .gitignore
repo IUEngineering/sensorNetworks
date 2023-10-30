@@ -28,7 +28,7 @@
 *.svn
 *.synctex.gz
 *.toc
-
+**\sensorNetworks.code-workspace
 # Ignore C compile bs
 *.elf
 *.hex

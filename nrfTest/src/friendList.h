@@ -3,7 +3,15 @@
 
 #include <avr/io.h>
 
-#define FORGET_FRIEND_TIME 8
+#define FORGET_FRIEND_TIME 8 // Deprecated
+
+// These are both non-inclusive (> instead of >=)
+#define ACTIVATE_TRUST      5
+#define DEACTIVATE_TRUST    5
+
+#define MAX_TRUST           7
+#define TRUST_ADDER         2 
+#define TRUST_SUBTRACTOR    1
 
 // 256 ID's - 2 standard ID's (0x00 and 0xff) - 1 (your own ID) = 253
 #define MAX_FRIENDS 253
@@ -14,10 +22,19 @@ typedef struct {
     uint8_t id;
     uint8_t hops;
     uint8_t via;
-    uint8_t trust;
-    uint8_t active;
-    uint16_t lastPingTime;
-}friend_t;
+    
+    uint8_t trust : 6;
+    uint8_t active : 1;
+    uint8_t deactivated : 1;
+        
+    uint8_t lastPingTime;
+} friend_t;
+
+
+
+// TODO: Memory optimization possibilities:
+// - Make active and trust a single byte (implemented by myself instead of the compiler, which should save some progmem)
+// - Make lastPingTime a byte somehow (very possible).
 
 
 //* Initialise the friendlist
@@ -37,19 +54,22 @@ friend_t *updateFriend(uint8_t id, uint8_t hops, uint8_t via);
 void printFriends(void);
 
 
-//* Lower the trust of all the friends with 1
-//* Remove friends if their trust == 0
-//* Deactivate friends if they are not trustworthy
+// Lower the trust of all the friends with 1
+// Remove friends if their trust == 0
+// Deactivate friends if they are not trustworthy
 void friendTimeTick(void);
 
-friend_t *getFriendsList(uint8_t *listLength);
+friend_t *getFriendsList(void);
 
-//* Get a list of all ping-worthy friends.
-//* This includes active friends, as well as friends that are known via an active friend.
-//* Adds a friend with an ID of 0 to the end of the array as a terminator.
+// Get a list of all ping-worthy friends.
+// This includes active friends, as well as friends that are known via an active friend.
+// Adds a friend with an ID of 0 to the end of the array as a terminator.
+// buf has to be large enough to store the current amount of friends.
+//
+// Also sets `deactivated` of every friend to 0.
 void getFriends(friend_t *buf);
 
-//* Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
+// Return a pointer to the requested friend id. Returns Null incase friend doesn't exist
 friend_t *findFriend(uint8_t id);
 
 
@@ -60,6 +80,10 @@ uint8_t getFriendAmount(void);
 // Removes all references to the friend with the specified ID.
 // If a friend was only known through this friend, it will be deleted.
 void removeViaReferences(uint8_t id);
+
+// Removes all friends from the given `vias` array,
+// given that they are known through `from`.
+void removeVias(uint8_t from, uint8_t *vias, uint8_t viaAmount);  
 
 
 #endif // _FRIENDLIST_H_
