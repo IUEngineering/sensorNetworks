@@ -1,2 +1,33 @@
-\subsection{Base station} \label{sec:basestation}
-    \subsubsection{Functionele blokken}
+\subsection{Basisstation} \label{sec:basestation}
+De basisstation is gemaakt om data weer te geven aan de gebruiker en ook voor het team om debug data te zien. 
+\subsubsection{Functionele blokken}
+
+\paragraph{Callback functies}
+De gehele interface is zo modulair mogelijk opgebouwt. De windows bestaan uit elementen die je kan aanmaken met de volgende functie.
+In deze functie kan je als argument 2 andere fucnties meegeven, een clickCallback die de touch cordinaten mee krijgt en een initCallback die de window meekrijgt zodat je erin de visuele ncruses fucnties kan oproepen. 
+\begin{lstlisting}[caption={ScreenElement},captionpos=b,label={lst:ScreenELement},style=c]
+static screenElement_t addScreenElement(
+    screen_t *screen, uint32_t startRow,
+    uint32_t startCol, uint8_t height, uint8_t width,
+    void (*clickCallback)(uint32_t, uint32_t),
+    void (*initCallback)(WINDOW *win)
+); return res - offset;
+\end{lstlisting}
+
+
+
+\subsubsection{Debug data scherm}
+Dit scherm was als eeste gemaakt op de basisstation. De debug scherm was heel erg nuttig om te zien of nodes en het netwerk goed werkten. 
+We hebben het gehele scherm gebruikt verschillende data te laten zien. 
+\begin{figure}[h]
+    \centering
+    \includegraphics*[scale=0.17]{img/debugScherm.jpg}
+    \caption{Debug scerm op de 7 inch PI scherm}
+\end{figure}
+Zoals te zien in Figuur 1, is het scherm opgedeelt in 5 delen. Links boven kan je alle broadcast berichten zien die de basisstation ontvangt. 
+Links onder in het scherm zie je alle prive relays en payloads die via de basisstation. Dan kijken we rechts boven, hier zitten 2 knoppen en een touch coords window. Een van de knoppen zet de PI veilig uit. De andere switcht naar de User data scherm die bescherven wordt in \ref{userParagraph}.
+De coords geven aan waar de laatste touch was op het scherm in rijen. In totaal zijn er 30 rijen op Y as en 100 rijden op de X as. Dit was een van de eerste windows die we hadden toegevoegd en heeft veel geholpen met positioneren van alle objecten op het scherm.
+Rechts midden kan je een vriendelijst zien die vanuit de bassistaion xMega wordt weergegeven. Daaronder zien we een `data from sensor nodes', dit is een window die onze dummy data laat zien vanuit de potmeters van andere nodes. 
+\subsubsection{User data scherm}\label{userParagraph}
+Als je switcht naar de user data scherm dan krijg je de `data from sensor nodes' te zien. Dit is een window precies zoals hij te zien in de debug window.
+Ook komt er nog een metaconcluses als de data vanuit de sensoren boven een grens komt. Dan zegt de interface `Je moet een raam open doen, de luchkwaliteit is slecht". Dit is nog iets wat verbeterd moet worden, onze user scherm is heel erg kaal. 
