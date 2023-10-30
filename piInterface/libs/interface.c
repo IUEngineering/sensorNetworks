@@ -107,12 +107,12 @@ void initInterface(void) {
     // Meta Screen
     addScreenElement(&metaScreen, 0, 92, 4, 8, switchScreenButtonPressed, drawSwitchButton);
     addScreenElement(&metaScreen, 0, 1, 6, 34, NULL, initDummyData);
-    addScreenElement(&metaScreen, 16, 1, 40, 40, NULL, drawMetaConclusions);
-    //addScreenElement(&metaScreen, 16, 1, 20, 20, NULL, drawMetaConclusions);
+    addScreenElement(&metaScreen, 16, 1, 40, 50, NULL, initMetaWindow);
+    // addScreenElement(&metaScreen, 16, 1, 20, 20, NULL, drawMetaConclusions);
     // addScreenElement(&metaScreen, 0, 0, 20, 20, NULL, )
-
     refresh();
     initDebugScreen();
+
 }
 
 void endInterface(int idk) {
@@ -132,7 +132,7 @@ void endInterface(int idk) {
 void runInterface(void) {
     static uint8_t wasScreenTouched = 0;
     
-
+    
     if(RPiTouch_UpdateTouch() && _oRPiTouch_Touched.bButton == 1 && wasScreenTouched == 0) {
         if(debugMode) checkTouchedButtons(debugScreen, _oRPiTouch_Touched);
         else checkTouchedButtons(metaScreen, _oRPiTouch_Touched);
@@ -187,6 +187,11 @@ void initTouchCoords(WINDOW *win) {
 void initDebugScreen(void) {
     refresh();
     drawScreen(debugScreen);
+}
+
+void initMetaScreen(void) {
+    refresh();
+    drawScreen(metaScreen);
 }
 
 void drawScreen(screen_t screen) {

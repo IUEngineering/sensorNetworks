@@ -18,5 +18,5 @@ typedef struct {
 }dummyData_t;
 
 dummyData_t accumulateData(uint8_t *payload);
-void drawMetaConclusions(WINDOW *window);
+void initMetaWindow(WINDOW *window);
 #endif // __DUMMYDATA_H__

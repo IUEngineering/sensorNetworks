@@ -17,7 +17,10 @@
 #define GREEN 0
 
 WINDOW *dummyDataWindow;
-void drawDummyData(WINDOW *window);
+WINDOW *metaWindow;
+
+static void drawDummyData(WINDOW *window);
+static void drawMetaConclusions(WINDOW *window);
 
 static dummyData_t data = {0};
 
@@ -29,13 +32,15 @@ dummyData_t accumulateData(uint8_t *payload) {
 
             break;
         case AIR_QUALITY:
-            data.airQuality = payload[2];
+            if (payload[2] == 0) data.airQuality = 'X';
+            else data.airQuality = payload[2];  
+            fprintf(stderr, "Data air quality: %c\n", data.airQuality);
 
             break;
         case LIGHT:
             // light is 16bits and payload is 8 bit. So we need to bitshift it.
-            data.light = payload[3] << 8;
-            data.light |= payload[2];
+            data.light =  ((uint16_t) payload[2]) << 8;
+            data.light |= payload[3] ;
 
             break;
         case TEMPERATURE:
@@ -47,7 +52,8 @@ dummyData_t accumulateData(uint8_t *payload) {
 
             break;  
     }    
-
+    drawDummyData(dummyDataWindow);
+    drawMetaConclusions(metaWindow);
     return data;
 }
 
@@ -64,15 +70,22 @@ void initDummyData(WINDOW *window) {
     drawDummyData(window);
 }
 
+void initMetaWindow(WINDOW *window) {
+    metaWindow = window;
+    drawMetaConclusions(window);
+}
+
 void drawDummyData(WINDOW *window) {
     wmove(window, 1, 0);
     wprintw(window, " Air Humiddity: %u %%\n", data.airHumiddity);
-    wprintw(window, " Air Quality:   %u mg/m²\n", data.airQuality);
+    wprintw(window, " Air Quality:   %c \n", data.airQuality ? data.airQuality : 'X');
     wprintw(window, " Light:         %u Lm\n", data.light);
     wprintw(window, " Temperature:   %u ", data.temperature);
     waddch(window, ACS_DEGREE);
     wprintw(window, "C\n");
     wprintw(window, " Loudness:      %u dB\n", data.loudness);
+    wrefresh(window);
+    fprintf(stderr, "kanekr\n");
 }
 
 
@@ -88,7 +101,7 @@ void drawDummyData(WINDOW *window) {
 uint8_t metaConslusions(void) {
     uint8_t conclusions = 0x00; 
 
-    if( (data.airHumiddity > 40 || data.airQuality > 25) && data.temperature > 22 ) { 
+    if( (data.airHumiddity > 40 || data.airQuality == 'R') && data.temperature > 22 ) { 
         conclusions |= OPEN_WINDOW_bm;
     }
 
@@ -97,7 +110,11 @@ uint8_t metaConslusions(void) {
 
 void drawMetaConclusions(WINDOW *window){
     uint8_t conclusions = metaConslusions();
-    if(conclusions & OPEN_WINDOW_bm){
-
+    if(conclusions & OPEN_WINDOW_bm) {
+        wmove(window, 0, 0);
+        wprintw(window, "doe die raam aan a niffa");
     }
+    else wclear(window);
+    
+    wrefresh(window);
 }

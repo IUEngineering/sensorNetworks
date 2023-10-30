@@ -175,11 +175,13 @@ void handleNewByte(uint8_t newByte) {
             if(inputBufferIndex < PAYLOAD_SIZE + 2 + PARITY) return;
 
             // Do not interpret if the parity is not zero or if we're not in debug mode.
-            if(checkParity(newByte, parity) || !*debugMode) break;
+            if(checkParity(newByte, parity)) break;
 
             // TODO: DummyData here if it's not debug mode.
-            accumulateData(inputBuffer + 3);
-            printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PAYLOAD_SIZE);
+            accumulateData(inputBuffer + 2);
+            if(*debugMode) {
+                printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PAYLOAD_SIZE);
+            } 
             break;
 
         case BROADCAST_BYTE:
