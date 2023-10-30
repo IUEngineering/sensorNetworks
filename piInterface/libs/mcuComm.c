@@ -178,9 +178,11 @@ void handleNewByte(uint8_t newByte) {
             if(checkParity(newByte, parity)) break;
 
             // TODO: DummyData here if it's not debug mode.
-            accumulateData(inputBuffer + 2);
+            accumulateData(inputBuffer + 2, *debugMode);
             if(*debugMode) {
+                // wmove(payloadWindow, getcury(payloadWindow),0);
                 printPacketToWindow(inputBuffer + 2, payloadWindow, 1, PAYLOAD_SIZE);
+                wscrl(payloadWindow, 0);
             } 
             break;
 

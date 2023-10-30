@@ -24,7 +24,7 @@ static void drawMetaConclusions(WINDOW *window);
 
 static dummyData_t data = {0};
 
-dummyData_t accumulateData(uint8_t *payload) {
+dummyData_t accumulateData(uint8_t *payload, uint8_t debugMode) {
     
     switch(payload[0]) {
         case AIR_HUMIDITY:
@@ -53,7 +53,7 @@ dummyData_t accumulateData(uint8_t *payload) {
             break;  
     }    
     drawDummyData(dummyDataWindow);
-    drawMetaConclusions(metaWindow);
+    if(!debugMode) drawMetaConclusions(metaWindow);
     return data;
 }
 
@@ -112,7 +112,7 @@ void drawMetaConclusions(WINDOW *window){
     uint8_t conclusions = metaConslusions();
     if(conclusions & OPEN_WINDOW_bm) {
         wmove(window, 0, 0);
-        wprintw(window, "doe die raam aan a niffa");
+        wprintw(window, "Doe een raam open, de luchtkwaliteit is niet goed!!!");
     }
     else wclear(window);
     

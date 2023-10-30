@@ -17,6 +17,6 @@ typedef struct {
     uint8_t  loudness;
 }dummyData_t;
 
-dummyData_t accumulateData(uint8_t *payload);
+dummyData_t accumulateData(uint8_t *payload, uint8_t debugMode);
 void initMetaWindow(WINDOW *window);
 #endif // __DUMMYDATA_H__

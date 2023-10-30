@@ -196,6 +196,7 @@ void initMetaScreen(void) {
 
 void drawScreen(screen_t screen) {
     for(uint8_t i = 0; i < screen.elementCount; i++) {
+        wclear(screen.elements[i].window);
         if(is_scrollok(screen.elements[i].window)) wmove(screen.elements[i].window, 0, 0);
         if(screen.elements[i].initCallback) {
             screen.elements[i].initCallback(screen.elements[i].window);
