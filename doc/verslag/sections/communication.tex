@@ -1,12 +1,76 @@
 \section{Communicatie} \label{sec:communication}
 In dit hoofdstuk wordt ingegaan op hoe de ISO die in het vak sensor netwerken gemaakt is, is geïmplementeerd door team 2. De implementatie is in twee delen opgesplitst: iso en vriendjes lijst. Iso wordt gebruikt om de nrf24l01p aan te sturen terwijl de vriendjes lijst is een erg eenvoudige database voor in een microcontroller is.
 \subsection{ISO}
+    Om het makkelijker te maken bij het debuggen van deze implementatie is er voor gekozen om er voor te zorgen dat de iso in een library vorm te schrijven. Door dit op deze manier te doen is het namelijk erg makkelijk om het programma dat gebruik wil maken van het dynamisch draadloos sensor netwerk te programmeren.
+
     \subsubsection{Init}
+        Bij de initialisatie van de ISO code wordt eerst de nrf24l01p ingesteld zodat deze voldoet aan de ISO (zie bijlage \ref{ap:iso} en \autoref{lst:nrfInit}). 
+\begin{lstlisting}[caption={nrf init},captionpos=b,label={lst:nrfInit},style=c]
+nrfspiInit();
+nrfBegin();
+
+nrfSetRetries(PRIVATE_MESSAGE_ACK_DELAY, NRF_SETUP_ARC_NORETRANSMIT_gc);
+nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
+nrfSetDataRate(NRF_RF_SETUP_RF_DR_2M_gc);
+nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
+nrfSetChannel(DEFAULT_CHANNEL);
+nrfSetAutoAck(0);
+
+nrfClearInterruptBits();
+nrfFlushRx();
+nrfFlushTx();
+\end{lstlisting}
+        Hierna moet het ID opgehaald worden dat gebruikt wordt voor de communicatie. In deze implementatie wordt dat gedaan door de vier minst significante bits van port D te en het team nummer vijf bits naar links geshift zoals te zien is in \autoref{lst:idInit}.
+\begin{lstlisting}[caption={ID init},captionpos=b,label={lst:idInit},style=c]
+// Read the ID from the GPIO pins.
+// Enable pullup for the first 4 pins of PORT D
+// Also invert their inputs. (We're using pullup, with a button to ground.)
+PORTD.DIRCLR = 0b1111;
+PORTCFG.MPCMASK = 0b1111; 
+PORTD.PIN0CTRL = PORT_INVEN_bm | PORT_OPC_PULLUP_gc;
+
+// It apparently takes some time for MPCMASK to do its thing.
+_delay_loop_1(5);
+
+myId = PORTD.IN & 0b1111;
+myId |= TEAM_ID;
+\end{lstlisting}
+        Vervolgens kunnen nu de reading pipes worden geopend, waarna timercounter D0 (TCD0) wordt ingesteld om aan te geven wanneer er een snapshot moet worden verstuurd. Als laatste wordt er een callback ingesteld die de berichten aan deze netwerk node afhandelt. Deze instellingen zijn te zien in \autoref{lst:finilPartOfIsoInit}.
+\begin{lstlisting}[caption={Laatste instellingen},captionpos=b,label={lst:finilPartOfIsoInit},style=c]
+// Initialize the timer/counter for sending
+// POL's (snapshots) and keeping track of multipackets.
+TCD0.CTRLB  = TC_WGMODE_NORMAL_gc;
+TCD0.CTRLA  = PING_TC_DIV;
+TCD0.PER    = PING_TC_PER;
+
+TCD1.CTRLB  = TC_WGMODE_NORMAL_gc;
+TCD1.CTRLA  = CURRENTTIME_TC_DIV;
+TCD1.PER    = CURRENTTIME_TC_PER;
+
+receiveCallback = callback;
+\end{lstlisting}
+
     \subsubsection{Vertrouwen}
+        Omdat een verbinding met een andere netwerk node niet altijd even betrouwbaar is, is er voor gekozen om een vertrouwenssysteem te implementeren. Zodra er een snapshot van een node wordt ontvangen zal het vertrouwen van deze node worden opgehoogd met 2 waarbij er een limiet is met waarde 7. Op het moment dat de netwerk node zelf een snapshot verstuurd wordt het vertrouwen van alle nodes die die kent met 1 omlaag gehaald met een limiet van 0. 
+
+        Een node wordt pas als een directe buur gezien vanaf het moment dat het vertrouwen in die node boven de 5 is gekomen. Zodra een node wordt vertrouwd zal dit zo blijven totdat het vertrouwen zakt onder de 5 zakt.
     \subsubsection{Update}
-    \subsubsection{ID}
+        In de huidige vorm van de ISO zijn updates alleen maar handig voor directe buren van de node die de update origineel heeft verstuurd maar moeten ze wel daarbuiten worden doorgestuurd. Dit doorsturen wordt alleen gedaan zolang de decay timer hoger is dan nul zie \autoref{lst:retransmitUpdate}.
+\begin{lstlisting}[caption={Update doorsturen},captionpos=b,label={lst:retransmitUpdate},style=c]
+if(packet[1] & UPDATE_TYPE_DECAY_bm) {
+
+    // Subtract one from the decay value.
+    packet[1] = UPDATE_TYPE_UPDATE_bm | (decay - 1);
+
+    // Make it someone else's problem.
+    nrfOpenWritingPipe(BROADCAST_PIPE);
+    send(packet);
+}
+\end{lstlisting}
+
     \subsubsection{Stuur pakket}
-    
+    Er zijn twee situaties waarin een node een pakket moet versturen 1: de node wil een zelf gemaakt pakket naar een andere node sturen of 2: de node heeft een bericht ontvangen voor een andere node die de node direct of indirect kent.
+
 \subsection{Vriendjes}
     In friendList.h en friendList.c worden alle vriendjes (nodes) van het netwerk opgeslagen. 
     \subsubsection{Datastructuur}
@@ -16,9 +80,13 @@ typedef struct {
     uint8_t id;
     uint8_t hops;
     uint8_t via;
-    uint8_t trust;
-    uint8_t active;
-}friend_t;
+    
+    uint8_t trust : 6;
+    uint8_t active : 1;
+    uint8_t deactivated : 1;
+        
+    uint8_t lastPingTime;
+} friend_t;
 \end{lstlisting}
 
         Tijdens de initialisatie wordt er een array van 8 friend\_t elementen gealloceerd waar alle id's van de array op 0x00 worden gezet. Deze array is alleen vanuit het friendsList.c bestand te bereiken.
