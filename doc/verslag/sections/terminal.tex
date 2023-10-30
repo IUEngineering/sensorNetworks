@@ -1,7 +1,7 @@
 
 Terminal.c is een library die gemaakt is voor nrfChat.c, maar ook voor andere debugging doeleinden. De library is gemaakt omdat, wanneer er normaal iets op de terminal uitgeprint wordt, door middel van \texttt{printf}, dit dwars door de huidige input heengaat van de gebruiker. De input staat nog steeds in de buffer, en kan nog steeds uitgevoerd worden, hij is alleen niet meer leesbaar. Dit beloofde uiteindelijk frustrerend genoeg om een library te schrijven die gebruikt kan worden om zowel debug informatie als ontvangen berichten uit te printen. De library regelt hierbij het bufferen van alle gebruikersinput in de terminal. Bovendien kan deze library gebruikt worden om arrays uit te printen die niet volledig bestaan uit printbare karakters. Dit is verder besproken in \autoref{ch:printStrex}.
 
-\subsubsection{Intrepeteer input}
+\paragraph{Intrepeteer input}
 Aangezien programma's zoals Minicom, TeraTerm en PuTTY elk getypte karakter direct naar de microcontroller sturen, moeten we onze eigen linebuffer bijhouden. Hier gebruikt terminal.c een functie voor die elke keer aangeroepen moet worden wanneer de gebruiker een toets op het toetsenbord intikt. De functie zet dan het getypte karakter in een buffer. 
 
 Doordat backspaces niet behandelt worden door een linebuffer van de terminal, zoals normaal bij C programma's, moeten we deze zelf afhandelen. In \autoref{lst:backspaces} is te zien hoe dit gebeurt. De buffer index wordt met 1 vermindert, en in de terminal wordt het vorige karakter vervangen door een spatie.
@@ -20,7 +20,7 @@ Doordat backspaces niet behandelt worden door een linebuffer van de terminal, zo
     }
 \end{lstlisting}
 
-\subsubsection{Command callback}
+\paragraph{Command callback}
 Wanneer het programma een return karakter (\textbackslash~n) tegenkomt, moet het ingevoerde commando uitgevoerd worden. Dit wordt gedaan door middel van een callback functie. Deze callback functie moet van te voren ingesteld zijn met een initialisatie functie.
 
 \begin{lstlisting}[caption={Enters afhandelen},captionpos=b,label={lst:newlines},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
@@ -36,7 +36,7 @@ Wanneer het programma een return karakter (\textbackslash~n) tegenkomt, moet het
     }
 \end{lstlisting}
 
-\subsubsection{De gebruikersinput ononderbroken laten}\label{ch:inputKeeping}
+\paragraph{De gebruikersinput ononderbroken laten}\label{ch:inputKeeping}
 Om te kunnen printen naar de terminal zonder de huidige input te verwijderen, moeten de getypte input eerst weggehaald worden.
 Dit wordt gedaan met een functie die de input weghaalt door middel van een escape sequence. De escape sequence die gebruikt wordt is \texttt{\string\e[1K}. Deze escape sequence verwijdert de regel waar de cursor zich op dit moment bevindt. De cursor wordt echter niet naar het begin van de regel verplaatst, dus er wordt nog een \texttt{\string\r} achteraan geprint.
 
@@ -68,7 +68,7 @@ De functie in \autoref{lst:reprintInput} zet, voordat hij de gebruikersinput uit
     }
 \end{lstlisting}
 
-\subsubsection{Print byte arrays naar de terminal}\label{ch:printStrex}
+\paragraph{Print byte arrays naar de terminal}\label{ch:printStrex}
 Bij het debuggen is vaak voorgekomen dat er een array van bytes geprint moest worden naar de terminal. Hiervoor moet elke keer een for-loop geschreven worden, wat redelijk frustrerend is, en veel tijd inneemt. Ook moet de nrfChat functie in sommige gevallen een array van bytes naar de terminal printen (bijvoorbeeld bij het ontvangen van een bericht). Hierdoor is een functie geschreven om dit te doen. Deze functie maakt ook gebruik van het systeem besproken in \autoref{ch:inputKeeping}, waardoor het niet de gebruikersinput onderbreekt. De hex waardes worden in de het blauw geprint, zodat ze goed te onderscheiden zijn van normale tekst.
 
 De functie heeft drie argumenten: een pointer naar een array, een lengte en een titel. De pointer wijst naar de array met data die uitgeprint moet worden; de lengte bevat het aantal bytes die geprint moeten worden; de titel is een string die boven de rij met hex waardes geprint wordt om hem te identificeren.

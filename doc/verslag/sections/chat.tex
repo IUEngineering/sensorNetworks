@@ -3,7 +3,7 @@ Het nrfChat bestand is bedoeld om op een gebruikersvriendelijke manier met ander
 
 De gebruiker kan commando's invoeren, beginnende met een slash, die onder andere gebruikt kunnen worden om de bestemming van berichten in te stellen, of de huidige burenlijst/vriendjeslijst uit te printen. Alles wat in de terminal getypt wordt dat niet begint met een slash, wordt gezien als een bericht om verstuurd te worden. Deze berichten worden via iso.c verstuurd naar de geselecteerde ontvanger.
 
-\subsubsection{Init}
+\paragraph{Init}
 Bij het initialiseren van nrfChat worden de volgende acties ondernomen:
 \begin{enumerate}
     \item iso.c wordt geïnitialiseerd. 
@@ -14,7 +14,7 @@ Bij het initialiseren van nrfChat worden de volgende acties ondernomen:
 
 Hierna kan de gebruiker commando's en berichten typen.
 
-\subsubsection{Loop}
+\paragraph{Loop}
 In de loop worden ingevoerde karakters doorgegeven aan terminal.c. Ook wordt \texttt{isoUpdate} aangeroepen. Zie \autoref{lst:nrfChatLoop}.
 
 \begin{lstlisting}[caption={De nrfChat loop},captionpos=b,label={lst:nrfChatLoop},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
@@ -34,10 +34,10 @@ void nrfChatLoop(void) {
 }
 \end{lstlisting}
 
-\subsubsection{Berichten ontvangen} \label{ch:messageReceive}
+\paragraph{Berichten ontvangen} \label{ch:messageReceive}
 Ontvangen berichten worden direct doorgestuurd naar de \texttt{terminalPrintStrex} functie van terminal.c. Zie \autoref{ch:printStrex}.
 
-\subsubsection{Interpreteer input} \label{ch:interpreter}
+\paragraph{Interpreteer input} \label{ch:interpreter}
 
 De input wordt in meerdere stappen geïnterpreteerd. De interpreteer functie krijgt de ingevoerde regel tekst mee als argument, en wordt uitgevoerd wanneer er op enter wordt gedrukt door de gebruiker.
 Het eerste deel van de functie is te zien in \autoref{lst:interpretInputStart}. Hier kijkt de functie eerst of de input begint met een slash. Als dit niet het geval is, wordt de volledige input direct verstuurd naar de geselecteerde bestemming. Wanneer de input wel met een slash begint, wordt de pointer naar de input met 1 verhoogt, zodat de rest van de code geen rekening meer hoeft te houden met deze slash.
@@ -87,10 +87,10 @@ printf("I don't know that command :(\n");
 
 
 
-\subsubsection{Help}
+\paragraph{Help}
 Help print een gebruikersaanwijzing uit voor de gebruiker, als een lijst van alle commando's en hun functionaliteit.
 
-\subsubsection{Chan}
+\paragraph{Chan}
 Chan is een erg simpel commando. Het enige wat het doet is de frequentie veranderen waar de nrf chip op zendt en ontvangt. De werking van de functie is te zien in \autoref{lst:chan}.
 \begin{lstlisting}[caption={De chan functie},captionpos=b,label={lst:chan},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 void chan(char *arguments) {
@@ -110,7 +110,7 @@ De functie heeft geen afhandeling van een ongeldige input. Dit is omdat \texttt{
     f = 2400 + \textrm{kanaal [MHZ]})
 \end{equation}
 
-\subsubsection{Dest}
+\paragraph{Dest}
 De dest functie werkt in principe hetzelfde als chan. Het enige verschil is dat dest het opgeslagen bestemmings-ID verandert in plaats van de frequentie. In \autoref{lst:dest} is te zien dat de dest functie wel ongeldige input afhandelt. Dit is omdat, waar 0 een geldige frequentie is bij /chan, het geen geldig ID is volgens de ISO. Het ID wordt uitgelezen met \texttt{strtol}, welke een hexadecimale string in een integer omzet. Dit is omdat ID's altijd als hexadecimaal getal genoteerd worden.
 
 \begin{lstlisting}[caption={De dest functie},captionpos=b,label={lst:dest},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
@@ -130,7 +130,7 @@ void dest(char *arguments) {
 \end{lstlisting}
 
 
-\subsubsection{Send}
+\paragraph{Send}
 De send functie stuurt encrypted alles wat er meegegeven wordt op via de \texttt{isoSendPacket} functie, zoals te zien in \autoref{lst:send}
 \begin{lstlisting}[caption={De send functie},captionpos=b,label={lst:send},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 void send(char *command) {
@@ -147,18 +147,18 @@ void send(char *command) {
 \end{lstlisting}
 
 
-\subsubsection{List}
+\paragraph{List}
 Het enige wat de list functie doet is de \texttt{printFriends} functie uitvoeren, te vinden in \autoref{ch:printFriends}.
 
 
-\subsubsection{MyID}
+\paragraph{MyID}
 MyID print het ID van de node naar de terminal. Dit is erg nuttig wanneer de geprinte header niet meer zichtbaar is door bijvoorbeeld een groot aantal ontvangen berichten.
 
-\subsubsection{Keys}
+\paragraph{Keys}
 Keys print key1 en key2 naar de terminal. Dit is erg nuttig wanneer het niet meer duidelijk was welke keys er werden gebruikt. Deze staan in Hexadecimaal inplaats van ASCII zodat de gebruiker nog een beetje moet ontcijferen wat de key ookalweer was.
 
-\subsubsection{Key1}
+\paragraph{Key1}
 Dit commando zet aan de array key1 de ASCII waarde van wat in de terminal is ingevoerd. 
 
-\subsubsection{Key2}
+\paragraph{Key2}
 Dit commando is hetzelfde als key1, maar doet dit dan voor key2.

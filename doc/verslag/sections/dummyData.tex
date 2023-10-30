@@ -1,10 +1,10 @@
-\section{Dummy data} \label{sec:dummyData}
+\subsection{Dummy data} \label{sec:dummyData}
 Het dummy data programma maakt het mogelijk om het dynamische draadloze sensor netwerk te testen. In Hoofdstuk \ref{sec:influenceOnComfort} staat beschreven welke soorten data er vanuit een sensor node moeten kunnen worden verstuurd. Omdat het systeem met meerdere sensor nodes moet worden getest zal niet elke sensor node alle sensor data genereren indien dit gewenst is. 
 
-\subsection{Nep data}
+\subsubsection{Nep data}
 De nep data wordt gegenereerd door een spanning aan te bieden op een van de pinnen A0 - A4, deze spanning moet tussen 0V en 2V zijn. De nep data spanning wordt van het analoge domein naar het digitale domein omgezet door een ADC. Omdat ADC's vaak een offset hebben wordt pin A5 met GND verbonden om de offset te meten en dit van de meet resultaten af te halen. De ADC conversies worden gestart op het moment dat de nep data nodig is voor het verzenden van informatie.
 
-\subsection{ADC}
+\subsubsection{ADC}
 De ADC is ingesteld op single ended signalen omdat er alleen maar positive signalen worden verwacht. De overige instellingen zijn te zien in \autoref{lst:adcInit}.
 \begin{lstlisting}[caption={ADC init},captionpos=b,label={lst:adcInit},style=c]
 // congigure ADCA
@@ -56,7 +56,7 @@ uint16_t ADCReadCH0(uint8_t inputPin) {
 }
 \end{lstlisting}
 
-\subsection{Timing}
+\subsubsection{Timing}
 Om de tijd bij te houden wordt gebruik gemaakt van timercounter E0 (TCE0). Het is niet mogelijk om 30 minuten bij te houden op de TCE0 waardoor er is gekozen om elke seconden een variable op te hogen en te kijken welke dat er moet worden verzonden zoals te zien is in \autoref{lst:dummyDataLoop}.
 \begin{lstlisting}[caption={dummyData loop},captionpos=b,label={lst:dummyDataLoop},style=c]
 while(! TCE0.INTFLAGS & TC0_OVFIF_bm)

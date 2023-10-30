@@ -5,16 +5,38 @@ het netwerk moet werken. Deze twee worden opgesplits omdat dit twee specificatie
 ook specificaties.
 
 \subsection{Sensor data}
-In hoofdstuk \ref{sec:influenceOnComfort} zijn een aantal factoren aan bod gekomen die invloed hebben op het comfort in een kamer. Een aantal van deze factoren kan snel dan wel langzaam veranderen waardoor ze niet even vaak hoeven worden gemeten. In tabel \ref{tabel:meetfrequentie} is de meetfrequentie per factor beschreven.
+In hoofdstuk \ref{sec:influenceOnComfort} zijn een aantal factoren aan bod gekomen die invloed hebben op het comfort in een kamer.
+Deze factoren hebben ook allemaal eenheden. Deze eenheden zijn standaard eenheden per factor. In onderstaande tabel \ref{tabel:meetbereik} staan deze beschreven.
+Naast deze eenheden is het ook belangrijk om te weten wanneer een bepaalde factor niet meer gezond is. Hierdoor zal er per eenheid in dezelfde 
+tabel \ref{tabel:meetbereik} ook het meetbereik staan.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|l|}\hline
+        Factor           & Meetbereik            & Eenheid     \\\hline
+        Temperatuur      & 10 tot 29 $^{\circ}$C & $^{\circ}$C \\\hline
+        Luchtvochtigheid & 0 tot 100\%           & \%          \\\hline
+        luchtkwaliteit   & Rood, Groen of Oranje &             \\\hline
+        Geluid           & 0 - 90dB              & dB          \\\hline
+        Licht            & 0 - 1600Lm            & Lumen       \\\hline
+    \end{tabular}
+    \caption{Meetbereik en eenheden voor verschillende comfort factoren.}
+    \label{tabel:meetbereik}
+\end{table}
+
+Een aantal van deze factoren kan snel dan wel langzaam veranderen waardoor ze niet even vaak hoeven worden gemeten. Ook is het goed
+ om te weten in welke eenheid deze grootheden gemeten worden. In tabel \ref{tabel:meetfrequentie} is de meetfrequentie en eenheid per 
+ factor beschreven.
+
 \begin{table}[h]
     \centering
     \begin{tabular}{|l|l|}\hline
-        Factor           & Meetfrequentie \\\hline
-        Temperatuur      & 30 min         \\\hline
-        Luchtvochtigheid & 30 min         \\\hline
-        luchtkwaliteit   & 10 min         \\\hline
-        Geluid           & 5 sec          \\\hline
-        Licht            & 10 sec         \\\hline
+        Factor           & Meetfrequentie\\\hline
+        Temperatuur      & 30 min        \\\hline
+        Luchtvochtigheid & 30 min        \\\hline
+        luchtkwaliteit   & 10 min        \\\hline
+        Geluid           & 5 sec         \\\hline
+        Licht            & 10 sec        \\\hline
     \end{tabular}
     \caption{Meetfrequentie voor verschillende comfort factoren.}
     \label{tabel:meetfrequentie}
