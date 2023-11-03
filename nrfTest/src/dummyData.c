@@ -22,10 +22,13 @@
 //  - All analog inputs must be between 0V and VCC/1.6 (VCC = 3V3) 
 
 #include <avr/io.h>
+#include <string.h>
 
 #include "iso.h"
+#include "encrypt.h"
+#include "serialF0.h"
 
-#define BASESTATION_ID  0x40
+#define BASESTATION_ID  0x41
 
 #define PAYLOAD_LENGTH  31
 
@@ -35,13 +38,20 @@
 #define TEMP_MESSAGE        0x04
 #define SOUND_MESSAGE       0x05
 
+#define MAX_TEMP    29
+#define MAX_VOCHT   100
+#define MAX_SOUND   90
+#define MAX_LIGHT   1600
+#define MAX_ADC     2800 // I have terminal evidence for this value (I read it from the terminal)
+
 #define TIME_5_SEC  5
 #define TIME_10_SEC 10
 #define TIME_10_MIN 600
 #define TIME_30_MIN 1800
 
-#define AIR_QUALITY_BAD     4096 * 1/3
-#define AIR_QUALITY_MED     4096 * 2/3
+#define AIR_QUALITY_BAD  MAX_ADC * 1/3
+#define AIR_QUALITY_MED  MAX_ADC * 2/3
+
 
 static void ADCInit(void);
 static uint16_t ADCReadCH0(uint8_t inputPin);
@@ -53,6 +63,9 @@ static void sendTemp(void);
 static void sendSound(void);
 
 static void receivePayload(uint8_t *data);
+
+static char key1[] = "VERON Zendamateur";
+static char key2[] = "PI5VLE";
 
 // Initialise the dummyData program
 void dummyDataInit(void) {
@@ -71,7 +84,7 @@ void dummyDataInit(void) {
     PORTB.PIN2CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
     PORTB.PIN3CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
     PORTB.PIN4CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
-    PORTB.PIN5CTRL = PORT_OPC_PULLUP_gc;
+    PORTB.PIN5CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
 
     // Configure TCE0 to set its interrupt flag every second
     TCE0.CTRLB     = TC_WGMODE_NORMAL_gc;       // Normal mode
@@ -91,7 +104,10 @@ void dummyDataLoop(void) {
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
+
         if (PORTB.IN & PIN5_bm) {
+            PORTC.OUTTGL = PIN0_bm;
+
             if (PORTB.IN & PIN4_bm)
                 sendSound();
 
@@ -186,26 +202,29 @@ uint16_t ADCReadCH0(uint8_t inputPin) {
 }
 
 static void sendAirMoisture(void) {
-    uint8_t payload[PAYLOAD_LENGTH];
+    uint8_t payload[PAYLOAD_LENGTH] = {0};
 
     uint16_t airMoisture16 = ADCReadCH0(ADC_CH_MUXPOS_PIN0_gc);
-    uint8_t  airMoisture8  = (uint8_t) (airMoisture16 * 0x00FF / 0x0FFF); 
+    uint8_t  airMoisture8  = (uint8_t) ((uint32_t)airMoisture16 * MAX_VOCHT / MAX_ADC); 
 
     // Fill payload
     payload[0] = AIR_MOIST_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = airMoisture8;
-    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+    printf("%d\n", payload[2]);
+
+
+    isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 
 static void sendAirQuality(void) {
-     uint8_t payload[PAYLOAD_LENGTH];
+    uint8_t payload[PAYLOAD_LENGTH] = {0};
 
     uint16_t airQuality = ADCReadCH0(ADC_CH_MUXPOS_PIN1_gc);
 
     // Fill payload
-    payload[0] = AIR_MOIST_MESSAGE;
+    payload[0] = AIR_QUALITY_MESSAGE;
     payload[1] = isoGetId();
 
     if (airQuality > AIR_QUALITY_MED)
@@ -214,56 +233,69 @@ static void sendAirQuality(void) {
         payload[2] = 'O';
     else
         payload[2] = 'R';
+
+    printf("\t%c\n", payload[2]);
+    
         
-    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+    isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 
 static void sendLight(void) {
-    uint8_t payload[PAYLOAD_LENGTH];
+    uint8_t payload[PAYLOAD_LENGTH] = {0};
 
     uint16_t light = ADCReadCH0(ADC_CH_MUXPOS_PIN2_gc);
+    light = (uint32_t)light * MAX_LIGHT / MAX_ADC;
 
     // Fill payload
     payload[0] = LIGHT_MESSAGE;
     payload[1] = isoGetId();
-    payload[2] = (uint8_t) light >> 8;  // Place MSB into the payload
-    payload[3] = (uint8_t) light;       // Place LSB into the payload
-    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+    payload[2] = (uint8_t) (light >> 8);      // Place MSB into the payload
+    payload[3] = (uint8_t) (light); // Place LSB into the payload
+    
+    printf("\t\t\t%02x %02x %d\n", payload[2], payload[3], light);
+
+    isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 
 static void sendTemp(void) {
-    uint8_t payload[PAYLOAD_LENGTH];
+    uint8_t payload[PAYLOAD_LENGTH] = {0};
 
     uint16_t temp16 = ADCReadCH0(ADC_CH_MUXPOS_PIN3_gc);
 
     // Map 12bit value to 8bit
     // (in - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-    uint8_t temp8 = (uint8_t) (temp16 * 0x00FF / 0x0FFF); 
+    uint8_t temp8 = (uint8_t) ((uint32_t)temp16 * MAX_TEMP / MAX_ADC); 
 
     // Fill payload
     payload[0] = TEMP_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = temp8;
-    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+
+    printf("\t\t\t\t%d\n", payload[2]);
+
+    isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 
 static void sendSound(void) {
-    uint8_t payload[PAYLOAD_LENGTH];
+    uint8_t payload[PAYLOAD_LENGTH] = {0};
 
     uint16_t sound16 = ADCReadCH0(ADC_CH_MUXPOS_PIN4_gc);
 
     // Map 12bit value to 8bit
     // (in - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-    uint8_t sound8 = (uint8_t) (sound16 * 0x00FF / 0x0FFF); 
+    uint8_t sound8 = (uint8_t) ((uint32_t)sound16 * MAX_SOUND / MAX_ADC); 
 
     // Fill payload
     payload[0] = SOUND_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = sound8;
-    isoSendPacket(BASESTATION_ID, payload, PAYLOAD_LENGTH);
+
+    printf("\t\t\t\t\t%d\n", payload[2]);
+
+    isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 

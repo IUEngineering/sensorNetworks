@@ -69,8 +69,8 @@ void nrfChatLoop(void) {
 // Sends the received buffer over to terminal.c
 // Gets message encrypted, decrypts the message first
 void messageReceive(uint8_t *payload) {
-    uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
-    terminalPrintStrex(decrypted, PAYLOAD_SIZE, "Received:");
+    // uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    terminalPrintStrex(payload, PAYLOAD_SIZE, "Received:");
 }
 
 // Callback from terminal.c.

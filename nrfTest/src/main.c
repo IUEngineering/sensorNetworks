@@ -22,7 +22,7 @@
 
 #define F_CPU 32000000UL
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define ENTER 0x0D
 
@@ -40,6 +40,7 @@
 int main(void) {
     PORTF.DIRSET = PIN0_bm | PIN1_bm;
     PORTF.OUTCLR = PIN0_bm;
+    PORTC.DIRSET = PIN0_bm;
 
     init_clock();
     init_stream(F_CPU);
@@ -75,8 +76,10 @@ int main(void) {
 
         // PE0 = 0, PE1 = 1
         else if (!(PORTE.IN & PIN0_bm) && (PORTE.IN & PIN1_bm)) {
-            if (DEBUG)
+            if (DEBUG) {
+                clear_screen();
                 printf("I am a sensor node\n");
+            }
             
             dummyDataInit();
             dummyDataLoop();
