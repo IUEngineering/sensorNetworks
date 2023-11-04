@@ -48,6 +48,8 @@ int main(void) {
     PMIC.CTRL |= PMIC_LOLVLEN_bm;
     sei();
 
+    clear_screen();
+
     // This bit is used to select the mode of the network node
     PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
     PORTE.PIN1CTRL = PORT_OPC_PULLUP_gc | PORT_INVEN_bm;
