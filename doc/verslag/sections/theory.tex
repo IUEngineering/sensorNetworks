@@ -8,46 +8,52 @@
 
 \section{Theoretisch kader} \label{sec:theory}
 
-Het uitiendelijk ontwerp bestaat uit 2 delen. De sensor data en het netwerk om de sensor data door te sturen. Beide moeten onderzocht worden, want beide zijn belangrijk.
-Uit beide onderdelen zullen ook specificaties komen om hiermee door te gaan naat het ontwerp gedeelte.
+\subsection{Temperatuur}
+\subsection{Luchtvochtigheid}
+\subsection{Luchtkwaliteit}
+\subsection{Geluid}
+\subsection{Licht}
 
-\subsection{Sensor data}
-Te lezen in Hoofdstuk \ref{sec:assignment} is dat er dus een probleem is met comfortabelheid in een ruimte. In de probleemstelling is al 
-kort verteld welke grootheden hier invloed op hebben. Dit waren luchtkwaliteit, licht en geluid. Dit zijn ze daarentegen niet allemaal. 
-In het onderzoek die is uitgevoerd door Kees Sietsma \cite{productiviteit} is te zien dat hij is gaan kijken naar de 
-productiviteit van werknemers binnen een bedrijf. Uit dit onderzoek is gebleken dat werknemers minder productief zijn als de temperatuur
-boven de 20 graden is. Bij elke graad staat dat de productiviteit daalt met 4\%. Ook is een werknemer gemiddeld 6\% productiver in een rustige
-en stille ruimte dan een werknemer die in een ruimte zit waar veel geluid te horen is en waar veel velle kleuren te zien zijn. \\
+% Het uitiendelijk ontwerp bestaat uit 2 delen. De sensor data en het netwerk om de sensor data door te sturen. Beide moeten onderzocht worden, want beide zijn belangrijk.
+% Uit beide onderdelen zullen ook specificaties komen om hiermee door te gaan naat het ontwerp gedeelte.
 
-Deze grootheden opzichzelf zijn al niet zo fijn, maar combintaties hiervan zullen nog erger zijn. Als er bijvoorbeeld wordt gekeken naar
-temperatuur opzichzelf dan kan dat niet comfortabel zijn bij bijvoorbeeld 24 graden, maar iemand zou hier nog gewoon in kunnen werken. 
-Als de factor luchtvochtigheid bij komt kijken dan is het ineens een ander verhaal. Dan kan het voor de gebruiker erg benauwd aan kunnen
-voelen en is de ruimte hierdoor dus niet meer fijn en productief om in te werken. Bijvoorbeeld de combinatie licht en geluid kan er na 
-een tijdje voor zorgen dat iemand hoofdpijn kan krijgen. Luchtkwaliteit en luchtvochtigheid kan ook voor een benauwd gevoel zorgen. \\
+% \subsection{Sensor data}
+% Te lezen in Hoofdstuk \ref{sec:assignment} is dat er dus een probleem is met comfortabelheid in een ruimte. In de probleemstelling is al 
+% kort verteld welke grootheden hier invloed op hebben. Dit waren luchtkwaliteit, licht en geluid. Dit zijn ze daarentegen niet allemaal. 
+% In het onderzoek die is uitgevoerd door Kees Sietsma \cite{productiviteit} is te zien dat hij is gaan kijken naar de 
+% productiviteit van werknemers binnen een bedrijf. Uit dit onderzoek is gebleken dat werknemers minder productief zijn als de temperatuur
+% boven de 20 graden is. Bij elke graad staat dat de productiviteit daalt met 4\%. Ook is een werknemer gemiddeld 6\% productiver in een rustige
+% en stille ruimte dan een werknemer die in een ruimte zit waar veel geluid te horen is en waar veel velle kleuren te zien zijn. \\
 
-Dit zijn goeie grootheden om te gebruiken in het netwerk. Maar de gebruiker moet ook feedback terug krijgen over de waardes die worden
-gemeten en eventueel horen of zien dat het niet meer productief is om in de ruimte te blijven. Hiervoor is een basisstation nodig. 
-Op dit station zou alle data binnen moeten komen. De gebruiker kan hier dus sowieso de waardes op uitlezen. Alleen is het logisch dat
-een gebruiker het verschil tussen 13 of 18 microgram per cubic meter. Wat in dit geval volgens de KNMI \cite{Gezonde} een verschil is tussen
-"de luchtkwaliteit is prima" en "de luchtkwaliteit is niet meer gezond". Hierdoor moet er voor elke parameter een kleine waarschuwing krijgen
-wanneer een bepaalde waarde is bereikt. Als er bijvoorbeeld wordt gekeken naar een telefoon en hoe deze meldingen laat zien dan zijn er 
-verschillende methodes om dat te doen. Dit wordt gedaan door een geluidje om de aandacht te trekken of door het scherm op te lichten. Soms
-is alleen dat niet genoeg en gaat de telefoon trillen en er is ook een mogelijkheid om een knipperende scherm melding te krijgen.
+% Deze grootheden opzichzelf zijn al niet zo fijn, maar combintaties hiervan zullen nog erger zijn. Als er bijvoorbeeld wordt gekeken naar
+% temperatuur opzichzelf dan kan dat niet comfortabel zijn bij bijvoorbeeld 24 graden, maar iemand zou hier nog gewoon in kunnen werken. 
+% Als de factor luchtvochtigheid bij komt kijken dan is het ineens een ander verhaal. Dan kan het voor de gebruiker erg benauwd aan kunnen
+% voelen en is de ruimte hierdoor dus niet meer fijn en productief om in te werken. Bijvoorbeeld de combinatie licht en geluid kan er na 
+% een tijdje voor zorgen dat iemand hoofdpijn kan krijgen. Luchtkwaliteit en luchtvochtigheid kan ook voor een benauwd gevoel zorgen. \\
 
-\subsection{Netwerk}
+% Dit zijn goeie grootheden om te gebruiken in het netwerk. Maar de gebruiker moet ook feedback terug krijgen over de waardes die worden
+% gemeten en eventueel horen of zien dat het niet meer productief is om in de ruimte te blijven. Hiervoor is een basisstation nodig. 
+% Op dit station zou alle data binnen moeten komen. De gebruiker kan hier dus sowieso de waardes op uitlezen. Alleen is het logisch dat
+% een gebruiker het verschil tussen 13 of 18 microgram per cubic meter. Wat in dit geval volgens de KNMI \cite{Gezonde} een verschil is tussen
+% "de luchtkwaliteit is prima" en "de luchtkwaliteit is niet meer gezond". Hierdoor moet er voor elke parameter een kleine waarschuwing krijgen
+% wanneer een bepaalde waarde is bereikt. Als er bijvoorbeeld wordt gekeken naar een telefoon en hoe deze meldingen laat zien dan zijn er 
+% verschillende methodes om dat te doen. Dit wordt gedaan door een geluidje om de aandacht te trekken of door het scherm op te lichten. Soms
+% is alleen dat niet genoeg en gaat de telefoon trillen en er is ook een mogelijkheid om een knipperende scherm melding te krijgen.
 
-Bij het ontwerpen van een netwerk zijn er verschillende dingen om rekening mee te houden. De volgende onderdelen zijn standaarden voor netwerken: 
+% \subsection{Netwerk}
 
-\begin{itemize}
-    \item Bandbreedte: Dit verwijst naar de hoeveelheid gegevens die over het netwerk kunnen worden verzonden in een bepaalde tijdseenheid, gemeten in bits per seconde (bps), kilobits per seconde (Kbps), megabits per seconde (Mbps) of gigabits per seconde (Gbps). \cite{Bandbreedte}
-    \item Latentie: Dit is de vertragingstijd tussen het verzenden van gegevens vanaf de bron naar de bestemming. Lage latentie is cruciaal voor real-time toepassingen zoals videoconferenties of online gaming. \cite{Bandbreedte}
-    \item Beveiliging: Een manier om de data veilig te houden, zoals firewalls, encryptie en authenticatieprotocollen.
-    \item Schaalbaarheid: Het vermogen van het netwerk om te kunnen groeien en omgaan met een toename van gebruikers, apparaten en gegevensverkeer.
-    \item Betrouwbaarheid: Het vermogen van het netwerk om consistentie en beschikbaarheid te bieden, zelfs bij storingen of hoge belasting.
-    \item Datalink-snelheid: De maximale snelheid waarmee gegevens kunnen worden overgedragen tussen apparaten in het netwerk, vaak uitgedrukt in Mbps of Gbps.\cite{Data}
-    \item IP-adressering: De methode waarmee apparaten in het netwerk worden geïdentificeerd, meestal via IPv4- of IPv6-adressen.\cite{IP}
-    \item Mobiliteit: Voor draadloze netwerken, het vermogen van apparaten om naadloos tussen verschillende toegangspunten te schakelen zonder de verbinding te verliezen.
-    \item QoS (Quality of Service): Het vermogen van het netwerk om prioriteit te geven aan bepaalde soorten gegevensverkeer, zodat essentiële toepassingen soepel kunnen blijven werken, zelfs tijdens periodes van zware belasting.
-    \item Management en Monitoring: Het vermogen om het netwerk te monitoren en te beheren, inclusief tools en software die worden gebruikt voor netwerkbeheer.
+% Bij het ontwerpen van een netwerk zijn er verschillende dingen om rekening mee te houden. De volgende onderdelen zijn standaarden voor netwerken: 
 
-\end{itemize}
+% \begin{itemize}
+%     \item Bandbreedte: Dit verwijst naar de hoeveelheid gegevens die over het netwerk kunnen worden verzonden in een bepaalde tijdseenheid, gemeten in bits per seconde (bps), kilobits per seconde (Kbps), megabits per seconde (Mbps) of gigabits per seconde (Gbps). \cite{Bandbreedte}
+%     \item Latentie: Dit is de vertragingstijd tussen het verzenden van gegevens vanaf de bron naar de bestemming. Lage latentie is cruciaal voor real-time toepassingen zoals videoconferenties of online gaming. \cite{Bandbreedte}
+%     \item Beveiliging: Een manier om de data veilig te houden, zoals firewalls, encryptie en authenticatieprotocollen.
+%     \item Schaalbaarheid: Het vermogen van het netwerk om te kunnen groeien en omgaan met een toename van gebruikers, apparaten en gegevensverkeer.
+%     \item Betrouwbaarheid: Het vermogen van het netwerk om consistentie en beschikbaarheid te bieden, zelfs bij storingen of hoge belasting.
+%     \item Datalink-snelheid: De maximale snelheid waarmee gegevens kunnen worden overgedragen tussen apparaten in het netwerk, vaak uitgedrukt in Mbps of Gbps.\cite{Data}
+%     \item IP-adressering: De methode waarmee apparaten in het netwerk worden geïdentificeerd, meestal via IPv4- of IPv6-adressen.\cite{IP}
+%     \item Mobiliteit: Voor draadloze netwerken, het vermogen van apparaten om naadloos tussen verschillende toegangspunten te schakelen zonder de verbinding te verliezen.
+%     \item QoS (Quality of Service): Het vermogen van het netwerk om prioriteit te geven aan bepaalde soorten gegevensverkeer, zodat essentiële toepassingen soepel kunnen blijven werken, zelfs tijdens periodes van zware belasting.
+%     \item Management en Monitoring: Het vermogen om het netwerk te monitoren en te beheren, inclusief tools en software die worden gebruikt voor netwerkbeheer.
+
+% \end{itemize}
