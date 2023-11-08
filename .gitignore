@@ -29,6 +29,10 @@
 *.synctex.gz
 *.toc
 **\sensorNetworks.code-workspace
+
+# Ignore feedback files
+**/feedback.md
+
 # Ignore C compile bs
 *.elf
 *.hex
