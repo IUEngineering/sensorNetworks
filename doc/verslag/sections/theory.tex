@@ -7,23 +7,33 @@
 % deze in dit specifieke geval wel/niet
 
 \section{Invloeden op comfort} \label{sec:theory}
+Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invloed op comfort\cite{comfort-grootheden}:
+\begin{itemize}
+    \item Kamertemperatuur
+    \item Luchtkwaliteit
+    \item Geluidsniveau
+    \item Lichtkwaliteit
+\end{itemize}
 
-\subsection{Temperatuur}
-\subsection{Luchtvochtigheid}
 \subsection{Luchtkwaliteit}
-\subsection{Geluid}
-\subsection{Licht}
+% Vertel over verschillende grootheden binnen luchtkwaliteit die gemeten kunnen worden met sensor.
+% Vertel welke sensoren geimplementeerd kunnen worden. Dit is niet onderzoek. Het antwoord is Luchtvochtigheidssensor en PPM-Bullshit-In-De-Lucht-Sensor.
+% Concludeer dat we 2 sensoren nodig hebben: luchtvocht en luchtqual
+Luchtkwaliteit bestaat uit verschillende aspecten. Twee hiervan zijn VOC (Volatile Organic Compounds) en luchtvochtigheid\cite{comfort-grootheden}\cite{luchtkwal-is-voc-denk-ik-misschien}. Dit zijn de twee luchtkwaliteit gerelateerde waardes die gemeten gaan worden.
 
-% Het uitiendelijk ontwerp bestaat uit 2 delen. De sensor data en het netwerk om de sensor data door te sturen. Beide moeten onderzocht worden, want beide zijn belangrijk.
+Luchtvochtigheid wordt normaal gemeten in \textit{relatieve} luchtvochtigheid. Dit geeft aan hoeveel waterdamp er in de lucht zit, vergeleken met hoeveel waterdamp er in de lucht kan zitten op de huidige temperatuur. Een relatieve luchtvochtigheid van 100\% is de maximale hoeveelheid waterdamp die er met de huidige temperatuur in kan zitten. 
+
+
+\subsection{Metaconclusie}
+% Noem 1 of 2 als voorbeeld
+% Maak duidelijk dat dit een Proof of concept.
+
+
+% Het uiteindelijk ontwerp bestaat uit 2 delen. De sensor data en het netwerk om de sensor data door te sturen. Beide moeten onderzocht worden, want beide zijn belangrijk.
 % Uit beide onderdelen zullen ook specificaties komen om hiermee door te gaan naat het ontwerp gedeelte.
 
 % \subsection{Sensor data}
-% Te lezen in Hoofdstuk \ref{sec:assignment} is dat er dus een probleem is met comfortabelheid in een ruimte. In de probleemstelling is al 
-% kort verteld welke grootheden hier invloed op hebben. Dit waren luchtkwaliteit, licht en geluid. Dit zijn ze daarentegen niet allemaal. 
-% In het onderzoek die is uitgevoerd door Kees Sietsma \cite{productiviteit} is te zien dat hij is gaan kijken naar de 
-% productiviteit van werknemers binnen een bedrijf. Uit dit onderzoek is gebleken dat werknemers minder productief zijn als de temperatuur
-% boven de 20 graden is. Bij elke graad staat dat de productiviteit daalt met 4\%. Ook is een werknemer gemiddeld 6\% productiver in een rustige
-% en stille ruimte dan een werknemer die in een ruimte zit waar veel geluid te horen is en waar veel velle kleuren te zien zijn. \\
+% Te lezen in Hoofdstuk \ref{sec:assignment} is dat er dus een probleem is met comfortabelheid in een ruimte. In de probleemstelling is al kort verteld welke grootheden hier invloed op hebben. Dit waren temperatuur, luchtkwaliteit, licht en geluid. Dit zijn ze daarentegen niet allemaal. In het is te zien dat hij is gaan kijken naar de productiviteit van werknemers binnen een bedrijf. Uit dit onderzoek is gebleken dat werknemers minder productief zijn als de temperatuurboven de 20 graden is. Bij elke graad staat dat de productiviteit daalt met 4\%. Ook is een werknemer gemiddeld 6\% productiver in een rustigeen stille ruimte dan een werknemer die in een ruimte zit waar veel geluid te horen is en waar veel velle kleuren te zien zijn. \\
 
 % Deze grootheden opzichzelf zijn al niet zo fijn, maar combintaties hiervan zullen nog erger zijn. Als er bijvoorbeeld wordt gekeken naar
 % temperatuur opzichzelf dan kan dat niet comfortabel zijn bij bijvoorbeeld 24 graden, maar iemand zou hier nog gewoon in kunnen werken. 
