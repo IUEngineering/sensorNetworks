@@ -7,8 +7,8 @@ De gebruiker kan commando's invoeren, beginnende met een slash, die onder andere
 Bij het initialiseren van nrfChat worden de volgende acties ondernomen:
 \begin{enumerate}
     \item iso.c wordt geïnitialiseerd. 
-    \item De ontvangst callback functie van iso.c wordt ingesteld op de ontvangst functie (zie \autoref{ch:messageReceive}).
-    \item De gebruikersinput callback functie van terminal.c ingesteld op de input interpreteer functie (zie \autoref{ch:interpreter}).
+    \item De ontvangst callback functie van iso.c wordt ingesteld op de ontvangst functie (zie \autoref{sec:messageReceive}).
+    \item De gebruikersinput callback functie van terminal.c ingesteld op de input interpreteer functie (zie \autoref{sec:interpreter}).
     \item Er wordt een header geprint met een welkomstbericht met een instructie om /help in te voeren, en het ID en kanaal van de node.
 \end{enumerate}
 
@@ -34,10 +34,10 @@ void nrfChatLoop(void) {
 }
 \end{lstlisting}
 
-\paragraph*{Berichten ontvangen} \label{ch:messageReceive}
-Ontvangen berichten worden direct doorgestuurd naar de \texttt{terminalPrintStrex} functie van terminal.c. Zie \autoref{ch:printStrex}.
+\paragraph*{Berichten ontvangen} \label{sec:messageReceive}
+Ontvangen berichten worden direct doorgestuurd naar de \texttt{terminalPrintStrex} functie van terminal.c. Zie \autoref{sec:printStrex}.
 
-\paragraph*{Interpreteer input} \label{ch:interpreter}
+\paragraph*{Interpreteer input} \label{sec:interpreter}
 
 De input wordt in meerdere stappen geïnterpreteerd. De interpreteer functie krijgt de ingevoerde regel tekst mee als argument, en wordt uitgevoerd wanneer er op enter wordt gedrukt door de gebruiker.
 Het eerste deel van de functie is te zien in \autoref{lst:interpretInputStart}. Hier kijkt de functie eerst of de input begint met een slash. Als dit niet het geval is, wordt de volledige input direct verstuurd naar de geselecteerde bestemming. Wanneer de input wel met een slash begint, wordt de pointer naar de input met 1 verhoogt, zodat de rest van de code geen rekening meer hoeft te houden met deze slash.
@@ -148,7 +148,7 @@ void send(char *command) {
 
 
 \paragraph*{List}
-Het enige wat de list functie doet is de \texttt{printFriends} functie uitvoeren, te vinden in \autoref{ch:printFriends}.
+Het enige wat de list functie doet is de \texttt{printFriends} functie uitvoeren, te vinden in \autoref{sec:printFriends}.
 
 
 \paragraph*{MyID}
