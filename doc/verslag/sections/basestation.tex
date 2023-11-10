@@ -18,15 +18,36 @@
 
 
 \subsubsection{Debug data scherm}
-Het debug scherm was heel erg nuttig om te zien of nodes en het netwerk goed werkten. 
-Het gehele scherm is gebruikt verschillende data te laten zien. 
-\begin{figure}[h]
+Het debug scherm is nuttig om te zien of nodes in het netwerk goed werken. 
+Het gehele scherm wordt gebruikt verschillende data te laten zien. 
+\begin{figure}[ht]
     \centering
-    \includegraphics*[scale=0.17]{img/debugScherm.jpg}
+    \includegraphics*[width=0.8\textwidth]{img/debugScherm.jpg}
     \caption{Debug scherm op de 7 inch PI scherm !!DIT MOET EEN SS WORDEN!!}
-    \label{fig:test}
+    \label{fig:debugSchermScreenshot}
 \end{figure}
-Zoals te zien in \autoref{fig:test}, is het scherm opgedeeld in 5 delen. Links boven kan je alle broadcast berichten zien die de basisstation ontvangt. 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics*[width=0.8\textwidth]{img/debugScreenExplain.pdf}
+    \caption{De verschillende onderdelen van het debug scherm}
+    \label{fig:debugSchermUitleg}
+\end{figure}
+
+Het debug scherm bestaat uit verschillende onderdelen. Deze onderdelen zijn opgedeeld in windows. Een schematische weergave van deze windows is te zien in \autoref{fig:debugSchermUitleg}.
+
+De Broadcast window i de constante stroom van broadcast-berichten die de basisstation node ontvangt. De broadcasts worden getoond als hexadecimale waardes. Aangezien het scherm erg klein is zijn de waardes niet met spaties opgesplitst, maar met twee duidelijk verschillende en leesbare kleuren. Wanneer de window vol staat met data, scrolt hij voor elke broadcast telkens een regel verder.
+
+De Relays \& Payloads window toont alle ontvangen directe berichten. Dit is inclusief doorstuurberichten die niet voor het basisstation bedoeld zijn. Om hier onderscheid in te maken worden de berichten die wel voor het basisstation bedoeld zijn lichter geprint. Onder de rij met bytes worden de corresponderende ASCII karakters geprint voor elke byte die een geldig ASCII karakter heeft. Dit wordt gedaan om berichten die tekstuele data bevatten te kunnen ontcijferen.
+
+De Buttons window bevat de coördinaten van de laatste aanraking op het touchscreen, en twee knoppen. Eén van de knoppen kan gebruikt worden om de Raspberry PI veilig af te sluiten, de andere kan gebruikt worden om te schakelen tussen het debug scherm en het normale scherm.
+
+De Friends window bevat de lijst van nodes die de basisstation node kent. Elke regel in de window toont de data van één node. Als er op de regel getikt wordt verschijnt er een prompt die vraagt of er een bericht gestuurd moet worden naar de node waar op getikt is, zoals te zien in \autoref{fig:friendsSend}. Als er vervolgens op "yes" getikt wordt, stuurt het basisstation een standaard bericht naar de geselecteerde node.
+
+De Data window toont de actuele sensordata. Wanneer
+
+
+Zoals te zien in \autoref{fig:debugSchermScreenshot}, is het scherm opgedeeld in 5 delen. Links boven kan je alle broadcast berichten zien die de basisstation ontvangt. 
 Links onder in het scherm zie je alle privé relays en payloads die via de basisstation. Dan kijken we rechts boven, hier zitten 2 knoppen en een touch coords window. Een van de knoppen zet de PI veilig uit. De andere switcht naar de User data scherm die beschreven wordt in \autoref{ch:userParagraph}.
 De coords geven aan waar de laatste touch was op het scherm in rijen en kolommen. In totaal zijn er 30 rijen op Y as en 100 kolommen op de X as. Dit was een van de eerste windows die we hadden toegevoegd en heeft veel geholpen met positioneren van alle objecten op het scherm.
 Rechts midden kan je een vriendenlijst zien die vanuit de basisstation xMega wordt weergegeven. Daaronder zien we een `data from sensor nodes', dit is een window die onze dummy data laat zien vanuit de potmeters van andere nodes. 
