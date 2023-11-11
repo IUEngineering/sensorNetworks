@@ -8,7 +8,6 @@
 - [ ] Specificaties vallen uit de lucht omdat ze in het vorige hoofdstuk niet zijn ontstaan en toegelicht. Het is altijd ‘relatieve luchtvochtigheid’. 4.2 is niet af.
 - [ ] Ontwerp begint niet met (visueel) totaalplaatje van de hoofdblokken. Het is niet “de focus liggen op het ontwerp van het netwerk” want de ISO-bijlage wordt als uitgangspunt gebruikt. De redenatie moet totaal omgedraaid zijn: uit de eigenschappen van het dynamische netwerk volgen functionele beslissingen waarvan verschillende in een/het ISO-team zijn afgebakend. 5.1 praat alleen over implementatie(s) en die horen niet in een (functioneel) ontwerp hoofdstuk. 5.3.1 bevat geen functionele blokken van het Basisstation. Jullie ‘functionele blokken” zijn low-level implementaties van bewust ontworpen, maar niet eerder verwoorde, functionele deeltaken.
 - [ ] Geheel hoofdstuk 5 is de implementatie, ofwel het gehele functionele ontwerp ontbreekt. Dit functionele ontwerp bevat o.a. de routing van het D WSN en de keuzes die hierbij zijn gemaakt worden daarbij onderbouwd. Daarnaast wordt broncode vooral in de bijlages getoond om de rode draad niet te laten verzanden.
-- [ ] Het testplan, de uitgevoerde testen en de testresultaten zijn niet benoemd.
 - [ ] De Conclusie is niet concreet genoeg omdat o.a. niet expliciete testresultaten en specificaties worden gebruikt. De Conclusie mag niet subjectief geschreven zijn. De genoemde (test)resultaten hadden in een vorig hoofdstuk al benoemd moeten zijn.
 - [ ] De Aanbevelingen zijn ‘fout’ verwoord en kent vooral vage claims.
 - [ ] De RAILS-analyse is vaag verwoord omdat het geen meetbare of gevalideerde informatie bevat.
@@ -17,3 +16,7 @@
 - [ ] Algemeen: het is ongebruikelijk om in dit formaat documentatie 4 niveaus diepe paragrafen te gebruiken.
 - [ ] Er kunnen nog verschillende spelling- en grammaticafouten worden voorkomen.
 - [ ] De schrijfstijl is niet consequent formeel toegepast.
+
+
+Naomi:
+- [ ] Het testplan, de uitgevoerde testen en de testresultaten zijn niet benoemd.
