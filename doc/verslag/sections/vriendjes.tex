@@ -1,4 +1,4 @@
-\subsection{Vriendjes}
+\subsection{Vriendjes} \label{sec:vriendjes}
 
 De directe buren en buren die via een directe buur bekend zijn (via's) worden opgeslagen als een `vriendje' object. Deze vriendjes worden opgeslagen in een simpele array. De array is standaard 253 vriendjes lang. Dit komt omdat elke node een ID heeft van 1 byte, waardoor er 256 mogelijke ID's zijn. In de ISO staat dat de ID's 0x00 en 0xff niet gebruikt mogen worden. Ook zou een node nooit zichzelf moeten opslaan als vriendje. Hierdoor blijven er 253 ID's over.
 In \autoref{fig:friendsList} is de werking van de vriendjes array te zien.
