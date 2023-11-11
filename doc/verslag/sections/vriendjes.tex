@@ -1,10 +1,7 @@
-\section{Systeem}
-
-
-
 \subsection{Vriendjes}
 
-De directe buren en buren die via een directe buur bekend is (via's) worden opgeslagen als een `vriendje' object. Deze vriendjes worden opgeslagen in een simpele array. De array is standaard 253 vriendjes lang, aangezien dat het maximale aantal is dat er kunnen zijn volgens de ISO. In \autoref{fig:friendsList} is de werking van de vriendjes array te zien.
+De directe buren en buren die via een directe buur bekend zijn (via's) worden opgeslagen als een `vriendje' object. Deze vriendjes worden opgeslagen in een simpele array. De array is standaard 253 vriendjes lang. Dit komt omdat elke node een ID heeft van 1 byte, waardoor er 256 mogelijke ID's zijn. In de ISO staat dat de ID's 0x00 en 0xff niet gebruikt mogen worden. Ook zou een node nooit zichzelf moeten opslaan als vriendje. Hierdoor blijven er 253 ID's over.
+In \autoref{fig:friendsList} is de werking van de vriendjes array te zien.
 
 
 \begin{figure}[ht]
@@ -25,7 +22,7 @@ Er zijn 2 soorten vriendjes: een direct vriendje en een via. Deze worden in hetz
     \item[Actief]   Of het vriendje betrouwbaar genoeg is om berichten naar te kunnen sturen.
 \end{description}
 
-De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanneer een node A een snapshot ontvangt van een vriendje B, zal node A het vertrouwen van B met twee ophogen. Wanneer node A zelf een snapshot stuurt verlaagt hij het vertrouwen van al zijn vriendjes met één. Op deze manier zal er consequent elke periode een snapshot ontvangen moeten worden om het vertrouwen te verhogen. Wanneer het vertrouwen boven 5 uitkomt, zal de node actief gemaakt worden. Dat wil zeggen dat het vriendje nu genoeg vertrouwd wordt om er data naartoe te sturen, en om hem te gebruiken als via-bron. Wanneer het vertrouwen onder 5 valt zal het vriendje niet meer actief gemaakt worden. Het vertrouwen zal nooit boven de 7 uitkomen. Deze waardes (5 en 7) zijn bepaald door deze steeds met kleine hoeveelheden aan te passen totdat het systeem zo betrouwbaar mogelijk leek te werken.
+De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanneer een node A een snapshot ontvangt van een vriendje B, zal node A het vertrouwen van B met twee ophogen. Wanneer node A zelf een snapshot stuurt verlaagt hij het vertrouwen van al zijn vriendjes met één. Op deze manier zal er consequent elke periode een snapshot ontvangen moeten worden om het vertrouwen te verhogen. Wanneer het vertrouwen boven 5 uitkomt, zal de node actief gemaakt worden. Dat wil zeggen dat het vriendje nu genoeg vertrouwd wordt om er data naartoe te sturen, hem te  en om hem te gebruiken als bron van via's. Wanneer het vertrouwen onder 5 valt zal het vriendje niet meer actief gemaakt worden. Het vertrouwen zal nooit boven de 7 uitkomen. Deze waardes (5 en 7) zijn een inschatting, en er zou meer getest moeten worden om te bevestigen of ze ideaal zijn voor onze doeleinden.
 
 
 \begin{figure}
@@ -40,7 +37,7 @@ De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanne
     \label{fig:trustSystem}
 \end{figure}
 
-De Hops en Via eigenschappen zijn bedoeld voor de vriendjes die via een ander, direct vriendje bekend zijn. Deze via's worden toegevoegd wanneer een actief vriendje een snapshot stuurt met vriendjes-data er in, van vriendjes die wij nog niet kennen. In een via vriendje wordt opgeslagen in hoeveel hops hij te bereiken is (wordt in de snapshot meegestuurd), en via wie hij bekend is (het actieve vriendje waarvan de snapshot is ontvangen). Wanneer een via vriendje plotseling wel direct te bereiken is, wordt het vertrouwen nog steeds opgehoogd. Wanneer het vriendje actief wordt zal de via en hops data van het vriendje verwijderd worden. Dit wordt gedaan om de situatie in \autoref{fig:HopsOpslaanVanActieveNode} te voorkomen.
+De Hops en Via eigenschappen zijn bedoeld voor de vriendjes die via een ander, direct vriendje bekend zijn. Deze via's worden toegevoegd wanneer een actief vriendje een snapshot stuurt met vriendjes-data er in, van vriendjes die wij nog niet kennen. In een via vriendje wordt opgeslagen in hoeveel hops hij te bereiken is (wordt in de snapshot meegestuurd), en via wie hij bekend is (het actieve vriendje waarvan de snapshot is ontvangen). Wanneer een via vriendje plotseling wel direct te bereiken is, wordt het vertrouwen nog steeds opgehoogd. Wanneer het vriendje actief wordt, wordt de via en hop data van het vriendje verwijderd. Dit wordt gedaan om de situatie in \autoref{fig:HopsOpslaanVanActieveNode} te voorkomen.
 
 
 \begin{figure}[ht]
