@@ -147,7 +147,7 @@ void chan(char *arguments) {
     nrfSetChannel(channel);
     nrfStartListening();
 
-    printf("\nSwitched to channel " ID_COLOR "%d" NO_COLOR "\n\n", channel);
+    printf("Switched to channel " ID_COLOR "%d" NO_COLOR "\n\n", channel);
 }
 
 void list(char *arguments) {
@@ -169,7 +169,7 @@ void dest(char *arguments) {
 }
 
 void myid(char *arguments) {
-    printf("Your ID is 0x%02x\n", isoGetId());
+    printf("Your ID is " ID_COLOR "0x%02x\n\n" NO_COLOR, isoGetId());
 }
 
 // Function to show the keys in Hex
