@@ -6,7 +6,11 @@
 \usepackage[backend=biber, style=ieee]{biblatex}
 \usepackage{multirow}
 \usepackage{pdfpages}
-\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz-timing}
+
 \addbibresource{references.bib}
 
 \setAuthor{\\Tycho Jöbsis (500845792)\\ Jochem Leijenhorst (500855372)\\ Illya Ustenko (500845492)\\ Naomi Visser (500850314) }
@@ -36,9 +40,11 @@
     \newpage
     \input{sections/system}
     \newpage
-    \input{sections/dummyData}
+    \input{sections/ISOlib.tex}
     \newpage
     \input{sections/basestation}
+    \newpage
+    \input{sections/dummyData}
     \newpage
     \input{sections/nrfChat}
     \newpage

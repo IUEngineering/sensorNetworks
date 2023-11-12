@@ -1,0 +1,19 @@
+\section{ISO library}
+
+De communicatie van de verschillende nodes in het netwerk gebeurt door middel van de NRF24L01+, volgens een afgesproken standaard (de ISO). Deze standaard is ontworpen om op een goede manier een DWSN bij te kunnen houden. Zoals eerder genoemd kunnen in het netwerk nodes makkelijk toegevoegd en verwijderd worden. Dit kan gedaan worden door een node aan te zetten, en deze naar een locatie in de buurt van het netwerk plaatsen. Zo verbindt de node automatisch met het netwerk. De nodes houden bij welke andere nodes er in het netwerk zitten door middel van periodiek verstuurde `snapshots'. Deze snapshots bevatten het ID van de node die het stuurt, samen met alle nodes die hij kent in het netwerk. Als een node een bericht wilt sturen naar een andere node, kan dit direct gebeuren, maar ook via één of meerdere andere nodes. Deze nodes sturen het bericht door totdat het zijn bestemming bereikt.
+
+De NRF24L01+ gebruikt een systeem genaamd `pipes', die nuttig zijn voor het sturen van berichten naar een bepaalde node. In de ISO worden 2 pipes gebruikt: een privé pipe en een openbare pipe. Elke node heeft zijn eigen privé pipe, waarom deze ontvangt. Daarbij ontvangt elke node ook op de openbare pipe. De privé pipe wordt gebruikt voor berichten, waar de openbare pipe gebruikt wordt voor snapshots.
+
+Voor het volgen van de ISO is een library gemaakt die dient als abstractielaag in de code van de nodes. De library heeft de volgende functionaliteiten:
+\begin{itemize}
+    \item Snapshots sturen.
+    \item Ontvangen berichten afhandelen.
+    \item Snapshots van andere interpreteren.
+    \item Een lijst van bekende nodes bijhouden (zie \autoref{sec:vriendjes}).
+    \item Een functie die berichten (of `payloads') stuurt over het netwerk.
+    \item Berichten die voor andere nodes bedoeld zijn doorsturen.
+    \item Een callback functie voor de berichten die voor deze node bedoeld zijn.
+\end{itemize}
+De library is gemaakt zodat het makkelijker is om programma's te maken die door middel van de ISO kunnen communiceren.
+
+\input{sections/vriendjes.tex}
