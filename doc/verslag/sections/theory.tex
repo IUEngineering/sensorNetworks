@@ -7,7 +7,7 @@
 % deze in dit specifieke geval wel/niet
 
 \section{Invloeden op productiviteit} \label{sec:theory}
-Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invloed op comfort\cite{comfort-grootheden}:
+Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invloed op productiviteit\cite{comfort-grootheden}:
 \begin{itemize}
     \item Kamertemperatuur
     \item Luchtkwaliteit
@@ -15,7 +15,6 @@ Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invlo
     \item Lichtkwaliteit
 \end{itemize}
 
-\subsection{Kamertemperatuur}
 
 \subsection{Luchtkwaliteit}
 % Vertel over verschillende grootheden binnen luchtkwaliteit die gemeten kunnen worden met sensor.
@@ -25,8 +24,33 @@ Luchtkwaliteit bestaat uit verschillende aspecten. Twee hiervan zijn VOC (Volati
 
 Luchtvochtigheid wordt normaal gemeten in \textit{relatieve} luchtvochtigheid. Dit geeft aan hoeveel waterdamp er in de lucht zit, vergeleken met hoeveel waterdamp er in de lucht kan zitten op de huidige temperatuur. Een relatieve luchtvochtigheid van 100\% is de maximale hoeveelheid waterdamp die er met de huidige temperatuur in kan zitten. 
 
+\subsection{Kamertemperatuur}
+De temperatuur waar een persoon comfortabel bij voelt hangt niet alleen af van de temperatuur zelf maar ook de luchtvochtigheid in een ruimte\cite{palonen1993effects}. Dit zorgt ervoor dat je niet allen kan kijken naar een temperatuur op zichzelf. De hoogste percentage mensen is comfortabel bij temperaturen tussen 22.0 $^{\circ}$C en 22.9 $^{\circ}$C. Tussen deze waardes maakt luchtvochtigheid ook het minste uit voor het menselijk gevoel. 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{img/tempHumidGraph.png}
+    \caption{Luchttemperatuur in een wel en niet bevochtigde ruimte met mening van werknemers}
+\end{figure}
+
+
 \subsection{Geluidsniveau}
-Geluidsniveau wordt gemeten in decibel (dB). 
+Geluidsniveau wordt gemeten in decibel met de A-weging (dBA)\cite{aWeighting}. De A-weging wordt gebruikt omdat het menselijk gehoor niet over alle frequenties geluid met dezelfde intensiteit ervaart. Om 68\% van de mensen tevreden te houden met het geluidsniveau in een kantooromgeving moet het niveau niet hoger zijn dan wat er beschreven is in \autoref{tab:soundLevels}\cite{geluid-levels}. In de tabel is het Gemiddelde niveau een gemiddelde van een metingen over 10 seconden. Elke gemeten waarde die 5 dBA boven het gemiddelde niveau piekt wordt opgeteld bij de piek index van het gemiddelde niveau. Deze metingen zijn meerdere keren per uur gedaan in de loop van 3 dagen in het onderzoek\cite{geluid-levels}. 
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{ c | c }
+        Gemiddelde niveau (dBA) & Piek index\\
+        \hline
+        50 & 44 \\
+        55 & 26 \\
+        60 & 14 \\
+        65 & 6  \\
+        70 & 1 
+    \end{tabular}
+    \caption{Gemiddelde waardes en piek indices}
+    \label{tab:soundLevels}
+\end{table}
+
 
 \subsection{Lichtkwaliteit}
 
