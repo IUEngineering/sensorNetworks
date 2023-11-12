@@ -58,22 +58,24 @@ Het gebruikersscherm is het scherm dat door de gebruiker gezien hoort te worden.
 De code van de interface gebruikt een modulair systeem om aanpassingen zo makkelijk mogelijk te maken. De twee schermen, het debug scherm en het gebruikersscherm, zijn gedefinieerd met een scherm datatype.
 Deze `schermen' bevatten vervolgens een array van `scherm elementen'.
 
-\begin{lstlisting}[caption={Het datatype van de schermen},captionpos=b,label={lst:screen_t},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
-    typedef struct {
-        uint8_t elementCount;
-        screenElement_t *elements;
-    } screen_t;
-\end{lstlisting}
+\begin{minipage}{\textwidth}
+    \begin{lstlisting}[caption={Het datatype van de schermen},captionpos=b,label={lst:screen_t},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+typedef struct {
+    uint8_t elementCount;
+    screenElement_t *elements;
+} screen_t;
+    \end{lstlisting}
+\end{minipage}
 
 Een scherm element moet een aantal dingen kunnen opslaan. Elk scherm element heeft een ncurses window nodig om naar de interface te kunnen printen. Deze bevat ook gelijk de dimensies en de positie van het element.
 Daarnaast is het handig als het mogelijk is om op het touchscreen een scherm element aan te kunnen tikken. Hierdoor heeft elk scherm element een functie pointer, die uitgevoerd wordt wanneer er op het element getikt wordt. Omdat een bepaalt element misschien wilt weten waar er precies getikt is, accepteert deze functie 2 coördinaten als argumenten. Als het scherm element geen tik functie nodig heeft, kan deze naar een null pointer gezet worden. Als laatste moet elk scherm element opnieuw naar de interface getekend kunnen worden, wanneer er van scherm gewisseld wordt. Hiervoor is een initialisatie functie pointer toegevoegd. Deze wordt uitgevoerd wanneer het scherm waar het element in zit geïnitialiseerd wordt.
 
 \begin{lstlisting}[caption={Het datatype van de scherm elementen},captionpos=b,label={lst:screenElement_t},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
-    typedef struct {
-        WINDOW *window;
-        void (*tap)(uint32_t col, uint32_t row);
-        void (*initialize)(WINDOW *win);
-    } screenElement_t;    
+typedef struct {
+    WINDOW *window;
+    void (*tap)(uint32_t col, uint32_t row);
+    void (*initialize)(WINDOW *win);
+} screenElement_t;    
 \end{lstlisting}
 
 \subsubsection*{Communicatie met de XMega}
