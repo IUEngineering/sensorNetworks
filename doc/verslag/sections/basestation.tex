@@ -25,8 +25,8 @@ Het debug scherm is nuttig om te zien of nodes in het netwerk goed werken.
 Het gehele scherm wordt gebruikt verschillende data te laten zien. 
 \begin{figure}[ht]
     \centering
-    \includegraphics*[width=0.8\textwidth]{img/debugScherm.jpg}
-    \caption{Debug scherm op de 7 inch PI scherm !!DIT MOET EEN SS WORDEN!!}
+    \includegraphics*[width=0.8\textwidth]{img/basestationInterface.png}
+    \caption{Debug scherm op de 7 inch PI scherm.}
     \label{fig:debugSchermScreenshot}
 \end{figure}
 
@@ -44,9 +44,16 @@ Het Relays \& Payloads venster toont alle ontvangen directe berichten. Dit is in
 
 Het Buttons venster bevat de coördinaten van de laatste aanraking op het touchscreen, en twee knoppen. Eén van de knoppen kan gebruikt worden om de Raspberry PI veilig af te sluiten, de andere kan gebruikt worden om te schakelen tussen het debug scherm en het normale scherm.
 
-Het Friends venster bevat de lijst van vriendjes die de basisstation node kent. Elke regel in het venster toont de data van één vriendje. Als er op de regel getikt wordt verschijnt er een prompt die vraagt of er een bericht gestuurd moet worden naar de node waar op getikt is, zoals te zien in \autoref{fig:friendsSend}. Als er vervolgens op ``yes'' getikt wordt, stuurt het basisstation een standaard bericht naar de geselecteerde node.
+Het Friends venster bevat de lijst van vriendjes die de basisstation node kent. Elke regel in het venster toont de data van één vriendje. Als er op de regel getikt wordt verschijnt er een prompt die vraagt of er een bericht gestuurd moet worden naar de node waar op getikt is, zoals te zien in \autoref{fig:friendSend}. Als er vervolgens op ``yes'' getikt wordt, stuurt het basisstation een standaard bericht naar de geselecteerde node.
 
-De Data venster toont de actuele sensordata. Wanneer er nog geen data ontvangen is van een bepaalde sensor, staat er ``measuring''.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.3\textwidth]{img/prompt.png}
+    \caption{Verstuur prompt op het debug scherm.}
+    \label{fig:friendSend}
+\end{figure}
+
+Het Data venster toont de actuele sensordata. Wanneer er nog geen data ontvangen is van een bepaalde sensor, staat er ``measuring''.
 
 \subsubsection*{Gebruikersscherm}
 Het gebruikersscherm is het scherm dat door de gebruiker gezien hoort te worden. Hierop is alle sensor data beschikbaar, net als het data venster in de debug interface. Ook is er een plaats waar de metaconclusies verschijnen.
