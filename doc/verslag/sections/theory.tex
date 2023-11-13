@@ -9,8 +9,11 @@
 \section{Invloeden op productiviteit} \label{sec:theory}
 Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invloed op productiviteit\cite{comfort-grootheden}:
 \begin{itemize}
-    \item Kamertemperatuur
     \item Luchtkwaliteit
+    \begin{itemize}
+        \item VOC (Volatile Organic Compounds)
+        \item Luchtvochtigheid
+    \end{itemize}
     \item Geluidsniveau
     \item Lichtkwaliteit
 \end{itemize}
@@ -22,19 +25,19 @@ Volgens een groot aantal onderzoeken hebben de volgende factoren de meeste invlo
 % Concludeer dat we 2 sensoren nodig hebben: luchtvocht en luchtqual
 Luchtkwaliteit bestaat uit verschillende aspecten. Twee hiervan zijn VOC (Volatile Organic Compounds) en luchtvochtigheid\cite{comfort-grootheden}\cite{luchtkwal-is-voc-denk-ik-misschien}. Dit zijn de twee luchtkwaliteit gerelateerde waardes die gemeten gaan worden.
 
-Luchtvochtigheid wordt normaal gemeten in \textit{relatieve} luchtvochtigheid. Dit geeft aan hoeveel waterdamp er in de lucht zit, vergeleken met hoeveel waterdamp er in de lucht kan zitten op de huidige temperatuur. Een relatieve luchtvochtigheid van 100\% is de maximale hoeveelheid waterdamp die er met de huidige temperatuur in kan zitten. 
+Luchtvochtigheid wordt normaal gemeten in \textit{relatieve} luchtvochtigheid. Dit geeft aan hoeveel waterdamp er in de lucht zit, vergeleken met hoeveel waterdamp er in de lucht kan zitten op de huidige temperatuur. Een relatieve luchtvochtigheid van 100\% is de maximale hoeveelheid waterdamp die er met de huidige temperatuur in de lucht kan zitten. 
 
 \subsection{Kamertemperatuur}
-De temperatuur waar een persoon comfortabel bij voelt hangt niet alleen af van de temperatuur zelf maar ook de luchtvochtigheid in een ruimte\cite{palonen1993effects}. Dit zorgt ervoor dat je niet allen kan kijken naar een temperatuur op zichzelf. De hoogste percentage mensen is comfortabel bij temperaturen tussen 22.0 $^{\circ}$C en 22.9 $^{\circ}$C. Tussen deze waardes maakt luchtvochtigheid ook het minste uit voor het menselijk gevoel. 
+De temperatuur waar een persoon zich comfortabel bij voelt hangt niet alleen af van de temperatuur zelf maar ook de luchtvochtigheid in een ruimte\cite{palonen1993effects}. Dit zorgt ervoor dat je niet allen kan kijken naar een temperatuur op zichzelf. Bij een temperatuur tussen 22.0 $^{\circ}$C en 22.9 $^{\circ}$ voelt het grootste percentage mensen zich comfortabel. Tussen deze twee temperaturen maakt luchtvochtigheid het minste uit. 
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=0.8]{img/tempHumidGraph.png}
-    \caption{Luchttemperatuur in een wel en niet bevochtigde ruimte met mening van werknemers}
+    \caption{Luchttemperatuur in een wel en niet bevochtigde ruimte volgens de mening van werknemers\cite{palonen1993effects}}
 \end{figure}
 
 
 \subsection{Geluidsniveau}
-Geluidsniveau wordt gemeten in decibel met de A-weging (dBA)\cite{aWeighting}. De A-weging wordt gebruikt omdat het menselijk gehoor niet over alle frequenties geluid met dezelfde intensiteit ervaart. Om 68\% van de mensen tevreden te houden met het geluidsniveau in een kantooromgeving moet het niveau niet hoger zijn dan wat er beschreven is in \autoref{tab:soundLevels}\cite{geluid-levels}. In de tabel is het Gemiddelde niveau een gemiddelde van een metingen over 10 seconden. Elke gemeten waarde die 5 dBA boven het gemiddelde niveau piekt wordt opgeteld bij de piek index van het gemiddelde niveau. Deze metingen zijn meerdere keren per uur gedaan in de loop van 3 dagen in het onderzoek\cite{geluid-levels}. 
+Het geluidsniveau wordt gemeten in decibel met de A-weging (dBA)\cite{aWeighting}. De A-weging wordt gebruikt omdat het menselijk gehoor niet over alle frequenties geluid met dezelfde intensiteit ervaart. Om 68\% van de mensen tevreden te houden met het geluidsniveau in een kantooromgeving moet het niveau niet hoger zijn dan wat er beschreven is in \autoref{tab:soundLevels}\cite{geluid-levels}. In \autoref{tab:soundLevels} is het Gemiddelde niveau een gemiddelde van een metingen over 10 seconden. Elke gemeten waarde die 5 dBA boven het gemiddelde niveau piekt wordt opgeteld bij de piek index van het gemiddelde niveau. Deze metingen zijn meerdere keren per uur gedaan in de loop van 3 dagen in het onderzoek\cite{geluid-levels}. 
 
 \begin{table}[ht]
     \centering
@@ -54,9 +57,30 @@ Geluidsniveau wordt gemeten in decibel met de A-weging (dBA)\cite{aWeighting}. D
 
 \subsection{Lichtkwaliteit}
 
+Lichtkwaliteit bestaat volgens de Europese regelgevingsnormen uit verschillende aspecten\cite{lightingIndorWorkspaces}. Een van deze aspecten is lichtintensiteit in lux, deze waarde verschilt per ruimte in een kantooromgeving. In \autoref{tab:lightLevelsOffices} zijn de waardes te zien waar een ruimte aan moet voldoen \cite{lightingIndorWorkspaces}.
 
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{ c | c }
+        Type van interieur, taak of activiteit & Lux waarde\\
+        \hline
+        Archiveren, kopiëren, enz. & 300 \\
+        Schrijven, typen, lezen, data verwerken & 500 \\
+        Technische tekening & 750 \\
+        CAD-Werkplekken & 500  \\
+        Conferentie- en vergaderzalen (Verlichting moet regelbaar zijn) & 500  \\
+        Receptiebalie & 300 \\
+        Archieven & 200 
+
+    \end{tabular}
+    \caption{Licht vereisten in een kantooromgeving\cite{lightingIndorWorkspaces}}
+    \label{tab:lightLevelsOffices}
+\end{table}
 
 \subsection{Metaconclusie}
+
+Voor de metaconclusies zijn er twee factoren gekozen, luchtkwaliteit en kamertemperatuur. Als de VOC waarde boven de 3.0 \(mg/m^3\)  \cite{voc-luchtkwaliteit} en/of de luchtvochtigheid boven 60\%\cite{palonen1993effects} komt terwijl de kamertemperatuur boven de 22.9 $^{\circ}$C\cite{palonen1993effects} is, dan wordt er een advies gegeven om het raam open te zetten. 
+
 % Noem 1 of 2 als voorbeeld
 % Maak duidelijk dat dit een Proof of concept.
 
