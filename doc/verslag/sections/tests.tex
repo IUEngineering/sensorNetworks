@@ -1,10 +1,11 @@
 \section{Verificatie}
 
 %inleiding over welke testen we gaan uitvoeren en waarom. Over hoe de testen zijn opgesteld en wat het doel is van de totaliteit testen.
+In dit hoofdstuk worden enkele tests uitgevoerd om het functioneren van het netwerk te evalueren. Hieruit kan worden afgeleid wat de optimale afstanden zijn en welke betrouwbaarheid haalbaar is.
 
 \subsection{Enkele communicatie Test}
 % uitleg wat de test is met doel
-DDeze test evalueert de communicatie tussen twee nodes. Het doel is om te beoordelen hoe betrouwbaar de verbinding is en over welke afstand de communicatie nog steeds betrouwbaar is. De test begint door eerst 100 berichten naar de andere node te verzenden op een afstand van 10 cm en te kijken hoeveel van de berichten aankomen bij de andere node. De betrouwbaarheid wordt bepaald op basis van het aantal ontvangen berichten van de 100 verzonden berichten. Daarnaast worden ook de vertrouwensniveaus vastgelegd die het systeem zelf meet. Hiervan wordt een gemiddelde genomen van de tijd tussen het eerste en het laatste bericht. Dit wordt gedaan om de gegevens met elkaar te vergelijken en conclusies te trekken.
+Deze test evalueert de communicatie tussen twee nodes. Het doel is om te beoordelen hoe betrouwbaar de verbinding is en over welke afstand de communicatie nog steeds betrouwbaar is. De test begint door eerst 100 berichten naar de andere node te verzenden op een afstand van 10 cm en te kijken hoeveel van de berichten aankomen bij de andere node. De betrouwbaarheid wordt bepaald op basis van het aantal ontvangen berichten van de 100 verzonden berichten. Daarnaast worden ook de vertrouwensniveaus vastgelegd die het systeem zelf meet. Hiervan wordt een gemiddelde genomen van de tijd tussen het eerste en het laatste bericht. Dit wordt gedaan om de gegevens met elkaar te vergelijken en conclusies te trekken.
 
 % Testopstelling
 In onderstaande afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. Hierop is te zien dat twee XMega's nodig zijn met een NRF-chip. Deze moeten worden geplaatst zoals aangegeven in de testopstelling en na elke test wordt de afstand vergroot volgens de tabel waarin alle testresultaten worden vastgelegd. Bij deze test zal er niets tussen de verbinding zitten.
@@ -14,26 +15,11 @@ In onderstaande afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. H
     \caption{Test opstelling.}
     \label{fig:TestCom}
 \end{figure}
-% Resultaten test
-In onderstaande tabel \ref{tab:EnkelCom} zijn de testresultaten te zien.
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c||c|c|c|c|}
-        \hline
-        Test    & Afstand   & Aangekomen berichten  & Trust & Betrouwbaarheid   \\\hline\hline
-        Test 1  & 10 cm     &                       &       &                   \\\hline
-        Test 2  & 15 cm     &                       &       &                   \\\hline
-        Test 3  & 20 cm     &                       &       &                   \\\hline
-        Test 4  & 30 cm     &                       &       &                   \\\hline
-        Test 5  & 50 cm     &                       &       &                   \\\hline
-        Test 6  & 100 cm    &                       &       &                   \\\hline
-        Test 7  & 150 cm    &                       &       &                   \\\hline
-        Test 8  & 200 cm    &                       &       &                   \\\hline   
-    \end{tabular}
-    \caption{Testresultaten Enkele communicatie Test.}
-    \label{tab:EnkelCom}
-\end{table}
 
+% Resultaten test
+
+
+\newpage
 \subsection{Hop Test}
 % uitleg wat de test is met doel
 Deze test is vergelijkbaar met de vorige test, maar maakt gebruik van één extra node tussen de twee versturende en ontvangende nodes. Het doel van deze test is om te onderzoeken hoe betrouwbaar de communicatie via hops is. Ook kan worden gekeken tot welke maximale afstand de hops nog steeds functioneren.
@@ -42,123 +28,125 @@ Deze test is vergelijkbaar met de vorige test, maar maakt gebruik van één extr
 Voor deze test zijn drie nodes nodig. In onderstaande afbeelding \ref{fig:Testhop} is te zien hoe de nodes moeten worden geplaatst: één die ontvangt, één die verstuurt en één die wordt gebruikt als hop. Deze test wordt slechts één keer uitgevoerd omdat de afstand al is bepaald in de vorige test. Zodra de berichten aankomen, is de test voltooid.
 \begin{figure}[h]
     \centering
-    \includegraphics[scale = 0.3]{img/test2.png}
+    \includegraphics[scale = 0.4]{img/test2.png}
     \caption{Test opstelling 2}
     \label{fig:Testhop}
 \end{figure}
 
 % Resultaten test
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c||c|c|c|c|c|}
-        \hline
-        Test    & Afstand rechterkant  & Afstand linkerkant & Aangekomen berichten  & Trust & Betrouwbaarheid   \\\hline\hline
-        Test 1  &                      &                    &                       &       &                   \\\hline
-    \end{tabular}
-    \caption{Testresultaten Hop Test.}
-    \label{tab:Hop}
-\end{table}
 
-\subsection{Totale communicatie Test}
-% uitleg wat de test is met doel
-Deze test is een samenvoeging van de vorige twee tests. In deze test wordt gekeken naar de communicatie tussen meerdere nodes. Elke node zal 100 berichten versturen naar een zelfgekozen node, waarbij de keuze bestaat uit een node met één of meerdere hops en een directe node. De afstand blijft statisch in deze test. Het doel van deze test is om te beoordelen of de communicatie met meerdere nodes succesvol is en of elke node vergelijkbare resultaten vertoont.
 
-% Testopstelling
-Aangezien het onderwerp van dit verslag betrekking heeft op vijf sensoren met een basisstation, zullen voor deze test zes afzonderlijke nodes worden gebruikt. In onderstaande afbeelding \ref{fig:TestTotCom} is te zien hoe de XMega's moeten worden opgesteld. De afstand is gebaseerd op de grootst mogelijke afstand waarbij de betrouwbaarheid nog boven de 90\% ligt, zoals vastgesteld in de eerdere enkele communicatietest.
+% \newpage
+% \subsection{Totale communicatie Test}
+% % uitleg wat de test is met doel
+% Deze test is een samenvoeging van de vorige twee tests. In deze test wordt gekeken naar de communicatie tussen meerdere nodes. Elke node zal 100 berichten versturen naar een zelfgekozen node, waarbij de keuze bestaat uit een node met één of meerdere hops en een directe node. De afstand blijft statisch in deze test. Het doel van deze test is om te beoordelen of de communicatie met meerdere nodes succesvol is en of elke node vergelijkbare resultaten vertoont.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale = 0.3]{img/test3.png}
-    \caption{Test opstelling 3}
-    \label{fig:TestTotCom}
-\end{figure}
+% % Testopstelling
+% Aangezien het onderwerp van dit verslag betrekking heeft op vijf sensoren met een basisstation, zullen voor deze test zes afzonderlijke nodes worden gebruikt. In onderstaande afbeelding \ref{fig:TestTotCom} is te zien hoe de XMega's moeten worden opgesteld. De afstand is gebaseerd op de grootst mogelijke afstand waarbij de betrouwbaarheid nog boven de 90\% ligt, zoals vastgesteld in de eerdere enkele communicatietest.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale = 0.3]{img/legenda_test3.png}
-    \caption{Legenda Test opstelling 3}
-    \label{fig:TestTotComLeg}
-\end{figure}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[scale = 0.5]{img/test3.png}
+%     \caption{Test opstelling 3}
+%     \label{fig:TestTotCom}
+% \end{figure}
 
-% Resultaten test
-In onderstaande tabel \ref{Test:TotCom} zijn de testresultaten te zien, zowel die van de directe buur als die van de indirecte buur.
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c||c|c|c|c|c|c|}
-        \hline
-        \textbf{Test}    & \textbf{Node}  & \textbf{Directe buur}   & \textbf{Aangekomen berichten}  & \textbf{Trust}     & \textbf{Betrouwbaarheid}   &\\\hline\hline
-        Test 1  &       &                &                       &           &                   &\\\hline
-        Test 2  &       &                &                       &           &                   &\\\hline
-        Test 3  &       &                &                       &           &                   &\\\hline
-        Test 4  &       &                &                       &           &                   &\\\hline
-        Test 5  &       &                &                       &           &                   &\\\hline
-        Test 6  &       &                &                       &           &                   &\\\hline\hline
-        \textbf{Test}    & \textbf{Node}  & \textbf{Indirecte buur}   & \textbf{Aantal hops} \textbf{Aangekomen berichten}  & \textbf{Trust}     & \textbf{Betrouwbaarheid}   \\\hline\hline
-        Test 1  &       &                &           &            &           &                   \\\hline
-        Test 2  &       &                &           &            &           &                   \\\hline
-        Test 3  &       &                &           &            &           &                   \\\hline
-        Test 4  &       &                &           &            &           &                   \\\hline
-        Test 5  &       &                &           &            &           &                   \\\hline
-        Test 6  &       &                &           &            &           &                   \\\hline\hline
-    \end{tabular}
-    \caption{Testresultaten Totale communicatie Test}
-    \label{Test:TotCom}
-\end{table}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[scale = 0.3]{img/legenda_test3.png}
+%     \caption{Legenda Test opstelling 3}
+%     \label{fig:TestTotComLeg}
+% \end{figure}
 
-\subsection{Encryptie Test}
-% uitleg wat de test is met doel
-Deze test controleert of de encryptie correct is geïmplementeerd. Dit wordt gedaan door twee nodes te nemen en bij één node de encryptie uit te schakelen. Vervolgens wordt gekeken naar wat binnenkomt en wordt dit bericht handmatig ontcijferd. Nadat dit is gedaan, wordt de encryptie weer ingeschakeld om te controleren of dit overeenkomt met wat is verzonden. Het doel van deze test is om te kijken of de encryptie naar behoren werkt.
+% % Resultaten test
+% In tabel \ref{Test:TotCom} zijn de testresultaten te zien, zowel die van de directe buur als die van de indirecte buur.
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{|c||c|c|c|c|c|}
+%         \hline
+%         \textbf{Test}    & \textbf{Node}  & \textbf{Directe buur}   & \textbf{Aangekomen berichten}  & \textbf{Trust}     & \textbf{Betrouwbaarheid}   \\\hline\hline
+%         Test 1  &       &                &                       &           &                   \\\hline
+%         Test 2  &       &                &                       &           &                   \\\hline
+%         Test 3  &       &                &                       &           &                   \\\hline
+%         Test 4  &       &                &                       &           &                   \\\hline
+%         Test 5  &       &                &                       &           &                   \\\hline
+%         Test 6  &       &                &                       &           &                   \\\hline
+%     \end{tabular}
+%     \caption{Testresultaten Totale communicatie Test (Directe buur).}
+%     \label{Test:TotCom}
+% \end{table}
 
-% Testopstelling
-De opstelling is hetzelfde als die van de enkele communicatietest. Het enige verschil is de encryptie die bij één node is ingeschakeld en bij de andere uitgeschakeld.\begin{figure}[h]
-    \centering
-    \includegraphics[scale = 0.3]{img/test1.png}
-    \caption{Test opstelling}
-    \label{fig:TestEn}
-\end{figure}
-% Resultaten test
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c||c|c|c|c|c|c|}
-        \hline
-        Test    & Verzonden bericht      & Key 1 & Key 2 & Ontvangen bericht & Zelf Decrypted bericht & Decrypted bericht \\\hline
-        Test 1  & Hallo                  &       &       &                   &                        &                   \\\hline
-        Test 2  & Poezen zijn lief       &       &       &                   &                        &                   \\\hline
-        Test 3  & Opdracht 1 met ?       &       &       &                   &                        &                   \\\hline
-        Test 4  & is deze opdracht leuk? &       &       &                   &                        &                   \\\hline
-    \end{tabular}
-    \caption{Testresultaten Totale communicatie Test}
-    \label{fig:TotCom}
-\end{table}
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{|c||c|c|c|c|c|c|}
+%         \hline
+%         \textbf{Test}    & \textbf{Node}  & \textbf{Indirecte buur}   & \textbf{Aantal hops} & \textbf{Aangekomen berichten}  & \textbf{Trust}     & \textbf{Betrouwbaarheid}   \\\hline\hline
+%         Test 1  &       &                &           &            &           &                   \\\hline
+%         Test 2  &       &                &           &            &           &                   \\\hline
+%         Test 3  &       &                &           &            &           &                   \\\hline
+%         Test 4  &       &                &           &            &           &                   \\\hline
+%         Test 5  &       &                &           &            &           &                   \\\hline
+%         Test 6  &       &                &           &            &           &                   \\\hline
+%     \end{tabular}
+%     \caption{Testresultaten Totale communicatie Test (Indirecte buur).}
+%     \label{Test:TotCom}
+% \end{table}
 
-\subsection{Interface Test}
-% uitleg wat de test is met doel
-Deze test richt zich op de interface van het basisstation, dat, zoals eerder vermeld, een debugscherm en een gebruikersscherm bevat. In beide gevallen is het essentieel om te verzekeren dat beide schermen naar verwachting functioneren. Deze test zal dit dan ook verifiëren. Er zullen twee tests worden uitgevoerd voor de interface: één voor het debugscherm en één voor het gebruikersscherm.
+% \newpage
+% \subsection{Encryptie Test}
+% % uitleg wat de test is met doel
+% Deze test controleert of de encryptie correct is geïmplementeerd. Dit wordt gedaan door twee nodes te nemen en bij één node de encryptie uit te schakelen. Vervolgens wordt gekeken naar wat binnenkomt en wordt dit bericht handmatig ontcijferd. Nadat dit is gedaan, wordt de encryptie weer ingeschakeld om te controleren of dit overeenkomt met wat is verzonden. Het doel van deze test is om te kijken of de encryptie naar behoren werkt.
 
-\subsection{Debugscherm}
-% Testopstelling
-Voor deze test zijn vijf nodes en het basisstation vereist. Het basisstation zal 100 keer naar elke node een 'Ping of Life' sturen, en elke node zal op zijn beurt 100 berichten naar het basisstation versturen. Op het basisstation zal ook worden geëvalueerd hoe groot het vertrouwen is van elke node voor de 'Ping of Life'.
-% Resultaten test
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c||c|c|c|c|}
-        \hline
-        \textbf{Test}   &   \textbf{Ontvangen door} & \textbf{Aangekomen berichten} &   \textbf{Trust}  &   \textbf{Betrouwbaarheid}    \\\hline
-        Test 1          &                           &                               &                   &                               \\\hline 
-        Test 2          &                           &                               &                   &                               \\\hline 
-        Test 3          &                           &                               &                   &                               \\\hline 
-        Test 4          &                           &                               &                   &                               \\\hline 
-        Test 5          &                           &                               &                   &                               \\\hline 
-        \textbf{Test}   &   \textbf{Verzonden naar} & \textbf{Aangekomen berichten} &   \textbf{Trust}  &   \textbf{Betrouwbaarheid}    \\\hline
-        Test 1          &                           &                               &                   &                               \\\hline 
-        Test 2          &                           &                               &                   &                               \\\hline 
-        Test 3          &                           &                               &                   &                               \\\hline 
-        Test 4          &                           &                               &                   &                               \\\hline 
-        Test 5          &                           &                               &                   &                               \\\hline 
-    \end{tabular}
-    \caption{Testresultaten Interface Test.}
-    \label{tab:Int}
-\end{table}
+% % Testopstelling
+% De opstelling is hetzelfde als die van de enkele communicatietest. Het enige verschil is de encryptie die bij één node is ingeschakeld en bij de andere uitgeschakeld.\begin{figure}[h]
+%     \centering
+%     \includegraphics[scale = 0.3]{img/test1.png}
+%     \caption{Test opstelling}
+%     \label{fig:TestEn}
+% \end{figure}
+% % Resultaten test
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{|c||c|c|c|c|c|c|}
+%         \hline
+%         Test    & Verzonden bericht      & Key 1 & Key 2 & Ontvangen bericht & Zelf Decrypted bericht & Decrypted bericht \\\hline
+%         Test 1  & Hallo                  &       &       &                   &                        &                   \\\hline
+%         Test 2  & Poezen zijn lief       &       &       &                   &                        &                   \\\hline
+%         Test 3  & Opdracht 1 met ?       &       &       &                   &                        &                   \\\hline
+%         Test 4  & is deze opdracht leuk? &       &       &                   &                        &                   \\\hline
+%     \end{tabular}
+%     \caption{Testresultaten Encryptie Test}
+%     \label{fig:TotCom}
+% \end{table}
+
+% \subsection{Interface Test}
+% % uitleg wat de test is met doel
+% Deze test richt zich op de interface van het basisstation, dat, zoals eerder vermeld, een debugscherm en een gebruikersscherm bevat. In beide gevallen is het essentieel om te verzekeren dat beide schermen naar verwachting functioneren. Deze test zal dit dan ook verifiëren. Er zullen twee tests worden uitgevoerd voor de interface: één voor het debugscherm en één voor het gebruikersscherm.
+
+% \subsection{Debugscherm}
+% % Testopstelling
+% Voor deze test zijn vijf nodes en het basisstation vereist. Het basisstation zal 100 keer naar elke node een 'Ping of Life' sturen, en elke node zal op zijn beurt 100 berichten naar het basisstation versturen. Op het basisstation zal ook worden geëvalueerd hoe groot het vertrouwen is van elke node voor de 'Ping of Life'.
+% % Resultaten test
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{|c||c|c|c|c|}
+%         \hline
+%         \textbf{Test}   &   \textbf{Ontvangen door} & \textbf{Aangekomen berichten} &   \textbf{Trust}  &   \textbf{Betrouwbaarheid}    \\\hline
+%         Test 1          &                           &                               &                   &                               \\\hline 
+%         Test 2          &                           &                               &                   &                               \\\hline 
+%         Test 3          &                           &                               &                   &                               \\\hline 
+%         Test 4          &                           &                               &                   &                               \\\hline 
+%         Test 5          &                           &                               &                   &                               \\\hline 
+%         \textbf{Test}   &   \textbf{Verzonden naar} & \textbf{Aangekomen berichten} &   \textbf{Trust}  &   \textbf{Betrouwbaarheid}    \\\hline
+%         Test 1          &                           &                               &                   &                               \\\hline 
+%         Test 2          &                           &                               &                   &                               \\\hline 
+%         Test 3          &                           &                               &                   &                               \\\hline 
+%         Test 4          &                           &                               &                   &                               \\\hline 
+%         Test 5          &                           &                               &                   &                               \\\hline 
+%     \end{tabular}
+%     \caption{Testresultaten Interface Test.}
+%     \label{tab:Int}
+% \end{table}
 
 \subsection{conclusies}
 De testen zijn uitgevoerd. 
