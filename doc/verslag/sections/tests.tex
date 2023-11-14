@@ -1,14 +1,15 @@
-\section{Verificatie}
+\section{Verificatie}\label{sec:tests}
 
 %inleiding over welke testen we gaan uitvoeren en waarom. Over hoe de testen zijn opgesteld en wat het doel is van de totaliteit testen.
 In dit hoofdstuk worden enkele tests uitgevoerd om het functioneren van het netwerk te evalueren. Hieruit kan worden afgeleid wat de optimale afstanden zijn en welke betrouwbaarheid haalbaar is.
 
 \subsection{Enkele communicatie Test}
 % uitleg wat de test is met doel
-Deze test evalueert de communicatie tussen twee nodes. Het doel is om te beoordelen hoe betrouwbaar de verbinding is en over welke afstand de communicatie nog steeds betrouwbaar is. De test begint door eerst 100 berichten naar de andere node te verzenden op een afstand van 10 cm en te kijken hoeveel van de berichten aankomen bij de andere node. De betrouwbaarheid wordt bepaald op basis van het aantal ontvangen berichten van de 100 verzonden berichten. Daarnaast worden ook de vertrouwensniveaus vastgelegd die het systeem zelf meet. Hiervan wordt een gemiddelde genomen van de tijd tussen het eerste en het laatste bericht. Dit wordt gedaan om de gegevens met elkaar te vergelijken en conclusies te trekken.
+Deze test evalueert de communicatie tussen twee nodes. Het doel is om te beoordelen hoe betrouwbaar de verbinding is en over welke afstand de communicatie nog steeds betrouwbaar is. Ook zal het vermogen van de chip worden verhoogd. Er is echter niet genoeg ruimte om op vol vermogen te testen, waardoor is gekozen voor de twee laagste vermogens. De test begint door eerst 100 berichten naar de andere node te verzenden op een afstand van 10 cm en te kijken hoeveel van de berichten aankomen bij de andere node. De betrouwbaarheid wordt bepaald op basis van het aantal ontvangen berichten van de 100 verzonden berichten. Daarnaast worden ook de vertrouwensniveaus vastgelegd die het systeem zelf meet. Hiervan wordt een gemiddelde genomen van de tijd tussen het eerste en het laatste bericht. Dit wordt gedaan om de gegevens met elkaar te vergelijken en conclusies te trekken.
 
 % Testopstelling
-In onderstaande afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. Hierop is te zien dat twee XMega's nodig zijn met een NRF-chip. Deze moeten worden geplaatst zoals aangegeven in de testopstelling en na elke test wordt de afstand vergroot volgens de tabel waarin alle testresultaten worden vastgelegd. Bij deze test zal er niets tussen de verbinding zitten.
+In afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. Hierop is te zien dat twee XMega's nodig zijn met een NRF-chip. Deze moeten worden geplaatst zoals aangegeven in de testopstelling en na elke test wordt de afstand vergroot volgens de tabel waarin alle testresultaten worden vastgelegd. Bij deze test zal er niets tussen de verbinding zitten.
+
 \begin{figure}[h]
     \centering
     \includegraphics[scale = 0.3]{img/test1.png}
@@ -16,8 +17,42 @@ In onderstaande afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. H
     \label{fig:TestCom}
 \end{figure}
 
+\vspace{0.5cm}
 % Resultaten test
+\begin{tikzpicture}
+\begin{axis}[
+    title={Enkele communicatie Test resultaten},
+    xlabel={Afstand (cm)},
+    ylabel={Betrouwbaarheid (\%)},
+    xmin=0, xmax=200,
+    ymin=0, ymax=140,
+    xtick={0,20,40,60,80,100,200},
+    ytick={0,20,40,60,80,100},
+    legend pos=north west,
+    ymajorgrids=true,
+    grid style=dashed,
+]
 
+\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+    (10,83)(15,90)(20,76)(30,72)(50,0)(100,0)(150,0)(200,0)
+    };
+    \addlegendentry{Aangekomen berichten(-18dBm)}
+
+\addplot[
+    color=red,
+    mark=square,
+    ]
+    coordinates {
+    (10,98)(15,85)(20,98)(30,40)(50,46)(100,67)(150,0)(200,0)
+    };
+    \addlegendentry{Aangekomen berichten (-12dBm)}
+    
+\end{axis}
+\end{tikzpicture}
 
 \newpage
 \subsection{Hop Test}
@@ -34,6 +69,30 @@ Voor deze test zijn drie nodes nodig. In onderstaande afbeelding \ref{fig:Testho
 \end{figure}
 
 % Resultaten test
+\begin{tikzpicture}
+\begin{axis}[
+    title={Hop Test resultaten},
+    xlabel={Afstand (cm)},
+    ylabel={Betrouwbaarheid (\%)},
+    xmin=0, xmax=50,
+    ymin=0, ymax=140,
+    xtick={0,20,40},
+    ytick={0,20,40,60,80,100},
+    legend pos=north west,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+
+\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+    (20,81)
+    };
+    \addlegendentry{Aangekomen berichten(-18dBm)}
+\end{axis}
+\end{tikzpicture}
 
 
 % \newpage
@@ -147,7 +206,11 @@ Voor deze test zijn drie nodes nodig. In onderstaande afbeelding \ref{fig:Testho
 %     \caption{Testresultaten Interface Test.}
 %     \label{tab:Int}
 % \end{table}
+\newpage
+\subsection{Conclusies}
+De twee tests zijn nu uitgevoerd, en de resultaten verschillen licht van de verwachtingen. In de enkele communicatietest werden de tests uitgevoerd met vermogens van -18 dBm en -12 dBm. Verwacht werd dat de resultaten van -12 dBm over het algemeen hoger zouden zijn dan die van -18 dBm. Dit was ook het geval, behalve bij een afstand van 15 cm tussen de nodes. Hier kwamen vijf berichten meer aan dan bij -12 dBm.
 
-\subsection{conclusies}
-De testen zijn uitgevoerd. 
+Als we specifiek naar de data van de -12 dBm lijn kijken, valt op dat tussen 10 en 20 cm ongeveer dezelfde hoeveelheid berichten wordt ontvangen. Daarna lijkt 30 cm net iets te ver te zijn, waarschijnlijk door ruis. Vervolgens neemt het aantal ontvangen berichten weer toe. Onze hypothese is dat dit wordt veroorzaakt door de chip zelf. Tijdens de testen werden deze waarden vastgesteld. Echter, bij de ontwikkeling van het netwerk konden de nodes veel verder uit elkaar staan en nog steeds goed ontvangen, zelfs met voorwerpen ertussen.
+
+Bij de hops kwamen net iets meer berichten binnen dan wanneer er een directe verbinding was, met een verschil van vijf berichten. Het enige verschil in de opstelling was hoe de XMega's werden geplaatst. Hieruit blijkt dat het signaal niet recht van voren komt, maar meer vanaf de zijkant van de XMega.
 
