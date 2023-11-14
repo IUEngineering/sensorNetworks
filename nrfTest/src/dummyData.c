@@ -38,12 +38,14 @@
 #define TEMP_MESSAGE        0x04
 #define SOUND_MESSAGE       0x05
 
-#define MAX_TEMP    29
+#define MAX_TEMP    30
 #define MAX_VOCHT   100
-#define MAX_SOUND   90
-#define MAX_LIGHT   1600
-#define MAX_ADC     2800 // I have terminal evidence for this value (I read it from the terminal)
+#define MAX_SOUND   80
+#define MAX_VOC     10
+#define MAX_LIGHT   1000
+#define MAX_ADC     3910 // I have terminal evidence for this value (I read it from the terminal)
 
+#define TIME_1_SEC  1
 #define TIME_5_SEC  5
 #define TIME_10_SEC 10
 #define TIME_10_MIN 600
@@ -57,12 +59,13 @@ static void ADCInit(void);
 static uint16_t ADCReadCH0(uint8_t inputPin);
 
 static void sendAirMoisture(void);
-static void sendAirQuality(void);
+static void sendVOC(void);
 static void sendLight(void);
 static void sendTemp(void);
 static void sendSound(void);
 
 static void receivePayload(uint8_t *data);
+static void checkButton(void);
 
 static char key1[] = "VERON Zendamateur";
 static char key2[] = "PI5VLE";
@@ -98,51 +101,59 @@ void dummyDataLoop(void) {
     uint16_t timer = 0;
 
     while (1) {
-        while(! (TCE0.INTFLAGS & TC0_OVFIF_bm))
+        while(! (TCE0.INTFLAGS & TC0_OVFIF_bm)) {
             isoUpdate();
+            checkButton();
+        }
 
         TCE0.INTFLAGS = TC0_OVFIF_bm;
         timer++;
 
-
-        if (PORTB.IN & PIN5_bm) {
-            PORTC.OUTTGL = PIN0_bm;
-
-            if (PORTB.IN & PIN4_bm)
-                sendSound();
-
-            if (PORTB.IN & PIN2_bm)
-                sendLight();
-
-            if (PORTB.IN & PIN1_bm)
-                sendAirQuality();
-            
-            if (PORTB.IN & PIN3_bm)
-                sendTemp();
-            
-            if (PORTB.IN & PIN0_bm)
-                sendAirMoisture();
-        }
-
-        if ((timer % TIME_5_SEC == 0) && (PORTB.IN & PIN4_bm))
+        // Lmao I hate this code with a passion.
+        if ((timer % TIME_1_SEC == 0) && (PORTB.IN & PIN4_bm))
             sendSound();
 
-        if ((timer % TIME_10_SEC == 0)  && (PORTB.IN & PIN2_bm))
+        if ((timer % TIME_1_SEC == 0) && (PORTB.IN & PIN2_bm))
             sendLight();
 
-        if ((timer % TIME_10_MIN == 0)  && (PORTB.IN & PIN1_bm))
-            sendAirQuality();
+        if ((timer % TIME_1_SEC == 0) && (PORTB.IN & PIN1_bm))
+            sendVOC();
 
-        if (timer % TIME_30_MIN == 0) {
-            if (PORTB.IN & PIN3_bm)
-                sendTemp();
+        if ((timer % TIME_1_SEC == 0) && (PORTB.IN & PIN3_bm))
+            sendTemp();
             
-            if (PORTB.IN & PIN0_bm)
-                sendAirMoisture();
+        if ((timer % TIME_1_SEC == 0) && (PORTB.IN & PIN0_bm))
+            sendAirMoisture();
 
-            timer = 0;
-        }
+        if(timer % TIME_30_MIN == 0) timer = 0;
     }
+}
+
+
+void checkButton(void) {
+    static uint8_t prevButton = 0;
+    if (PORTB.IN & PIN5_bm) {
+        if(prevButton) return;
+        prevButton = 1;
+
+        PORTC.OUTTGL = PIN0_bm;
+
+        if (PORTB.IN & PIN4_bm)
+            sendSound();
+
+        if (PORTB.IN & PIN2_bm)
+            sendLight();
+
+        if (PORTB.IN & PIN1_bm)
+            sendVOC();
+        
+        if (PORTB.IN & PIN3_bm)
+            sendTemp();
+        
+        if (PORTB.IN & PIN0_bm)
+            sendAirMoisture();
+    }
+    else prevButton = 0;
 }
 
 // Configure ADCA:
@@ -211,31 +222,21 @@ static void sendAirMoisture(void) {
     payload[0] = AIR_MOIST_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = airMoisture8;
-    printf("%d\n", payload[2]);
-
 
     isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
 
-static void sendAirQuality(void) {
+static void sendVOC(void) {
     uint8_t payload[PAYLOAD_LENGTH] = {0};
 
-    uint16_t airQuality = ADCReadCH0(ADC_CH_MUXPOS_PIN1_gc);
+    uint16_t volatileOrganicCompounds = (uint16_t)ADCReadCH0(ADC_CH_MUXPOS_PIN1_gc) * MAX_VOC / MAX_ADC;
 
     // Fill payload
     payload[0] = AIR_QUALITY_MESSAGE;
     payload[1] = isoGetId();
+    payload[2] = volatileOrganicCompounds;
 
-    if (airQuality > AIR_QUALITY_MED)
-        payload[2] = 'G';
-    else if (airQuality > AIR_QUALITY_BAD)
-        payload[2] = 'O';
-    else
-        payload[2] = 'R';
-
-    printf("\t%c\n", payload[2]);
-    
         
     isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
@@ -247,14 +248,14 @@ static void sendLight(void) {
     uint16_t light = ADCReadCH0(ADC_CH_MUXPOS_PIN2_gc);
     light = (uint32_t)light * MAX_LIGHT / MAX_ADC;
 
+    printf("%d\n", light);
+
     // Fill payload
     payload[0] = LIGHT_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = (uint8_t) (light >> 8);      // Place MSB into the payload
     payload[3] = (uint8_t) (light); // Place LSB into the payload
     
-    printf("\t\t\t%02x %02x %d\n", payload[2], payload[3], light);
-
     isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
@@ -273,8 +274,6 @@ static void sendTemp(void) {
     payload[1] = isoGetId();
     payload[2] = temp8;
 
-    printf("\t\t\t\t%d\n", payload[2]);
-
     isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
 }
@@ -292,8 +291,6 @@ static void sendSound(void) {
     payload[0] = SOUND_MESSAGE;
     payload[1] = isoGetId();
     payload[2] = sound8;
-
-    printf("\t\t\t\t\t%d\n", payload[2]);
 
     isoSendPacket(BASESTATION_ID, keysEncrypt(payload, PAYLOAD_LENGTH, key1, strlen(key1), key2, strlen(key2)), PAYLOAD_LENGTH);
     return;
