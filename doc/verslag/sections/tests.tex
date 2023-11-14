@@ -19,40 +19,44 @@ In afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. Hierop is te z
 
 \vspace{0.5cm}
 % Resultaten test
-\begin{tikzpicture}
-\begin{axis}[
-    title={Enkele communicatie Test resultaten},
-    xlabel={Afstand (cm)},
-    ylabel={Betrouwbaarheid (\%)},
-    xmin=0, xmax=200,
-    ymin=0, ymax=140,
-    xtick={0,20,40,60,80,100,200},
-    ytick={0,20,40,60,80,100},
-    legend pos=north west,
-    ymajorgrids=true,
-    grid style=dashed,
-]
 
-\addplot[
-    color=blue,
-    mark=square,
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        title={Enkele communicatie Test resultaten},
+        xlabel={Afstand (cm)},
+        ylabel={Betrouwbaarheid (\%)},
+        xmin=0, xmax=200,
+        ymin=0, ymax=140,
+        xtick={0,20,40,60,80,100,200},
+        ytick={0,20,40,60,80,100},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
     ]
-    coordinates {
-    (10,83)(15,90)(20,76)(30,72)(50,0)(100,0)(150,0)(200,0)
-    };
-    \addlegendentry{Aangekomen berichten(-18dBm)}
 
-\addplot[
-    color=red,
-    mark=square,
-    ]
-    coordinates {
-    (10,98)(15,85)(20,98)(30,40)(50,46)(100,67)(150,0)(200,0)
-    };
-    \addlegendentry{Aangekomen berichten (-12dBm)}
-    
-\end{axis}
-\end{tikzpicture}
+    \addplot[
+        color=blue,
+        mark=square,
+        ]
+        coordinates {
+        (10,83)(15,90)(20,76)(30,72)(50,0)(100,0)(150,0)(200,0)
+        };
+        \addlegendentry{Aangekomen berichten(-18dBm)}
+
+    \addplot[
+        color=red,
+        mark=square,
+        ]
+        coordinates {
+        (10,98)(15,85)(20,98)(30,40)(50,46)(100,67)(150,0)(200,0)
+        };
+        \addlegendentry{Aangekomen berichten (-12dBm)}
+        
+    \end{axis}
+    \end{tikzpicture}
+\end{figure}
 
 \newpage
 \subsection{Hop Test}
@@ -60,7 +64,7 @@ In afbeelding \ref{fig:TestCom} is de testopstelling weergegeven. Hierop is te z
 Deze test is vergelijkbaar met de vorige test, maar maakt gebruik van één extra node tussen de twee versturende en ontvangende nodes. Het doel van deze test is om te onderzoeken hoe betrouwbaar de communicatie via hops is. Ook kan worden gekeken tot welke maximale afstand de hops nog steeds functioneren.
 
 % Testopstelling
-Voor deze test zijn drie nodes nodig. In onderstaande afbeelding \ref{fig:Testhop} is te zien hoe de nodes moeten worden geplaatst: één die ontvangt, één die verstuurt en één die wordt gebruikt als hop. Deze test wordt slechts één keer uitgevoerd omdat de afstand al is bepaald in de vorige test. Zodra de berichten aankomen, is de test voltooid.
+Voor deze test zijn drie nodes nodig. In \autoref{fig:Testhop} is te zien hoe de nodes moeten worden geplaatst: één die ontvangt, één die verstuurt en één die wordt gebruikt als hop. Deze test wordt slechts één keer uitgevoerd omdat de afstand al is bepaald in de vorige test. Zodra de berichten aankomen, is de test voltooid.
 \begin{figure}[h]
     \centering
     \includegraphics[scale = 0.4]{img/test2.png}
@@ -69,30 +73,33 @@ Voor deze test zijn drie nodes nodig. In onderstaande afbeelding \ref{fig:Testho
 \end{figure}
 
 % Resultaten test
-\begin{tikzpicture}
-\begin{axis}[
-    title={Hop Test resultaten},
-    xlabel={Afstand (cm)},
-    ylabel={Betrouwbaarheid (\%)},
-    xmin=0, xmax=50,
-    ymin=0, ymax=140,
-    xtick={0,20,40},
-    ytick={0,20,40,60,80,100},
-    legend pos=north west,
-    ymajorgrids=true,
-    grid style=dashed,
-]
-
-\addplot[
-    color=blue,
-    mark=square,
+\begin{figure}
+    \begin{tikzpicture}
+    \centering
+    \begin{axis}[
+        title={Hop Test resultaten},
+        xlabel={Afstand (cm)},
+        ylabel={Betrouwbaarheid (\%)},
+        xmin=0, xmax=50,
+        ymin=0, ymax=140,
+        xtick={0,20,40},
+        ytick={0,20,40,60,80,100},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
     ]
-    coordinates {
-    (20,81)
-    };
-    \addlegendentry{Aangekomen berichten(-18dBm)}
-\end{axis}
-\end{tikzpicture}
+
+    \addplot[
+        color=blue,
+        mark=square,
+        ]
+        coordinates {
+        (20,81)
+        };
+        \addlegendentry{Aangekomen berichten(-18dBm)}
+    \end{axis}
+    \end{tikzpicture}
+\end{figure}
 
 
 % \newpage
