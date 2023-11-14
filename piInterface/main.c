@@ -16,11 +16,8 @@
 #include "libs/interface.h"
 
 
-
-
 int main(int nArgc, char* aArgv[]) {
     refresh();
-
 
     int nRet;
 

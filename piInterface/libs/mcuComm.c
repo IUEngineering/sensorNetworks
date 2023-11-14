@@ -219,6 +219,7 @@ void handleNewByte(uint8_t newByte) {
 // Print the packet as a string of hex chars to the given window.
 // Will put the title, if not NULL, at the start of the line.
 void printPacketToWindow(uint8_t *packet, WINDOW *window, uint8_t printASCII, uint8_t length) {
+    
     if(length == PAYLOAD_SIZE){
         wattron(window, A_BOLD);
     }

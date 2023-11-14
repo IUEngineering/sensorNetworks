@@ -59,6 +59,8 @@ void endInterface(int idk);
 
 static screenElement_t coordElement; 
 static uint8_t debugMode = 1;
+static screenElement_t debugDataElement;
+static screenElement_t metaDataElement;
 
 void initInterface(void) {
 
@@ -94,7 +96,7 @@ void initInterface(void) {
 
 
     screenElement_t broadcastElement = addScreenElement(&debugScreen, 0, 1, 15, 64, NULL, NULL);
-    addScreenElement(&debugScreen, 24, 66, 6, 34, NULL, initDummyData);
+    debugDataElement = addScreenElement(&debugScreen, 24, 66, 6, 34, NULL, initDummyData);
 
     if(initInputHandler(friendsElement.window, broadcastElement.window, payloadElement.window, &debugMode)) {
         fprintf(stderr, "Could not find xMage (ﾉ´ｰ`)ﾉ\n");
@@ -106,7 +108,7 @@ void initInterface(void) {
 
     // Meta Screen
     addScreenElement(&metaScreen, 0, 92, 4, 8, switchScreenButtonPressed, drawSwitchButton);
-    addScreenElement(&metaScreen, 0, 1, 6, 34, NULL, initDummyData);
+    metaDataElement = addScreenElement(&metaScreen, 0, 1, 6, 34, NULL, initDummyData);
     addScreenElement(&metaScreen, 16, 1, 40, 50, NULL, initMetaWindow);
     // addScreenElement(&metaScreen, 16, 1, 20, 20, NULL, drawMetaConclusions);
     // addScreenElement(&metaScreen, 0, 0, 20, 20, NULL, )
@@ -131,6 +133,7 @@ void endInterface(int idk) {
 
 void runInterface(void) {
     static uint8_t wasScreenTouched = 0;
+    static uint16_t runAmount = 0;
     
     
     if(RPiTouch_UpdateTouch() && _oRPiTouch_Touched.bButton == 1 && wasScreenTouched == 0) {
@@ -138,7 +141,16 @@ void runInterface(void) {
         else checkTouchedButtons(metaScreen, _oRPiTouch_Touched);
     }
 
-    if (debugMode) drawTouchCoords();
+    if (debugMode) {
+        drawTouchCoords();
+    }
+
+    if(++runAmount == 1000) {
+        if(debugMode) drawDummyData(debugDataElement.window);
+        else drawDummyData(metaDataElement.window);
+        runAmount = 0;
+    }
+
     
     wasScreenTouched = _oRPiTouch_Touched.bButton; 
 

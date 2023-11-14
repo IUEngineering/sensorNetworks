@@ -19,7 +19,6 @@
 WINDOW *dummyDataWindow;
 WINDOW *metaWindow;
 
-static void drawDummyData(WINDOW *window);
 static void drawMetaConclusions(WINDOW *window);
 
 static dummyData_t data = {0};
@@ -29,27 +28,34 @@ dummyData_t accumulateData(uint8_t *payload, uint8_t debugMode) {
     switch(payload[0]) {
         case AIR_HUMIDITY:
             data.airHumiddity = payload[2];
-
+            data.airHumiddityLastUpdate = time(NULL);
+ 
+ 
             break;
         case AIR_QUALITY:
-            if (payload[2] == 0) data.airQuality = 'X';
-            else data.airQuality = payload[2];  
-            fprintf(stderr, "Data air quality: %c\n", data.airQuality);
+            data.airQuality = payload[2];
+            data.airQualityLastUpdate = time(NULL);
+
 
             break;
         case LIGHT:
             // light is 16bits and payload is 8 bit. So we need to bitshift it.
             data.light =  ((uint16_t) payload[2]) << 8;
             data.light |= payload[3] ;
+            data.lightLastUpdate = time(NULL);
 
             break;
         case TEMPERATURE:
             data.temperature = payload[2];
-
+            data.temperatureLastUpdate = time(NULL);
+ 
+ 
             break;
         case LOUDNESS:
             data.loudness = payload[2];
-
+            data.loudnessLastUpdate = time(NULL);
+ 
+ 
             break;  
     }    
     drawDummyData(dummyDataWindow);
@@ -76,14 +82,47 @@ void initMetaWindow(WINDOW *window) {
 }
 
 void drawDummyData(WINDOW *window) {
+    time_t now = time(NULL);
+
     wmove(window, 1, 0);
-    wprintw(window, " Air Humiddity: %u %%\n", data.airHumiddity);
-    wprintw(window, " Air Quality:   %c \n", data.airQuality ? data.airQuality : 'X');
-    wprintw(window, " Light:         %u Lm\n", data.light);
-    wprintw(window, " Temperature:   %u ", data.temperature);
-    waddch(window, ACS_DEGREE);
-    wprintw(window, "C\n");
-    wprintw(window, " Loudness:      %u dB\n", data.loudness);
+
+    if(data.airHumiddityLastUpdate) {
+        double timeDiff = difftime(now, data.airHumiddityLastUpdate);
+        
+        wprintw(window, "Air Humiddity: %u %%\t%ds ago\n", data.airHumiddity, (uint16_t)timeDiff);
+    }
+    else wprintw(window, "Air Humiddity: measuring..\n");
+
+    if(data.airQualityLastUpdate) {
+        double timeDiff = difftime(now, data.airQualityLastUpdate);
+        
+        wprintw(window, "Air Quality:   %u mg/m^3\t%ds ago\n", data.airQuality, (uint16_t)timeDiff);
+    }
+    else wprintw(window, "Air Quality:   measuring..\n");
+
+    if(data.lightLastUpdate) {
+        double timeDiff = difftime(now, data.lightLastUpdate);
+        
+        wprintw(window, "Light:         %u Lx\t%ds ago\n", data.light, (uint16_t)timeDiff);
+    }
+    else wprintw(window, "Light:         measuring..\n");
+
+    if(data.temperatureLastUpdate) {
+        double timeDiff = difftime(now, data.temperatureLastUpdate);
+        
+        wprintw(window, "%u ", data.temperature);
+        waddch(window, ACS_DEGREE);
+        wprintw(window, "C\t%ds ago\n", (uint16_t)timeDiff);
+    }
+    else wprintw(window, "Temperature:   measuring..\n");
+
+    if(data.loudnessLastUpdate) {
+        double timeDiff = difftime(now, data.loudnessLastUpdate);
+        
+        wprintw(window, "Loudness:      %u dBA\t%ds ago\n", data.loudness, (uint16_t)timeDiff);
+    }
+    else wprintw(window, "Loudness:      measuring..\n");
+
     wrefresh(window);
     fprintf(stderr, "kanekr\n");
 }
@@ -101,7 +140,7 @@ void drawDummyData(WINDOW *window) {
 uint8_t metaConslusions(void) {
     uint8_t conclusions = 0x00; 
 
-    if( (data.airHumiddity > 40 || data.airQuality == 'R') && data.temperature > 22 ) { 
+    if( (data.airHumiddity >= 60 || data.airQuality >= 3) && data.temperature >= 23 ) { 
         conclusions |= OPEN_WINDOW_bm;
     }
 
