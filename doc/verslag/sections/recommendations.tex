@@ -1,6 +1,17 @@
-\section{Aanbevelingen}
+\section{Aanbevelingen} \label{sec:aanbevelingen}
 
 % Ook al zijn alle specificaties voldaan is het uiteindelijk ontwerp nog niet geoptimaliseerd. In appendix \ref{app:railsAnalysis} is een RAILS 
 % analyse opgenomen. Hierin is uitgekomen dat de hardware die was geleverd niet helemaal gewenst is en dat het encryptie algoritme toch iets 
 % simpler is dan dat er was gehoopt. Hierdoor is het handig dat als er een revisie 2 gemaakt gaat worden er gekeken wordt naar het onderzoeken van 
 % een betere chip en een ingewikkeldere encryptie om hopelijk alles efficienter en energiezuiniger te maken, maar ook veiliger.
+
+Ondanks dat aan alle specificaties is voldaan, is het uiteindelijke ontwerp nog niet geoptimaliseerd. In \autoref{app:railsAnalysis} zijn enkele belangrijke punten beschreven die vallen onder de volgende categorieën:
+\begin{itemize}
+\item Snelheid van het systeem
+\item Efficiëntie
+\item Energiebesparing
+\end{itemize}
+
+Ook werd in de conclusie opgemerkt dat de beveiliging momenteel eenvoudig is. Dit kan complexer worden gemaakt door een geavanceerder beveiligingsalgoritme te ontwikkelen, waarvoor verder onderzoek nodig is. Snelheidsverbeteringen kunnen worden bereikt door bijvoorbeeld de ontvangen en verzonden snapshots kleiner te maken. Dit betekent dat snapshots niet de volledige array hoeven te bevatten, maar alleen de bijgewerkte delen. Efficiëntie kan worden verbeterd door het algoritme voor het bijhouden van 'vriendjes' te herzien en de array te verkleinen. Energiebesparing kan worden bevorderd door slaapstanden toe te voegen aan het systeem of door de kloksnelheid van de software aan te passen. Een andere benadering zou kunnen zijn om eigen hardware te ontwikkelen, waardoor er meer controle is over de microcontroller. Hierdoor kan een microcontroller worden gekozen die alleen de essentiële functies bevat, met mogelijkheden voor verbeteringen
+
+Dit zouden goeie uitgangspunten zijn voor een volgende versie van dit netwerk.
