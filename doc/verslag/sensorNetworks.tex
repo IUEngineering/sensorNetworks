@@ -5,6 +5,7 @@
 \usepackage[dutch]{babel}
 \usepackage[backend=biber, style=ieee]{biblatex}
 \usepackage{multirow}
+\usepackage{pdfpages}
 \addbibresource{references.bib}
 
 \setAuthor{Tycho Jöbsis, Jochem Leijenhorst, Illya Ustenko and Naomi Visser}
@@ -30,13 +31,19 @@
     \onecolumn
     \tableofcontents
     \newpage
-
+    \input{sections/introduction}
+    \input{sections/assignment}
+    \input{sections/communication}
+    \input{sections/dummyData}
+    \input{sections/basestation}
     \input{sections/nrfChat}
+    \input{sections/rails}
 
     \printbibliography
 
     \appendix
     \input{appendices/blink}
+    \input{appendices/iso}
 
 \end{document}
 

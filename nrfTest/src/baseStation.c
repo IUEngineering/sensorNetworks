@@ -3,12 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util/delay.h>
-#include <avr/interrupt.h>
-#include "serialF0.h"
 
+#include "serialF0.h"
 #include "baseStation.h"
 #include "iso.h"
+
 #include "friendList.h"
 #include "encrypt.h"
 

@@ -21,6 +21,7 @@
 *.ind
 *.out
 **/sensorNetworks.pdf
+**/Onderzoeksraamwerk.pdf
 *.run.xml
 *.url
 *.svn

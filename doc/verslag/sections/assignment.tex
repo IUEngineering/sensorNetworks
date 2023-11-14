@@ -1,0 +1,27 @@
+\section{Opdracht} \label{sec:assignment}
+Wanneer iemand in een kamer zit wilt diegene zich zo comfortabel mogelijk voelen. Dit komt omdat een persoon productiever is wanneer diegene zich beter voelt in de kamer waarin diegene zich bevindt \cite{productiviteit}. Dit kan daarentegen negatief beïnvloed worden door verschillende factoren. Dit kan lucht kwaliteit zijn, warmte, geluid, etc. Het is daarom belangrijk om te weten wanneer het niet meer comfortabel is in een kamer en waarom. 
+
+Het probleem is dus dat een kamer door verschillende negatieve invloeden niet meer comfortabel is. Nu is het belangrijk om te weten waarom en wanneer dit zo is. Dit om uiteindelijk een signaal te geven en een eventuele oplossing om weer comfortabel te voelen in de kamer. Het doel zal dan ook zijn om iets te bedenken van een systeem om dit te kunnen monitoren en feedback over terug te geven.
+
+\subsection{Invloeden op comfort in een kamer} \label{sec:influenceOnComfort}
+Het comfort van een persoon in een kamer is afhankelijk van een aantal factoren, deze factoren zijn temperatuur, luchtvochtigheid, luchtkwaliteit, geluidsniveau en licht sterkte \cite{productiviteit}. 
+Temperatuur, luchtvochtigheid, luchtkwaliteit, geluidsniveau en licht sterkte zijn geen elektrische signalen en moeten dus omgezet worden via sensoren naar elektrische signalen\footnote{luchtkwaliteit is niet iets dat op zich zelf gemeten kan worden. Omdat de sensor techniek niet centraal staat in dit vak zal hier alleen niet verder op worden ingegaan}. In het vak sensornetwerken licht de nadruk op het ontwikkelen van een dynamisch draadloos sensornetwerk waardoor voor de eerste iteratie in dit project er alleen aan het dynamisch draadloos sensornetwerk gewerkt zal worden.
+
+\subsection{Opstelling}
+Om gebruikers makkelijk informatie te geven over de comfort kwaliteit in een bepaalde ruimte is er gekozen om een basisstation te hebben dat stationair neergezet kan worden maar wat een gebruiker ook in de hand mee kan nemen ergens anders naar toe\footnote{Het basisstation moet wel in het bereik blijven van het dynamisch draadloos sensornetwerk.}. Om de informatie te verzamelen op een flexibele manier is er voor gekozen om sensor nodes te hebben die data verzamelen en deze data vervolgens naar het basisstation toe te laten sturen.
+
+\subsection{Sensor data}
+In hoofdstuk \ref{sec:influenceOnComfort} zijn een aantal factoren aan bod gekomen die invloed hebben op het comfort in een kamer. Een aantal van deze factoren kan snel dan wel langzaam veranderen waardoor ze niet even vaak hoeven worden gemeten. In tabel \ref{tabel:meetfrequentie} is de meetfrequentie per factor beschreven.
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|}\hline
+        Factor           & Meetfrequentie \\\hline
+        Temperatuur      & 30 min         \\\hline
+        Luchtvochtigheid & 30 min         \\\hline
+        luchtkwaliteit   & 10 min         \\\hline
+        Geluid           & 5 sec          \\\hline
+        Licht            & 10 sec         \\\hline
+    \end{tabular}
+    \caption{Meetfrequentie voor verschillende comfort factoren.}
+    \label{tabel:meetfrequentie}
+\end{table}
