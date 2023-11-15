@@ -89,37 +89,42 @@ void drawDummyData(WINDOW *window) {
     if(data.airHumiddityLastUpdate) {
         double timeDiff = difftime(now, data.airHumiddityLastUpdate);
         
-        wprintw(window, "Air Humiddity: %u %%\t%ds ago\n", data.airHumiddity, (uint16_t)timeDiff);
+        wprintw(window, "Air Humiddity: %u %%               ", data.airHumiddity); //%ds ago\n", data.airHumiddity, (uint16_t)timeDiff);
+        mvwprintw(window, 1, 24," %3ds ago\n", (uint16_t)timeDiff);
     }
     else wprintw(window, "Air Humiddity: measuring..\n");
 
     if(data.airQualityLastUpdate) {
         double timeDiff = difftime(now, data.airQualityLastUpdate);
         
-        wprintw(window, "Air Quality:   %u mg/m^3\t%ds ago\n", data.airQuality, (uint16_t)timeDiff);
+        wprintw(window, "VOC:           %u mg/m^3               ", data.airQuality); // %ds ago\n", data.airQuality, (uint16_t)timeDiff);
+        mvwprintw(window, 2, 24," %3ds ago\n", (uint16_t)timeDiff);
     }
-    else wprintw(window, "Air Quality:   measuring..\n");
+    else wprintw(window, "VOC:           measuring..\n");
 
     if(data.lightLastUpdate) {
         double timeDiff = difftime(now, data.lightLastUpdate);
         
-        wprintw(window, "Light:         %u Lx\t%ds ago\n", data.light, (uint16_t)timeDiff);
+        wprintw(window, "Light:         %u Lx               ", data.light); //%ds ago\n", data.light, (uint16_t)timeDiff);
+        mvwprintw(window, 3, 24," %3ds ago\n", (uint16_t)timeDiff);
     }
     else wprintw(window, "Light:         measuring..\n");
 
     if(data.temperatureLastUpdate) {
         double timeDiff = difftime(now, data.temperatureLastUpdate);
         
-        wprintw(window, "%u ", data.temperature);
+        wprintw(window, "Temperature:   %u ", data.temperature);
         waddch(window, ACS_DEGREE);
-        wprintw(window, "C\t%ds ago\n", (uint16_t)timeDiff);
+        wprintw(window, "C              "); //   %ds ago\n", (uint16_t)timeDiff);
+        mvwprintw(window, 4, 24," %3ds ago\n", (uint16_t)timeDiff);
     }
     else wprintw(window, "Temperature:   measuring..\n");
 
     if(data.loudnessLastUpdate) {
         double timeDiff = difftime(now, data.loudnessLastUpdate);
         
-        wprintw(window, "Loudness:      %u dBA\t%ds ago\n", data.loudness, (uint16_t)timeDiff);
+        wprintw(window, "Loudness:      %u dBA               ", data.loudness); //   %ds ago\n", data.loudness, (uint16_t)timeDiff);
+        mvwprintw(window, 5, 24," %3ds ago\n", (uint16_t)timeDiff);
     }
     else wprintw(window, "Loudness:      measuring..\n");
 
@@ -150,10 +155,19 @@ uint8_t metaConslusions(void) {
 void drawMetaConclusions(WINDOW *window){
     uint8_t conclusions = metaConslusions();
     if(conclusions & OPEN_WINDOW_bm) {
+        wclear(window);
         wmove(window, 0, 0);
-        wprintw(window, "Doe een raam open, de luchtkwaliteit is niet goed!!!");
+        wattrset(window, COLOR_PAIR(RED_PAIR));
+        wattron(window, A_BOLD);
+        wattron(window, A_BLINK);
+        wprintw(window, "Doe een raam open, de luchtkwaliteit is niet goed!");
     }
-    else wclear(window);
+    else {
+        wattrset(window, 0);
+        wclear(window);
+        wmove(window, 0, 0);
+        wprintw(window, "Alles is oke, je hoeft niks te doen!");
+    }
     
     wrefresh(window);
 }

@@ -8,6 +8,7 @@
 #define BANNER_PAIR    1
 #define ACTIVE_PAIR    2
 #define LINE_PAIR      3
+#define RED_PAIR       4
 
 
 typedef struct screenElement_t screenElement_t;

@@ -87,6 +87,7 @@ void initInterface(void) {
     init_pair(BANNER_PAIR, COLOR_WHITE, COLOR_MAGENTA);
     init_pair(TEST_PAIR, COLOR_GREEN, 0);
     init_pair(LINE_PAIR, 0, COLOR_WHITE);
+    init_pair(RED_PAIR, COLOR_WHITE, COLOR_RED);
   
     //addScreenElement(&debugScreen, 0, 92, 4, 8, resetButtonPressed, drawButton);
     
@@ -108,8 +109,8 @@ void initInterface(void) {
 
     // Meta Screen
     addScreenElement(&metaScreen, 0, 92, 4, 8, switchScreenButtonPressed, drawSwitchButton);
-    metaDataElement = addScreenElement(&metaScreen, 0, 1, 6, 34, NULL, initDummyData);
-    addScreenElement(&metaScreen, 16, 1, 40, 50, NULL, initMetaWindow);
+    metaDataElement = addScreenElement(&metaScreen, 9, 32, 6, 34, NULL, initDummyData);
+    addScreenElement(&metaScreen, 16, 32, 40, 50, NULL, initMetaWindow);
     // addScreenElement(&metaScreen, 16, 1, 20, 20, NULL, drawMetaConclusions);
     // addScreenElement(&metaScreen, 0, 0, 20, 20, NULL, )
     refresh();
