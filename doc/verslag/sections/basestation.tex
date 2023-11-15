@@ -22,7 +22,7 @@ De interface van het basisstation bestaat uit 2 verschillende schermen: het debu
 
 \subsubsection*{Debug scherm}
 Het debug scherm is nuttig om te zien of nodes in het netwerk goed werken. 
-Het gehele scherm wordt gebruikt verschillende data te laten zien. 
+Het gehele scherm wordt gebruikt om verschillende data te laten zien. 
 \begin{figure}[ht]
     \centering
     \includegraphics*[width=0.8\textwidth]{img/basestationInterface.png}
@@ -75,7 +75,7 @@ typedef struct {
 \end{minipage}
 
 Een scherm element moet een aantal dingen kunnen opslaan. Elk scherm element heeft een ncurses window nodig om naar de interface te kunnen printen. Deze bevat ook gelijk de dimensies en de positie van het element.
-Daarnaast is het handig als het mogelijk is om op het touchscreen een scherm element aan te kunnen tikken. Hierdoor heeft elk scherm element een functie pointer, die uitgevoerd wordt wanneer er op het element getikt wordt. Omdat een bepaalt element misschien wilt weten waar er precies getikt is, accepteert deze functie 2 coördinaten als argumenten. Als het scherm element geen tik functie nodig heeft, kan deze naar een null pointer gezet worden. Als laatste moet elk scherm element opnieuw naar de interface getekend kunnen worden, wanneer er van scherm gewisseld wordt. Hiervoor is een initialisatie functie pointer toegevoegd. Deze wordt uitgevoerd wanneer het scherm waar het element in zit geïnitialiseerd wordt.
+Daarnaast is het handig als het mogelijk is om op het touchscreen een scherm element aan te kunnen tikken. Hierdoor heeft elk scherm element een functie pointer, die uitgevoerd wordt wanneer er op het element getikt wordt. Omdat een bepaalt element misschien wilt weten waar er precies getikt is, accepteert deze functie coördinaten als argumenten. Als het scherm element geen tik functie nodig heeft, kan deze naar een null pointer gezet worden. Als laatste moet elk scherm element opnieuw naar de interface getekend kunnen worden, wanneer er van scherm gewisseld wordt. Hiervoor is een initialisatie functie pointer toegevoegd. Deze wordt uitgevoerd wanneer het scherm waar het element in zit geïnitialiseerd wordt.
 
 \begin{lstlisting}[caption={Het datatype van de scherm elementen},captionpos=b,label={lst:screenElement_t},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 typedef struct {
@@ -87,7 +87,7 @@ typedef struct {
 
 \subsubsection*{Communicatie met de XMega}
 
-De Raspberry PI communiceert met de XMega met een UART/USB connectie. De XMega stuurt continu diagnostische data over het netwerk naar de PI. Deze moet de PI dan vervolgens kunnen interpreteren. Aangezien een PI geen verbinding kan maken met een microcontroller die nog niet is aangesloten, is het wenselijk om de XMega te hebben aangesloten voordat het interface programma op de PI gestart wordt. Wanneer het programma opstart stuurt de PI een opstartbyte naar de XMega, en wacht totdat deze reageert. De XMega gaat pas data sturen wanneer deze de opstartbyte heeft ontvangen. Op deze manier weet de PI altijd wat de eerste byte is die de XMega heeft gestuurd. Wanneer het programma afgesloten wordt stuurt de PI ook een afsluit byte naar de XMega, zodat deze stopt met data sturen.
+De Raspberry PI communiceert met de XMega met een UART/USB connectie. De XMega stuurt continu diagnostische data over het netwerk naar de PI. Deze moet de PI dan vervolgens kunnen interpreteren. Aangezien een PI geen verbinding kan maken met een microcontroller die nog niet is aangesloten, is het wenselijk om de XMega aangesloten te hebben voordat het interface programma op de PI gestart wordt. Wanneer het programma opstart stuurt de PI een opstartbyte naar de XMega, en wacht totdat deze reageert. De XMega gaat pas data sturen wanneer deze de opstartbyte heeft ontvangen. Op deze manier weet de PI altijd wat de eerste byte is die de XMega heeft gestuurd. Wanneer het programma afgesloten wordt stuurt de PI ook een afsluit byte naar de XMega, zodat deze stopt met data sturen.
 
 Er zijn 5 verschillende soorten berichten die de XMega kan sturen. De PI moet kunnen weten met welk soort bericht hij te maken heeft, dus is er een systeem bedacht met identificerende bytes. Elk bericht dat de XMega stuurt begint met een identificerende byte. Deze byte wordt de `protocol byte' genoemd, en geeft aan op welke manier de PI de data erna moet parsen. Hier volgt een korte beschrijving van elk van de protocollen:
 

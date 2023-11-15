@@ -22,10 +22,10 @@ Er zijn 2 soorten vriendjes: een direct vriendje en een via. Deze worden in hetz
     \item[Actief]   Of het vriendje betrouwbaar genoeg is om berichten naar te kunnen sturen.
 \end{description}
 
-De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanneer een node A een snapshot ontvangt van een vriendje B, zal node A het vertrouwen van B met twee ophogen. Wanneer node A zelf een snapshot stuurt verlaagt hij het vertrouwen van al zijn vriendjes met één. Op deze manier zal er consequent elke periode een snapshot ontvangen moeten worden om het vertrouwen te verhogen. Wanneer het vertrouwen boven 5 uitkomt, zal de node actief gemaakt worden. Dat wil zeggen dat het vriendje nu genoeg vertrouwd wordt om er data naartoe te sturen, hem te  en om hem te gebruiken als bron van via's. Wanneer het vertrouwen onder 5 valt zal het vriendje niet meer actief gemaakt worden. Het vertrouwen zal nooit boven de 7 uitkomen. Deze waardes (5 en 7) zijn een inschatting, en er zou meer getest moeten worden om te bevestigen of ze ideaal zijn voor onze doeleinden.
+De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanneer een node A een snapshot ontvangt van een vriendje B, zal node A het vertrouwen van B met twee ophogen. Wanneer node A zelf een snapshot stuurt verlaagt hij het vertrouwen van al zijn vriendjes met één. Op deze manier zal er consequent elke periode een snapshot ontvangen moeten worden om het vertrouwen te verhogen. Wanneer het vertrouwen boven 5 uitkomt, zal de node actief gemaakt worden. Dat wil zeggen dat het vriendje nu genoeg vertrouwd wordt om er data naartoe te sturen en om hem te gebruiken als bron van via's. Wanneer het vertrouwen onder 5 valt zal het vriendje niet meer actief gemaakt worden. Het vertrouwen zal nooit boven de 7 uitkomen. Deze waardes (5 en 7) zijn een inschatting, en er zou meer getest moeten worden om te bevestigen of ze ideaal zijn voor onze doeleinden.
 
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \begin{tikztimingtable}
         B Actief            & 19L 1S 3L 9H 4L \\
@@ -37,7 +37,7 @@ De Vertrouwen en Actief eigenschappen zijn bedoeld voor directe vriendjes. Wanne
     \label{fig:trustSystem}
 \end{figure}
 
-De Hops en Via eigenschappen zijn bedoeld voor de vriendjes die via een ander, direct vriendje bekend zijn. Deze via's worden toegevoegd wanneer een actief vriendje een snapshot stuurt met vriendjes-data er in, van vriendjes die wij nog niet kennen. In een via vriendje wordt opgeslagen in hoeveel hops hij te bereiken is (wordt in de snapshot meegestuurd), en via wie hij bekend is (het actieve vriendje waarvan de snapshot is ontvangen). Wanneer een via vriendje plotseling wel direct te bereiken is, wordt het vertrouwen nog steeds opgehoogd. Wanneer het vriendje actief wordt, wordt de via en hop data van het vriendje verwijderd. Dit wordt gedaan om de situatie in \autoref{fig:HopsOpslaanVanActieveNode} te voorkomen.
+De Hops en Via eigenschappen zijn bedoeld voor de vriendjes die via een ander, direct vriendje bekend zijn. Deze via's worden toegevoegd wanneer een actief vriendje een snapshot stuurt met vriendjes-data er in, van vriendjes die wij nog niet kennen. In een via vriendje wordt opgeslagen in hoeveel hops hij te bereiken is (dit wordt in de snapshot meegestuurd), en via wie hij bekend is (het actieve vriendje waarvan de snapshot is ontvangen). Wanneer een via vriendje plotseling wel direct te bereiken is, wordt het vertrouwen nog steeds opgehoogd. Wanneer het vriendje actief wordt, worden de Via en Hop data van het vriendje verwijderd. Dit wordt gedaan om de situatie in \autoref{fig:HopsOpslaanVanActieveNode} te voorkomen.
 
 
 \begin{figure}[ht]

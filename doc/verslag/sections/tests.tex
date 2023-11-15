@@ -1,8 +1,8 @@
-\section{Netwerkeigenschappen}\label{sec:tests} \label{sec:tests}
+\section{Netwerkeigenschappen}\label{sec:tests}
 In dit hoofdstuk zal er gekeken worden naar een aantal eigenschappen van het netwerk. Er zal onder andere gekeken worden naar het effect van het zendvermogen op de betrouwbaarheid van bericht aankomst.
 
 \subsection{Invloed van afstand tussen twee nodes} \label{sec:influenceOfDistanceOnNetwork}
-De afstand tussen twee netwerk nodes heeft invloed op de betrouwbaarheid van het netwerk. Er moet dus onderzocht worden wat de invloed van afstand tussen netwerk nodes is op het netwerk. Omdat het zendvermogen erg veel invloed heeft op over welke afstand er informatie kan worden overgedragen, zal het zendvermogen ook worden meegenomen.
+De afstand tussen twee netwerk nodes heeft invloed op de betrouwbaarheid van het netwerk. Er moet dus onderzocht worden wat de invloed van afstand tussen netwerk nodes is op het netwerk. Omdat het zendvermogen erg veel invloed heeft op de afstand waarover er informatie overgedragen kan worden, zal het zendvermogen ook worden meegenomen.
 
 \begin{figure}[h]
     \centering
@@ -10,7 +10,7 @@ De afstand tussen twee netwerk nodes heeft invloed op de betrouwbaarheid van het
     \caption{Test opstelling.}
     \label{fig:TestCom}
 \end{figure}
-Om de invloed van afstand tussen twee netwerk nodes te onderzoeken, zal gebruik gemaakt worden van de test opstelling die schematisch is weergegeven in \autoref{fig:TestCom}. Er zal met verschillende afstanden tussen de twee netwerk nodes gemeten hoeveel procent er van de verstuurde berichten aankomen. Deze metingen zullen gedaan worden op twee zendvermogens, -12dBm en -18dBm respectievelijk.
+Om de invloed van afstand tussen twee netwerk nodes te onderzoeken, zal gebruik gemaakt worden van de test opstelling die schematisch is weergegeven in \autoref{fig:TestCom}. Er zal met verschillende afstanden tussen twee netwerk nodes gemeten worden hoeveel procent er van de verstuurde berichten aankomen. Deze metingen zullen gedaan worden op twee zendvermogens, -12dBm en -18dBm.
 
 \begin{figure}[ht]
     \centering
@@ -60,9 +60,10 @@ Met deze test wordt er gekeken naar de invloed op de ontvangstkans als er niet e
     \caption{Test opstelling 2.}
     \label{fig:Testhop}
 \end{figure}
-De afstand tussen node één en node twee zijn gelijk aan de afstand tussen node twee en drie. Node één zal 100 berichten via node 2 naar node drie sturen. Er wordt bijgehouden hoeveel van deze berichten aankomen. Het aantal berichten dat aankomt is een indicatie voor de invloed van het sturen van data via andere nodes in het netwerk.
+De afstanden tussen de nodes zijn gelijk aan elkaar. Node één zal 100 berichten via node twee naar node drie sturen. Er wordt bijgehouden hoeveel van deze berichten aankomen. Het aantal berichten dat aankomt is een indicatie voor de invloed van het sturen van data via andere nodes in het netwerk.
 
-Uit de test is gebleken dat de betrouwbaarheid van bericht aankomst 81\% is. Het is belangrijk om te vermelden dat dit resultaat op een enkele meeting is gebaseerd.
+Uit de test is gebleken dat de betrouwbaarheid van bericht aankomst 81\% is. Het is belangrijk om te vermelden dat dit resultaat op een enkele meting van 100 berichten is gebaseerd.
 
-\subsection{Conclusies op basis de metingen}
+\subsection{Conclusies op basis van de metingen}
 In paragrafen \ref{sec:influenceOfDistanceOnNetwork} en \ref{sec:influenceOfHopsInNetwork} zijn een aantal metingen gedaan aan het netwerk. Uit deze metingen valt te halen dat er niet een vergrote kans is op het niet aankomen van berichten, op het moment dat deze via een andere node worden verstuurd. Wel is aangetoond dat de afstand tussen twee netwerk nodes een zeer bepalende factor heeft op de kans of berichten aankomen.
+

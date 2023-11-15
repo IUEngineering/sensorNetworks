@@ -1,6 +1,6 @@
 \section{Debug chat terminal} \label{sec:debugProgram}
-Om het netwerk te ontwikkelen is het handig om een manier te hebben om het systeem te kunnen debuggen. Hiervoor is een debug chat terminal geschreven. Dit programma draait op een XMega en werkt via een seriële verbinding met een computer over USB. De terminal kan gebruikt worden in een programma zoals TeraTerm/Minicom. In \autoref{fig:debugTerminal} is de terminal te zien. Wanneer de gebruiker iets typt, wordt dit op het scherm getoond, net als in een normale command line. Wanneer er een bericht binnenkomt, wordt deze naar de terminal geprint, zonder de gebruikersinvoer te onderbreken. De gebruiker kan berichten sturen door deze te typen en vervolgens op enter te drukken. Er zijn een aantal commando's die de gebruiker kan uitvoeren. Deze commando's beginnen met een slash (/), zodat ze niet worden verward met berichten die verstuurd moeten worden.
-De eschikbare commando's zijn:
+Om het netwerk te ontwikkelen is het handig om een manier te hebben om het systeem te kunnen debuggen. Hiervoor is een debug chat terminal geschreven. Dit programma draait op een XMega en werkt via een seriële verbinding met een computer over USB. De terminal kan gebruikt worden in een programma zoals TeraTerm/Minicom. In \autoref{fig:debugTerminal} is de terminal te zien. Wanneer de gebruiker iets typt, wordt dit op het scherm getoond, net als in een normale command line. Wanneer er een bericht binnenkomt, wordt deze naar de terminal geprint, zonder de gebruikersinvoer te onderbreken. De gebruiker kan berichten sturen door deze te typen en vervolgens op enter te drukken. Er zijn ook een aantal commando's die de gebruiker kan uitvoeren. Deze commando's beginnen met een slash (/), zodat ze niet worden verward met berichten die verstuurd moeten worden.
+De beschikbare commando's zijn:
 
 \begin{description}
     \item[/help] Print een lijst van alle beschikbare commando's, en hoe deze gebruikt moeten worden.
@@ -22,7 +22,7 @@ De eschikbare commando's zijn:
 \end{description}
 
 
-Wanneer op enter gedrukt wordt zonder iets in te vullen wordt het vorige commando uitgevoerd. Dit is erg handig voor het /list commando, aangezien de lijst dan makkelijk herhaaldelijk geprint kan worden. Ook is het nuttig voor het testen van verbindingen. Berichten kunnen snel herhaald worden door steeds op enter te blijven drukken. Wanneer de node iets ontvangt, wordt dit in de terminal als hexadecimale waarde en ASCII karakter geprint, als deze bestaat. 
+Wanneer op enter gedrukt wordt zonder iets in te vullen wordt het vorige commando uitgevoerd. Dit is erg handig voor het /list commando, aangezien de lijst dan makkelijk herhaaldelijk geprint kan worden. Ook is het nuttig voor het testen van verbindingen. Berichten kunnen snel herhaald worden door steeds op enter te blijven drukken. Wanneer de node iets ontvangt, wordt dit in de terminal als hexadecimale geprint, en als ASCII karakter, als deze bestaat. 
 
 \begin{figure}[ht]
     \centering

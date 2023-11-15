@@ -3,7 +3,7 @@
 De sensor nodes verzamelen informatie die naar het basisstation wordt gestuurd. Met deze informatie kunnen er meta conclusies getrokken worden waaruit aanbevelingen kunnen volgen voor de gebruikers van dit systeem. Omdat dit een proof of concept is, zijn de sensor nodes geïmplementeerd op een manier dat er geen echte sensor data gemeten wordt, dit om eerst het communicatienetwerk te kunnen ontwikkelen en testen. 
 
 Omdat het systeem meerdere typen sensoren nodig heeft om te kunnen werken, moeten er verschillende soorten sensoren nagedaan worden in het netwerk. Om er voor te zorgen dat niet elk type sensor een eigen programma nodig heeft, zijn er instellingspinnen die gebruikt kunnen worden.
-Als deze instellingspinnen met GND worden verbonden doet de sensor node alsof die het type sensor kan uitlezen dat bij deze instellingspin hoort volgens \autoref{table:SensorNodeSettings}.
+Als deze instellingspinnen met GND worden verbonden doet de sensor node alsof hij het type sensor kan uitlezen dat bij deze instellingspin hoort volgens \autoref{table:SensorNodeSettings}.
 \begin{table}[h]
     \centering
     \begin{tabular}{l|l|l}      
@@ -19,5 +19,5 @@ Als deze instellingspinnen met GND worden verbonden doet de sensor node alsof di
 \end{table}
 Meerdere type sensoren kunnen tegelijkertijd als actief worden ingesteld. Hierdoor moet het mogelijk zijn om de sensor data van meerdere sensoren in te stellen. Dit is gedaan door een apart ADC kanaal te gebruiken voor elk type sensor. In \autoref{table:SensorNodeSettings} is te zien welke ADC pin bij welke soort sensor hoort. De sensoren worden op dit moment geïmplementeerd met een potentiometer en een weerstand. Op deze manier is het mogelijk om de sensor waardes handmatig aan te passen. Dit is nodig om te testen of bepaalde meta-conclusies ook daadwerkelijk worden getoond aan eindgebruikers.
 
-Een aantal dingen die gemeten worden door de sensoren van het systeem veranderen niet snel over tijd, dit zorgt er voor dat deze sensoren niet continu uitgelezen hoeven te worden. Door niet continu deze sensoren uit te lezen kan er energie bespaart worden. Deze besparing is belangrijk voor de levensduur van batterij gevoede sensor nodes. Om deze energiebesparingstechniek voor te bereiden is het mogelijk om de meetperiode van alle soorten sensoren aan te kunnen passen. 
-Om er voor te zorgen dat test snel uitgevoerd kunnen worden in het geval van een lange meetperiode, kan pin PB5 met GND worden verbonden. Zodra dit gebeurt zullen alle ingestelde typen sensoren in de node uitgelezen worden en verstuurd naar het basisstation.
+Een aantal dingen die gemeten worden door de sensoren van het systeem veranderen niet snel over tijd, dit zorgt er voor dat deze sensoren niet continu uitgelezen hoeven te worden. Door niet continu deze sensoren uit te lezen kan er energie bespaard worden. Deze besparing is belangrijk voor de levensduur van batterij gevoede sensor nodes. Om deze energiebesparingstechniek voor te bereiden is het mogelijk om de meetperiode van alle soorten sensoren aan te passen. 
+Om er voor te zorgen dat tests snel uitgevoerd kunnen worden in het geval van een lange meetperiode, kan pin PB5 met GND worden verbonden. Zodra dit gebeurt zullen alle ingestelde typen sensoren in de node uitgelezen worden en verstuurd naar het basisstation.

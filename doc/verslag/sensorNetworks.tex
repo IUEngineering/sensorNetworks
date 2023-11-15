@@ -26,9 +26,14 @@
 % \def\tableautorefname{Tabel}
 % \def\equationautorefname{Formule}
 % \def\chapterautorefname{Hoofdstuk}
-% \def\sectionautorefname{paragraaf}
-% \def\subsectionautorefname{paragraaf}
-% \def\subsubsectionautorefname{paragraaf}
+% \def\sectionautorefname{Hoofdstuk}
+% \def\subsectionautorefname{Paragraaf}
+% \def\subsubsectionautorefname{Paragraaf}
+\addto\extrasdutch{\renewcommand{\chapterautorefname}{Hoofdstuk}}
+\addto\extrasdutch{\renewcommand{\sectionautorefname}{Hoofdstuk}}
+\addto\extrasdutch{\renewcommand{\subsectionautorefname}{Paragraaf}}
+\addto\extrasdutch{\renewcommand{\subsubsectionautorefname}{Paragraaf}}
+
 
 \begin{document}
     \makeTitlepage
