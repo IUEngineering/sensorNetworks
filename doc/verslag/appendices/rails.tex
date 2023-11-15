@@ -46,6 +46,20 @@ De software bestaat uit verschillende abstractie lagen. Het is wel aan te raden 
 
 Op dit moment is er geen speciale hardware ontwikkeld voor de implementatie van het proof of concept. Het is aan te raden om dit in de toekomst wel te doen. Met name is het aan te raden om hardware te ontwikkelen voor de sensor nodes en de basisstation nodes. Bij het ontwikkelen van de hardware voor de sensor nodes is het aan te raden om er voor te zorgen dat het makkelijk is om nep data te gebruiken, dan wel echte sensoren aan te sluiten. Deze aanbeveling wordt gedaan om er voor te zorgen dat de hardware niet te vaak aangepast hoeft te worden in de ontwikkeling van het proof of concept.
 
+Dit hoofdstuk beschrijft de wisselwerking tussen de hardware, software en digitale onderdelen. Het proof of concept bestaat op het moment voornamelijk uit software. De enige hardware vereisten die er op dit moment zijn, zijn:
+\begin{itemize}
+    \item XMega microcontroller.
+    \item SPI verbinding tussen de XMega en de NRF24L01+.
+    \item UART naar USB omzetting.
+\end{itemize}
+De verdeling tussen de hardware en de software is redelijk logisch op het moment. Het is namelijk vrij lastig om gewild draadloze communicatie op te zetten die enkel door software wordt geïmplementeerd. Afhankelijk van de resultaten van dit proof of concept kan het logisch worden om de communicatie stack te implementeren in een ASIC. Voordat dit gedaan wordt moet het proof of concept eerst verder zijn uitgewerkt.
+
+De software bestaat uit verschillende abstractie lagen. Deze abstractie lagen werken erg fijn. Het is wel aan te raden om er voor te zorgen dat er een enkele plek komt waar een hardware abstractie wordt geschreven. Dit om te zorgen dat het makkelijk is om van microcontroller te wisselen.
+
+Op dit moment is er geen custom hardware ontwikkeld voor de implementatie van het proof of concept. Het is aan te raden om dit in de toekomst te doen. Met name is het aan te raden om hardware te ontwikkelen voor de sensor nodes en de basisstation nodes. Bij het ontwikkelen van de hardware voor de sensor nodes is het aan te raden om er voor te zorgen dat, het makkelijk is om nep data te gebruiken dan wel echte sensoren aan te sluiten. Deze aanbeveling wordt gedaan om er voor te zorgen dat de hardware niet te vaak aangepast hoeft te worden in de ontwikkeling van het proof of concept.
+
+% Om er voor te zorgen dat de iso stack algemener gebruikt gaat worden in de toekomst is het nuttig om voorbereidingen te treffen voor 
+
 \subsection{Lookup tabellen}
 Aangezien de vriendjes worden opgeslagen in een array die groot genoeg is om het maximum aantal vriendjes op te kunnen slaan, zou het voor de hand liggen om hier ook een lookup tabel voor te gebruiken. De vriendjes kunnen dan op de index van hun ID opgeslagen worden.
 \begin{table}[ht]
@@ -80,6 +94,8 @@ Op de XMega zijn er drie manieren om energie te besparen\footnote{De voedingsspa
 Het is belangrijk om op te merken dat als de kloksnelheid wordt verlaagd dit niet altijd tot een energie besparing leidt. Deze onzekerheid vindt plaats op het moment dat de XMega gebruik maakt van slaapstanden. 
 
 Op dit moment wordt er geen gebruik gemaakt van de slaapstanden en is de kloksnelheid van de XMega 32MHz. Wanneer de slaapstanden worden gebruikt, verbruikt de XMega een minimale hoeveelheid energie \cite{XMegaDatasheet}. Hierdoor is het aan te raden om in een volgende software revisie van de sensor nodes gebruik te gaan maken van de slaapstanden van de XMega. 
+
+
 % \fbox{
 %     \centering
 %     \includegraphics[page=1,scale=0.7]{img/RAILS.pdf}
