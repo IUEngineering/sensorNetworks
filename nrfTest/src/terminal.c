@@ -85,6 +85,7 @@ void terminalPrintHex(uint8_t *buf, uint8_t length, const char *title) {
 
     rePrintInput();
 }
+
 // As a string followed by a line of hex values.
 void terminalPrintStrex(uint8_t *buf, uint8_t length, const char *title) {
     removeInput();

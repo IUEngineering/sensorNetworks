@@ -1,0 +1,58 @@
+\section{Specificaties}
+
+Er zijn voor dit ontwerp 2 verschillende groepen specificaties om op te stellen; Specificaties over de sensor data en specificaties over het netwerk.
+
+\subsection{Sensor data}
+In hoofdstuk \ref{sec:influenceOnComfort} zijn een aantal factoren aan bod gekomen die invloed hebben op het comfort in een kamer.
+Deze factoren hebben ook allemaal eenheden. Deze eenheden zijn standaard eenheden per factor. In onderstaande tabel \ref{tabel:meetbereik} staan deze beschreven.
+Naast deze eenheden is het ook belangrijk om te weten wanneer een bepaalde factor niet meer gezond is. Hierdoor zal er per eenheid in dezelfde 
+tabel \ref{tabel:meetbereik} ook het meetbereik staan.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |l|l|l| }\hline
+        Factor           & Meetbereik            & Eenheid     \\\hline
+        Temperatuur      & 10 tot 29 $^{\circ}$C & $^{\circ}$C \\\hline
+        Luchtvochtigheid & 0 tot 100\%           & \%          \\\hline
+        luchtkwaliteit   & Rood, Groen of Oranje &             \\\hline
+        Geluid           & 60dBA - 80dBA         & dB          \\\hline
+        Licht            & 0 - 1600Lm            & Lumen       \\\hline
+    \end{tabular}
+    \caption{Meetbereik en eenheden voor verschillende comfort factoren.}
+    \label{tabel:meetbereik}
+\end{table}
+
+Een aantal van deze factoren kan snel dan wel langzaam veranderen waardoor ze niet even vaak hoeven worden gemeten. Ook is het goed
+ om te weten in welke eenheid deze grootheden gemeten worden. In tabel \ref{tabel:meetfrequentie} is de meetfrequentie en eenheid per 
+ factor beschreven.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|}\hline
+        Factor           & Meetfrequentie\\\hline
+        Temperatuur      & 30 min        \\\hline
+        Luchtvochtigheid & 30 min        \\\hline
+        luchtkwaliteit   & 10 min        \\\hline
+        Geluid           & 5 sec         \\\hline
+        Licht            & 10 sec        \\\hline
+    \end{tabular}
+    \caption{Meetfrequentie voor verschillende comfort factoren.}
+    \label{tabel:meetfrequentie}
+\end{table}
+
+\subsection{Netwerk}
+In hoofdstuk \ref{sec:theory} is er naast sensor data ook netwerken besproken. Hieronder een lijst met specificaties die daaruit zijn 
+opgesteld en die volgens de opdrachtgever belangrijk zijn om mee te nemen.
+\begin{itemize}
+    \item Betrouwbaarheid
+    \item Mobiliteit
+    \item Management en Monitoring
+    \item Beveiliging
+    \item Unieke adressering
+\end{itemize}
+
+De opdrachtgever heeft al aangegeven dat voor mobiliteit het een must is om alle nodes draadloos met elkaar en het basisstation te laten communiceren.
+Voor betrouwbaarheid is het belangrijk dat het systeem zo min mogelijk opnieuw opgestart moet worden om te werken.
+Er moet een basisstation zijn waarop alle data zichtbaar en overzichtelijk leesbaar is. 
+Voor de beveiliging is alleen encryptie een must. Alles dat daarna wordt gedaan is mooi meegenomen.
+De opdrachtgever heeft ook aangegeven dat er een unieke adressering moet zijn.

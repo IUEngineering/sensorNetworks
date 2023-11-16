@@ -1,8 +1,8 @@
 
-Terminal.c is een library die gemaakt is voor nrfChat.c, maar ook voor andere debugging doeleinden. De library is gemaakt omdat, wanneer er iets op de terminal uitgeprint wordt, dit dwars door de huidige input heengaat van de gebruiker. De input staat nog steeds in de buffer, en kan nog steeds uitgevoerd worden, hij is alleen niet meer leesbaar. Dit beloofde uiteindelijk frustrerend genoeg om snel een library te schrijven die gebruikt kan worden om zowel debug informatie als ontvangen berichten uit te printen. Ook regelt de library het bufferen van alle gebruikersinput.
+Terminal.c is een library die gemaakt is voor nrfChat.c, maar ook voor andere debugging doeleinden. De library is gemaakt omdat, wanneer er normaal iets op de terminal uitgeprint wordt, door middel van \texttt{printf}, dit dwars door de huidige input heengaat van de gebruiker. De input staat nog steeds in de buffer, en kan nog steeds uitgevoerd worden, hij is alleen niet meer leesbaar. Dit beloofde uiteindelijk frustrerend genoeg om een library te schrijven die gebruikt kan worden om zowel debug informatie als ontvangen berichten uit te printen. De library regelt hierbij het bufferen van alle gebruikersinput in de terminal. Bovendien kan deze library gebruikt worden om arrays uit te printen die niet volledig bestaan uit printbare karakters. Dit is verder besproken in \autoref{sec:printStrex}.
 
 \subsubsection{Intrepeteer input}
-Aangezien programma's zoals Minicom, TeraTerm en PuTTY elk getypte karakter direct naar de microcontroller sturen, moeten we onze eigen linebuffer bijhouden. Hier is de functie \texttt{terminalInterpretChar} voor bedoelt. Deze functie moet elke keer aangeroepen worden wanneer de gebruiker een toets op het toetsenbord intikt. De functie zet dan het getypte karakter dan in een buffer. 
+Aangezien programma's zoals Minicom, TeraTerm en PuTTY elk getypte karakter direct naar de microcontroller sturen, moeten we onze eigen linebuffer bijhouden. Hier gebruikt terminal.c een functie voor die elke keer aangeroepen moet worden wanneer de gebruiker een toets op het toetsenbord intikt. De functie zet dan het getypte karakter in een buffer. 
 
 Doordat backspaces niet behandelt worden door een linebuffer van de terminal, zoals normaal bij C programma's, moeten we deze zelf afhandelen. In \autoref{lst:backspaces} is te zien hoe dit gebeurt. De buffer index wordt met 1 vermindert, en in de terminal wordt het vorige karakter vervangen door een spatie.
 
@@ -13,16 +13,105 @@ Doordat backspaces niet behandelt worden door een linebuffer van de terminal, zo
     if(inChar == '\b' && inputBufferIndex) {
         // Go back 1, make the char empty, and go back again.
         // If we only print \b the cursor would simply move
-    // to the left without removing any characters.
-    printf("\b \b");
-    inputBufferIndex--;
-    return;
-}
+        // to the left without removing any characters.
+        printf("\b \b");
+        inputBufferIndex--;
+        return;
+    }
 \end{lstlisting}
 
 \subsubsection{Command callback}
-Wanneer het programma een return karakter (\textbackslash~n) tegenkomt, moet het ingevoerde commando uitgevoerd worden. Dit wordt gedaan door middel van een callback functie. De callback functie kan worden ingesteld met een initialisatie functie. De 
+Wanneer het programma een return karakter (\textbackslash~n) tegenkomt, moet het ingevoerde commando uitgevoerd worden. Dit wordt gedaan door middel van een callback functie. Deze callback functie moet van te voren ingesteld zijn met een initialisatie functie.
 
-\subsubsection{Print string}
-\subsubsection{Print hex}
-\subsubsection{Print string en hex} \label{ch:printStrex}
+\begin{lstlisting}[caption={Enters afhandelen},captionpos=b,label={lst:newlines},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Handle an enter press.
+    if(inChar == '\n') {
+        if(inputBufferIndex != 0) inputBuffer[inputBufferIndex] = '\0';
+        printf("\n");
+        inputBufferIndex = 0;
+
+        // Run the callback function.
+        commandCallback(inputBuffer);
+        return;
+    }
+\end{lstlisting}
+
+\paragraph{De gebruikersinput ononderbroken laten}\label{sec:inputKeeping}
+Om te kunnen printen naar de terminal zonder de huidige input te verwijderen, moeten de getypte input eerst weggehaald worden.
+Dit wordt gedaan met een functie die de input weghaalt door middel van een escape sequence. De escape sequence die gebruikt wordt is \texttt{\string\e[1K}. Deze escape sequence verwijdert de regel waar de cursor zich op dit moment bevindt. De cursor wordt echter niet naar het begin van de regel verplaatst, dus er wordt nog een \texttt{\string\r} achteraan geprint.
+
+\begin{lstlisting}[caption={De huidige input van de gebruiker verwijderen},captionpos=b,label={lst:removeInput},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Removes the input as preparation for printing something else.
+    void removeInput(void) {
+        // \e[1K = Erase the current line.
+        // \r = Go to the start of the current line.
+        if(inputBufferIndex != 0) printf("\e[1K\r");
+    }
+\end{lstlisting}
+
+Na het verwijderen van de regel, kan de te printen tekst veilig geprint worden, zonder dat de input aangetast wordt.
+Nadat deze tekst geprint is wordt de gebruikersinput opnieuw naar de terminal geprint, op een nieuwe regel. Op deze manier lijkt het alsof de nieuwe tekst toe is gevoegd aan de terminal \textit{boven} de input.
+
+De functie in \autoref{lst:reprintInput} zet, voordat hij de gebruikersinput uitprint, een \texttt{\string\0} op de plaats van de huidige input buffer index (het einde van de huidige input). Dit wordt gedaan omdat \texttt{printf} alleen stopt met printen wanneer deze een \texttt{\string\0} tegenkomt.
+
+\begin{lstlisting}[caption={De huidige input van de gebruiker opnieuw printen},captionpos=b,label={lst:reprintInput},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Reprints the input.
+    // To be used after something else was printed to the terminal.
+    void rePrintInput(void) {
+        // Reprint the current inputbuffer so the user can continue typing.
+        // If inputBufferIndex == 0 there is nothing to be printed.
+        if(inputBufferIndex != 0) {
+            // Make sure to stop printing at the current cursor position.
+            inputBuffer[inputBufferIndex] = '\0';
+            printf("%s", inputBuffer);
+        }
+    }
+\end{lstlisting}
+
+\paragraph{Print byte arrays naar de terminal}\label{sec:printStrex}
+Bij het debuggen is vaak voorgekomen dat er een array van bytes geprint moest worden naar de terminal. Hiervoor moet elke keer een for-loop geschreven worden, wat redelijk frustrerend is, en veel tijd inneemt. Ook moet de nrfChat functie in sommige gevallen een array van bytes naar de terminal printen (bijvoorbeeld bij het ontvangen van een bericht). Hierdoor is een functie geschreven om dit te doen. Deze functie maakt ook gebruik van het systeem besproken in \autoref{sec:inputKeeping}, waardoor het niet de gebruikersinput onderbreekt. De hex waardes worden in de het blauw geprint, zodat ze goed te onderscheiden zijn van normale tekst.
+
+De functie heeft drie argumenten: een pointer naar een array, een lengte en een titel. De pointer wijst naar de array met data die uitgeprint moet worden; de lengte bevat het aantal bytes die geprint moeten worden; de titel is een string die boven de rij met hex waardes geprint wordt om hem te identificeren.
+
+\begin{lstlisting}[caption={Een hex string printen naar de terminal},captionpos=b,label={lst:terminalPrintHex},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+void terminalPrintHex(uint8_t *buf, uint8_t length, const char *title) {
+    removeInput();
+
+    if(title != NULL) printf("%s\n", title);
+
+    // Print the values of the array in hex
+    printf(HEX_COLOR);
+    for(uint8_t i = 0; i < length; i++) {
+        printf("%02x ", buf[i]);
+    }
+
+    // Print double newline because it looks better.
+    printf(NO_COLOR "\n\n");
+
+    rePrintInput();
+}
+\end{lstlisting}
+
+Er is ook een andere functie die hezelfde doet, maar ook de corresponderende karakters uitprint, als deze printbaar zijn. Deze functie is bijna hetzelfde als de functie die te zien is in \autoref{lst:terminalPrintHex}. Hij heeft alleen nog een extra for loop, die de karakters uitprint.
+
+\begin{lstlisting}[caption={De corresponderende karakters naar de terminal printen, mits ze printbaar zijn},captionpos=b,label={lst:strex},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Print the buffer as characters (if possible).
+    printf(NO_COLOR "\n");
+    for(uint8_t i = 0; i < length; i++) {
+        printf("%s ", getPrintable(buf[i]));
+    }
+\end{lstlisting}
+
+De for loop is te zien in \autoref{lst:strex}. Hij maakt gebruik van de \texttt{getPrintable} functie. Deze functie geeft een string van 2 karakters terug. Als het karakter printbaar is geeft de functie gewoon dat karakter terug, gevolgd door een spatie. Wanneer het karakter niet printbaar is, maar wel een veel gebruikte escape sequence heeft, wordt de escape sequence teruggegeven. Wanneer dit ook niet het geval is, geeft de functie gewoon 2 spaties terug.
+Een voorbeeld hiervan is te zien in \autoref{lst:strexVoorbeeld}.
+
+\begin{lstlisting}[caption={Een voorbeeld van het gebruik van de \texttt{terminalPrintStrex} functie},captionpos=b,label={lst:strexVoorbeeld},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    uint8_t inputArray[8] = {'t', 'e', 'x' 't', 0x56, 0x19, 0x0a, 0xf4};
+    terminalPrintStrex(inputArray, 8, "Test print:");
+    // Resulteert in:
+    //
+    // Test print: 
+    // 74 65 78 74 56 19 0a f4
+    // t  e  x  t  V     \n   
+    // 
+\end{lstlisting}

@@ -1,29 +1,64 @@
 \section{Debug chat terminal} \label{sec:debugProgram}
+Om het netwerk te ontwikkelen is het handig om een manier te hebben om het systeem te kunnen debuggen. Hiervoor is een debug chat terminal geschreven. Dit programma draait op een XMega en werkt via een seriële verbinding met een computer over USB. De terminal kan gebruikt worden in een programma zoals TeraTerm/Minicom. In \autoref{fig:debugTerminal} is de terminal te zien. Wanneer de gebruiker iets typt, wordt dit op het scherm getoond, net als in een normale command line. Wanneer er een bericht binnenkomt, wordt deze naar de terminal geprint, zonder de gebruikersinvoer te onderbreken. De gebruiker kan berichten sturen door deze te typen en vervolgens op enter te drukken. Er zijn ook een aantal commando's die de gebruiker kan uitvoeren. Deze commando's beginnen met een slash (/), zodat ze niet worden verward met berichten die verstuurd moeten worden.
+De beschikbare commando's zijn:
 
-Het NrfChat programma laat mensen met elkaar praten via een CLI interface. Om het programma in te stellen kunnen een aantal commando's
+\begin{description}
+    \item[/help] Print een lijst van alle beschikbare commando's, en hoe deze gebruikt moeten worden.
 
-\subsection{Commands}
-De commando's die in het nrfChat programma kunnen worden gebruikt.
+    \item[/dest] Verander het bestemmings-ID van berichten.
 
-\begin{table}[h]
-    \begin{tabular}{|l|l|} \hline
-        \textbf{Commando} & \textbf{Beschrijving} \\\hline
-        help & Laat een hulp bericht zien \\\hline
-        chan & Selecteer het kanaal waarop wordt gezonden en ontvangen\\\hline
-        send & Stuur een bericht \\\hline
-        list & Laat de vriendjes lijst zien\\\hline
-        dest & Stel doel ID in voor berichten die met send worden verstuurd \\\hline
-        myid & Laat zien wat het ID is van de node \\\hline
-    \end{tabular}
-\end{table}
+    \item[/list] Print de huidige lijst van vriendjes. 
 
-\subsection{Functionele blokken}
+    \item[/send] Verstuur een bericht. Dit commando wordt zelden gebruikt, doordat een bericht ook verstuurd kan worden door het in de terminal te typen en op enter te drukken. /send kan echter wel nuttig zijn voor het versturen van berichten die beginnen met een slash.
 
-\subsection{nrfChat}
-    \input{sections/chat.tex}
+    \item[/myid] Print het ID van de node.
 
-\subsection{Terminal}
-    \input{sections/terminal.tex}
+    \item[/keys] Print de twee encryptie keys.
+
+    \item[/key1] Verander encryptie key 1.
+    \item[/key2] Verander encryptie key 2. 
+
+    \item[/chan] Verander het NRF kanaal. 
+\end{description}
+
+
+Wanneer op enter gedrukt wordt zonder iets in te vullen wordt het vorige commando uitgevoerd. Dit is erg handig voor het /list commando, aangezien de lijst dan makkelijk herhaaldelijk geprint kan worden. Ook is het nuttig voor het testen van verbindingen. Berichten kunnen snel herhaald worden door steeds op enter te blijven drukken. Wanneer de node iets ontvangt, wordt dit in de terminal als hexadecimale geprint, en als ASCII karakter, als deze bestaat. 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/nrfchat.png}
+    \caption{Hoe de debug chat terminal eruit ziet.}
+    \label{fig:debugTerminal}
+\end{figure}
+
+
+% Het NrfChat programma laat mensen met elkaar praten via een CLI interface. Om het programma in te stellen kunnen een aantal commando's
+
+% \subsubsection{Commands}
+% De commando's die in het nrfChat programma kunnen worden gebruikt.
+
+% \begin{table}[h]
+%     \begin{tabular}{|l|l|} \hline
+%         \textbf{Commando} & \textbf{Beschrijving} \\\hline
+%         help & Laat een hulp bericht zien \\\hline
+%         chan & Selecteer het kanaal waarop wordt gezonden en ontvangen\\\hline
+%         send & Stuur een bericht \\\hline
+%         list & Laat de vriendjes lijst zien\\\hline
+%         dest & Stel doel ID in voor berichten die met send worden verstuurd \\\hline
+%         myid & Laat zien wat het ID is van de node \\\hline
+%         keys & Laat zien wat de keys zijn \\\hline
+%         key1 & Definieert key 1 met wat erachter wordt gezet\\\hline
+%         key2 & Definieert key 2 met wat erachter wordt gezet\\\hline
+%     \end{tabular}
+% \end{table}
+
+% \subsubsection{Functionele blokken}
+
+% \subsubsection{nrfChat}
+%     \input{sections/chat.tex}
+
+% \subsubsection{Terminal}
+%     \input{sections/terminal.tex}
     
 
     

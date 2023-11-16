@@ -1,9 +1,9 @@
-\section{Communicatie} \label{sec:communication}
+\subsection{Communicatie} \label{sec:communication}
 In dit hoofdstuk wordt ingegaan op hoe de ISO die in het vak sensor netwerken gemaakt is, is geïmplementeerd door team 2. De implementatie is in twee delen opgesplitst: iso en vriendjes lijst. Iso wordt gebruikt om de nrf24l01p aan te sturen terwijl de vriendjes lijst is een erg eenvoudige database voor in een microcontroller is.
-\subsection{ISO}
+\subsubsection{ISO}
     Om het makkelijker te maken bij het debuggen van deze implementatie is er voor gekozen om er voor te zorgen dat de iso in een library vorm te schrijven. Door dit op deze manier te doen is het namelijk erg makkelijk om het programma dat gebruik wil maken van het dynamisch draadloos sensor netwerk te programmeren.
 
-    \subsubsection{Init}
+    \paragraph{Init}
         Bij de initialisatie van de ISO code wordt eerst de nrf24l01p ingesteld zodat deze voldoet aan de ISO (zie bijlage \ref{ap:iso} en \autoref{lst:nrfInit}). 
 \begin{lstlisting}[caption={nrf init},captionpos=b,label={lst:nrfInit},style=c]
 nrfspiInit();
@@ -50,11 +50,11 @@ TCD1.PER    = CURRENTTIME_TC_PER;
 receiveCallback = callback;
 \end{lstlisting}
 
-    \subsubsection{Vertrouwen}
+    \paragraph{Vertrouwen}
         Omdat een verbinding met een andere netwerk node niet altijd even betrouwbaar is, is er voor gekozen om een vertrouwenssysteem te implementeren. Zodra er een snapshot van een node wordt ontvangen zal het vertrouwen van deze node worden opgehoogd met 2 waarbij er een limiet is met waarde 7. Op het moment dat de netwerk node zelf een snapshot verstuurd wordt het vertrouwen van alle nodes die die kent met 1 omlaag gehaald met een limiet van 0. 
 
         Een node wordt pas als een directe buur gezien vanaf het moment dat het vertrouwen in die node boven de 5 is gekomen. Zodra een node wordt vertrouwd zal dit zo blijven totdat het vertrouwen zakt onder de 5 zakt.
-    \subsubsection{Update}
+    \paragraph{Update}
         In de huidige vorm van de ISO zijn updates alleen maar handig voor directe buren van de node die de update origineel heeft verstuurd maar moeten ze wel daarbuiten worden doorgestuurd. Dit doorsturen wordt alleen gedaan zolang de decay timer hoger is dan nul zie \autoref{lst:retransmitUpdate}.
 \begin{lstlisting}[caption={Update doorsturen},captionpos=b,label={lst:retransmitUpdate},style=c]
 if(packet[1] & UPDATE_TYPE_DECAY_bm) {
@@ -68,12 +68,13 @@ if(packet[1] & UPDATE_TYPE_DECAY_bm) {
 }
 \end{lstlisting}
 
-    \subsubsection{Stuur pakket}
+\newpage
+    \paragraph{Stuur pakket}
     Er zijn twee situaties waarin een node een pakket moet versturen 1: de node wil een zelf gemaakt pakket naar een andere node sturen of 2: de node heeft een bericht ontvangen voor een andere node die de node direct of indirect kent.
 
-\subsection{Vriendjes}
+\subsubsection{Vriendjes}
     In friendList.h en friendList.c worden alle vriendjes (nodes) van het netwerk opgeslagen. 
-    \subsubsection{Datastructuur}
+    \paragraph{Datastructuur}
         Vriendjes hebben een aantal eigenschappen die onthouden moeten worden om er voor te zorgen dat iso goed kan werken. Een van deze eigenschappen is het unieke ID van een vriendje, hoeveel vriendjes tussen jou en het vriendje in zitten, via wie dit vriendje te bereiken is, hoeveel vertrouwen we hebben in het vriendje en of we het vriendje actief vertrouwen. Omdat deze verschillende elementen vaak nodig zijn is er voor gekozen om deze elementen in een struct samen te voegen en voor programmeer gemak een typedef van deze struct te maken (zie \autoref{lst:friendType}). 
 \begin{lstlisting}[caption={Vriendjes struct},captionpos=b,label={lst:friendType},style=c]
 typedef struct {
@@ -91,7 +92,7 @@ typedef struct {
 
         Tijdens de initialisatie wordt er een array van 8 friend\_t elementen gealloceerd waar alle id's van de array op 0x00 worden gezet. Deze array is alleen vanuit het friendsList.c bestand te bereiken.
 
-    \subsubsection{Vriendjes toevoegen}
+    \paragraph{Vriendjes toevoegen}
         Om een vriendje toe te voegen wordt de updateFriend functie gebruikt. Deze functie heeft het id, aantal hops en de via data van het nieuwe vriendje nodig. Het id wordt gebruikt om te kijken of het vriendje al bekend is, als het vriendje al bekend is en een directe verbinding heeft (hops = 0) worden de volgende stappen uitgevoerd (zie \autoref{lst:updateDirectFriend}):
         \begin{itemize}
             \item Hoog trust op met TRUST\_ADDER
@@ -123,7 +124,7 @@ if(hops < oldFriend->hops || oldFriend->hops == 0) {
 \end{lstlisting}
         In het geval geen van de situaties die hierboven beschreven het geval zijn zal het nieuwe vriendje niet worden opgeslagen.
 
-    \subsubsection{Vriendjes verwijderen}
+    \paragraph{Vriendjes verwijderen}
         Om een vriendje te verwijdere is er een functie gemaakt waar het friend\_t object aan moet worden meegegeven. Als het friend\_t object een ID heeft anders dan NULL zal het aantal vrienden met 1 omlaag worden gehaald. De implementatie hiervan is te zien in \autoref{lst:verwijderFriend}.
         \begin{lstlisting}[caption={Verwijder vriendje},captionpos=b,label={lst:verwijderFriend},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 void removeFriend(friend_t *friend) {
@@ -132,7 +133,7 @@ void removeFriend(friend_t *friend) {
 }
         \end{lstlisting}
 
-    \subsubsection{Vind vriendje}
+    \paragraph{Vind vriendje}
         Om te checken of een vriend bekend is met een ID kan de findFriend functie gebruikt worden. Deze functie checkt eerst of het opgegeven ID een valide waarde heeft, in het geval dit niet is zal de functie NULL returnen. Als het meegegeven ID wel valide is wordt stapsgewijs de hele friend\_t array doorgezocht tot of het ID gevonden wordt of tot er het ID niet is gevonden in de hele friend\_t array. In het geval er niet een friend\_t element in de array is gevonden met het opgegeven ID returned de functie NULL. Op het moment dat er wel een friend\_t element in de array is gevonden met het opgegeven ID returned de functie een pointer naar dit friend\_t object. De implementatie hiervan is te zien in \autoref{lst:vindFriend}.
         \begin{lstlisting}[caption={Vind vriendje},captionpos=b,label={lst:vindFriend},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
 // Find a friend, and return a pointer to that friend.
@@ -147,3 +148,43 @@ friend_t *findFriend(uint8_t id) {
     return NULL;
 }
         \end{lstlisting}
+
+
+\subsubsection{Encryptie}
+Bij een netwerk is het ook handig om een encryptie methode te gebruiken om data van het eigen netwerk veilig te stellen.
+Voor dit netwerk is er gekozen om hoe dan ook voor de prive berichten een encryptie te gebruiken omdat dit ervoor zorgt 
+dat de data die van het eigen netwerk afkomt normaal zal zijn. Dit is anders als er data naar dit netwerk verstuurt wordt. De 
+data die dan ontvangen wordt is onlogisch en kan hierdoor gefilterd worden. 
+
+Tijdens de lessen is er gesproken over 3 verschillende encryptie algoritmes. DES (Data Encryption Standard), AES (Advanced Encryption Standard)
+en XOR. Er is uiteindelijk gekozen voor de XOR algoritme omdat deze in een korte tijd goed te implementeren was. Daarentegen is er wel voor
+een variatie op de XOR algortime gekozen. Deze heeft na zoeken geen officiele naam en is ook zelf bedacht.
+Het werkt alsvolgt:
+
+Wanneer er een bericht binnen komt of wordt verstuurd wordt deze meteen in de keysEncrypt functie gezet. In onderstaande lstlisting \ref{lst:keyEncrypt} 
+staat  de keysEncrypt functie beschreven. Op regel twee is te zien welke soort data er nodig is. De functie moet weten wat message, key1 en
+key2 is en wat de lengte van deze drie zijn. Hierna is er een for-loop die evenlang meegaat als dat de lengte van message is. In deze 
+for-loop staat dat voor elk even plekje in de array key 1 gebruikt wordt en voor elk oneven plekje wordt key 2 gebruikt. Welke plek 
+van de key array gebruikt wordt, wordt bepaald door de lengte van de key en de plek van de message. Zo gebruikt bijvoorbeeld plek 0 
+sowieso plek 0 van key 1. Als key 1 maar 3 plekken bevat dan gebruikt plek 6 ook plek 0 van key 1. 
+
+\begin{lstlisting}[caption={keyEncrypt Functie},captionpos=b,label={lst:keyEncrypt},style=c,xleftmargin=.\textwidth,xrightmargin=.\textwidth]
+    // Encryption and Decryption using multiple key arrays with different lengths
+    uint8_t *keysEncrypt(uint8_t* message, uint8_t length, char* key1, 
+        uint8_t keyLength1, char * key2, uint8_t keyLength2) {
+        static uint8_t data[32];
+        for (uint8_t i = 0; i < length; i++) {
+            if (i % 2 == 0) {  
+                data[i] = (message[i] ^ key1[(i/2) % keyLength1]);
+            }
+            else {
+                data[i] = (message[i] ^ key2[(i/2) % keyLength2]);
+            }
+        }
+        return data;
+    }
+\end{lstlisting}
+
+De keys zijn variable en niet hardcoded in de software. Hoe dit werkt wordt in hoofstuk \ref{sec:debugProgram} besproken. 
+Er is gekozen voor niet hardcoded keys omdat dit ervoor zorgt dat elke keer wanneer het systeem opstart er een nieuwe key bedacht 
+kan worden. Hierdoor is de kans op kraken verkleind. De keys kunnen zelfs aangepast worden terwijl het programma nog aanstaat.         

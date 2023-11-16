@@ -22,16 +22,23 @@
 *.out
 **/sensorNetworks.pdf
 **/Onderzoeksraamwerk.pdf
+**/sensorNetworks.code-workspace
 *.run.xml
 *.url
 *.svn
 *.synctex.gz
 *.toc
 **\sensorNetworks.code-workspace
+
+# Ignore feedback files
+**/feedback.md
+
 # Ignore C compile bs
 *.elf
 *.hex
 *.o
+
+*(busy)
 
 # Exclude binary from basisstation
 basisstation
