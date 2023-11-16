@@ -69,8 +69,8 @@ void nrfChatLoop(void) {
 // Sends the received buffer over to terminal.c
 // Gets message encrypted, decrypts the message first
 void messageReceive(uint8_t *payload) {
-    uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
-    terminalPrintStrex(decrypted, PAYLOAD_SIZE, "Received:");
+    // uint8_t *decrypted = keysEncrypt((uint8_t*)payload, PAYLOAD_SIZE, key1Data, strlen(key1Data), key2Data, strlen(key2Data));
+    terminalPrintStrex(payload, PAYLOAD_SIZE, "Received:");
 }
 
 // Callback from terminal.c.
@@ -144,7 +144,7 @@ void chan(char *arguments) {
     nrfSetChannel(channel);
     nrfStartListening();
 
-    printf("\nSwitched to channel " ID_COLOR "%d" NO_COLOR "\n\n", channel);
+    printf("Switched to channel " ID_COLOR "%d" NO_COLOR "\n\n", channel);
 }
 
 void list(char *arguments) {
@@ -166,7 +166,7 @@ void dest(char *arguments) {
 }
 
 void myid(char *arguments) {
-    printf("Your ID is 0x%02x\n", isoGetId());
+    printf("Your ID is " ID_COLOR "0x%02x\n\n" NO_COLOR, isoGetId());
 }
 
 // Function to show the keys in Hex

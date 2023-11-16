@@ -39,3 +39,7 @@
 *.o
 
 *(busy)
+
+# Exclude binary from basisstation
+basisstation
+linuxSerial_rewritten
