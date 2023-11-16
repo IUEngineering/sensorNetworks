@@ -1,0 +1,42 @@
+\documentclass[12pt, a4paper, twoside]{article}
+
+\usepackage{hvaTemplate}
+\usepackage{csquotes}
+\usepackage[dutch]{babel}
+\usepackage[backend=biber, style=ieee]{biblatex}
+\usepackage{multirow}
+\addbibresource{references.bib}
+
+\setAuthor{Tycho Jöbsis (500845792), Jochem Leijenhorst (500855372), Illya Ustenko (500845492) and Naomi Visser (500850314)}
+\extraInfo{Implementatie van een dynamisch draadloos sensor netwerk}
+\setTitle{Sensornetwerken}
+
+\graphicspath{ {img/} }
+
+\numberwithin{equation}{section}
+
+\begin{document}
+    \makeTitlepage
+    \onecolumn
+    \tableofcontents
+    \newpage
+
+    \section{Inleiding}
+    In dit onderzoeksraamwerk wordt er gekeken naar wat de opdracht inhoudt en wat het probleem is. 
+    Hieruit is een doelstelling opgesteld. Vanuit deze doelstelling worden deelvragen bedacht om deze in een 
+    later hoofdstuk kort te beantwoorden met onderzoek. Hieruit volgt dan dus ook een netwerk waarin sommige 
+    grootheden gemeten worden om hier vanuit feedback te kunnen geven aan de gebruiker. 
+
+    \section{Opdracht}
+    \input{hoofdstukken/opdracht}
+
+    \newpage
+    \section{Grootheden}
+    \input{hoofdstukken/grootheden}
+
+    \newpage    
+    \printbibliography
+
+    \appendix
+
+\end{document}

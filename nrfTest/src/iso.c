@@ -9,9 +9,6 @@
 #include "serialF0.h"
 #include "terminal.h"
 
-// Shift team ID 5 bits to the left so that it can be the first(most segnificant) 3 bits of the ID.
-#define TEAM_ID 0x02 << 5
-
 #define BROADCAST_PIPE (uint8_t *)"kweks"
 #define BROADCAST_PIPE_INDEX 0
 
@@ -40,30 +37,37 @@
 #define UPDATE_COUNT_REMOVE_bm  0x0f
 #define UPDATE_MAX_DECAY        5
 
-#define MAX_MULTIPACKET_TIME_INTERVAL 256
+// The currentTime timer counts every 100ms, and pings are sent every second, so if a message is received within 500ms it's probably a multipacket.
+#define MAX_MULTIPACKET_TIME_INTERVAL 8
 #define MAX_MULTIPACKETS 3
 
 #define MESSAGE_DESTINATION_ID 0
 
-#define PACKET_SIZE 32
-
 #define HOPS_LIMIT 16
 
 
-// Counter every 250 ms formula:
-// TC_CCA = ((t * F_CPU) / (2* N)) - 1 
-#define TC_CCA  15624
+// Counter every second formula:
+// PING_TC_PER = ((t * F_CPU) /  N) - 1
+#define PING_TC_DIV TC_CLKSEL_DIV1024_gc
+#define PING_TC_PER 31249
 
+// 10Hz // 100ms
+#define CURRENTTIME_TC_DIV TC_CLKSEL_DIV256_gc
+#define CURRENTTIME_TC_PER 31249
 
 // #define FILLIST 3
 
 
 
 // Define list of neighbors (neighbors are friends :)
-static uint16_t currentTime = 0;
+uint8_t currentTime = 0;
 static uint8_t myId = 0;
-static void pingOfLife(void);
+
 static void (*receiveCallback)(uint8_t *payload);
+void (*broadcastCallback)(uint8_t *package) = NULL;
+void (*relayCallback)(uint8_t *package) = NULL;
+
+static void pingOfLife(void);
 static void send(uint8_t *data);
 static void openPrivateWritingPipe(uint8_t destId);
 static void timerOverflow(void);
@@ -111,45 +115,35 @@ void isoInit(void (*callback)(uint8_t *data)) {
     nrfPowerUp();
 
     // TODO: Check if these delays are necessary.
-    _delay_ms(5);
     nrfOpenReadingPipe(BROADCAST_PIPE_INDEX, BROADCAST_PIPE);
-    _delay_ms(5);
     nrfOpenReadingPipe(PRIVATE_PIPE_INDEX, privatePipe);
     nrfStartListening();
 
     initFriendList();
-#ifdef FILLIST
-    for(uint8_t i = 1; i <= 20; i++) {
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-        updateFriend(i, 0, 0);
-    }
-    for(uint8_t i = 0; i < 20; i++) {
-        updateFriend(i + 15, i % 3 + 1, i / 2);
-    }
 
-#endif
+    // Initialize the timer/counter for sending POL's (snapshots) and keeping track of multipackets.
+    TCD0.CTRLB  = TC_WGMODE_NORMAL_gc;
+    TCD0.CTRLA  = PING_TC_DIV;
+    TCD0.PER    = PING_TC_PER;
 
-    // Initialize the timer/counter for sending POL's (snapshots) and removing friends.
-    TCD0.CTRLA  = TC_CLKSEL_DIV1024_gc;
-    TCD0.CTRLB  = TC0_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD0.CCA    = TC_CCA;
-
-    TCD1.CTRLA  = TC_CLKSEL_DIV256_gc;
-    TCD1.CTRLB  = TC1_CCAEN_bm | TC_WGMODE_FRQ_gc;
-    TCD1.CCA    = 16; // Random value I don't really care tbh. It has to be low enough to not fill a uint16_t within like 5 seconds.
+    TCD1.CTRLB  = TC_WGMODE_NORMAL_gc;
+    TCD1.CTRLA  = CURRENTTIME_TC_DIV;
+    TCD1.PER    = CURRENTTIME_TC_PER;
 
     receiveCallback = callback;
 
     DEBUG_PRINT("\e[31mDebugging is enabled.\e[0m");
 }
 
-void isoUpdate(void) {
+uint8_t isoUpdate(void) {
+
+    uint8_t ret = 0;
 
     // Read the first timer counter overflow interrupt flag.
-    if(TCD0.INTFLAGS & TC0_OVFIF_bm) timerOverflow();
+    if(TCD0.INTFLAGS & TC0_OVFIF_bm) {
+        timerOverflow();
+        ret = 1;
+    }
     TCD0.INTFLAGS |= TC0_OVFIF_bm; // Reset the flag.
 
     // Read the second timer counter overflow interrupt flag.
@@ -166,6 +160,8 @@ void isoUpdate(void) {
         nrfRead(packet, PACKET_SIZE);
         parsePacket(packet, receivePipe);
     }
+
+    return ret;
 }
 
 void timerOverflow(void) {
@@ -215,18 +211,19 @@ void send(uint8_t *data) {
     nrfStopListening();
     // The datasheet says it takes 130 us to switch out of listening mode.
     _delay_us(130);
+    // TODO: Check if this is necessary
 
     // The data is always 32 bytes because for some reason it was decided to not use dynamic payload.
     nrfWrite(data, PACKET_SIZE);
     nrfStartListening();
 }
 
+
 void pingOfLife(void) {
+
     // Ping build:
     //* Index:  0    1    2    3    4    5    6    7    8    8    9    8
     //* Type:   myID Typ  ID0  Hop0 ID1  Hop1 ID2  Hop2 ID3  Hop3 ID4  Hop4
-    
-    // TODO: Handle max hops.
 
     // Get the list of friends.
     friend_t friends[MAX_FRIENDS + 1]; // One larger for id=0 terminator. 
@@ -289,17 +286,18 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
 
     // If it's a Ping of Life (snapshot):
     if(receivePipe == BROADCAST_PIPE_INDEX) {
-        #ifdef FILLIST
-        return;
-        #endif
-
+    
         // Check which parser to use:
         if(packet[1] & UPDATE_TYPE_UPDATE_bm) parseUpdate(packet);
         else parsePing(packet);
+
+        // Send the data to the PI if we're the basestation.
+        if(broadcastCallback) broadcastCallback(packet);
         
         return;
     }
 
+    // Toggle the red LED to show that we've received something private.
     PORTF.OUTTGL = PIN1_bm;
 
     // Is for me???
@@ -307,10 +305,12 @@ void parsePacket(uint8_t *packet, uint8_t receivePipe) {
         receiveCallback(packet + 1);
     }
 
-    // If it's a message for someone else.
+    // If it's a message for someone else, relay the packet.
     else {
-        // Relay packet
         isoSendPacket(packet[0], packet + 1, PACKET_SIZE - 1);
+
+        // Send the relayed packet to the PI if we're the basestation.
+        if(relayCallback) relayCallback(packet);
     }
 }
 
@@ -343,7 +343,8 @@ void parsePing(uint8_t *packet) {
 
     for(uint8_t i = 2; i < packetLength; i += 2)
         // Make sure to not add yourself as friend (prevents becoming schizophrenic).
-        if(packet[i] != myId)
+        // Also enforce the maximum amount of hops of [nodeAmount] + 2.
+        if(packet[i] != myId  &&  packet[i + 1] < getFriendAmount() + 2)
             updateFriend(packet[i], packet[i + 1] + 1, packet[SNAPSHOT_SENDER_ID]);
 
 }
@@ -359,7 +360,7 @@ void parseUpdate(uint8_t *packet) {
     if(findFriend(packet[0])->active) { 
         for(uint8_t i = 0; i < adders; i++) {
             // Well this is going to be run like 28 times every time a nerd decides to send an update,
-            // because literally EVERYONE is repeating them, woo :D.
+            // because literally EVERYONE is relaying them, woo :D.
 
             // We can find the hops by subtracting the max decay by the current decay.
             updateFriend(packet[UPDATE_FIRST_ID + i], UPDATE_MAX_DECAY - decay, packet[0]);
@@ -384,4 +385,11 @@ void parseUpdate(uint8_t *packet) {
 
 uint8_t isoGetId(void) {
     return myId;
+}
+
+void isoSetRelayCallback(void (*callback)(uint8_t *package)) {
+    relayCallback = callback;
+}
+void isoSetBroadcastCallback(void (*callback)(uint8_t *package)) {
+    broadcastCallback = callback;
 }
